@@ -9,14 +9,31 @@ import websockets
 
 PORT = 9001
 WS_PORT = 9002
-Handler = http.server.SimpleHTTPRequestHandler
+WEBSOCKET_SERVER = False
 
+class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
+    extensions_map = {
+        '': 'application/octet-stream',
+        '.manifest': 'text/cache-manifest',
+        '.html': 'text/html',
+        '.png': 'image/png',
+        '.jpg': 'image/jpg',
+        '.svg':	'image/svg+xml',
+        '.css':	'text/css',
+        '.js':'application/x-javascript',
+        '.wasm': 'application/wasm',
+        '.json': 'application/json',
+        '.xml': 'application/xml',
+    }
+
+class MyTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
 
 def hash_directory(directory):
     hash_obj = hashlib.md5()
     for root, dirs, files in os.walk(directory):
         for file in sorted(files):  # Sort to ensure consistent order
-            if file.endswith('.html') or file.endswith('.css'):
+            if file.endswith(('html', 'js', 'css', 'json')):
                 file_path = os.path.join(root, file)
                 # Use file metadata (name, size, and modification time) for hashing
                 stat = os.stat(file_path)
@@ -29,7 +46,7 @@ current_hash = None
 ws_connections = set()
 
 def run_http_server():
-    with socketserver.TCPServer(("", PORT), Handler) as httpd:
+    with MyTCPServer(("", PORT), HttpRequestHandler) as httpd:
         print(f"Serving HTTP at port {PORT}")
         httpd.serve_forever()
 
@@ -57,12 +74,23 @@ async def notify_clients():
     if ws_connections:
         await asyncio.wait([asyncio.create_task(ws.send("reload")) for ws in ws_connections])
 
-def main():
+def WebSocketServer():
     http_thread = threading.Thread(target=run_http_server)
     http_thread.daemon = True
     http_thread.start()
-    
+
     asyncio.run(watch_files())
+
+def StandaloneHTTPServer():
+    httpd = http.server.HTTPServer(('', PORT), HttpRequestHandler)
+    print(f"Serving HTTP at port {PORT}")
+    httpd.serve_forever()
+
+def main():
+    if WEBSOCKET_SERVER:
+        WebSocketServer()
+    else:
+        StandaloneHTTPServer()
 
 if __name__ == "__main__":
     main()
