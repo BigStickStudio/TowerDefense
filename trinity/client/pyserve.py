@@ -9,7 +9,7 @@ import websockets
 
 PORT = 9001
 WS_PORT = 9002
-WEBSOCKET_SERVER = False
+REALTIME_UPDATE = True
 
 class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
     extensions_map = {
@@ -26,6 +26,13 @@ class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         '.xml': 'application/xml',
     }
 
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        super().end_headers()
+
+
 class MyTCPServer(socketserver.TCPServer):
     allow_reuse_address = True
 
@@ -33,7 +40,7 @@ def hash_directory(directory):
     hash_obj = hashlib.md5()
     for root, dirs, files in os.walk(directory):
         for file in sorted(files):  # Sort to ensure consistent order
-            if file.endswith(('html', 'js', 'css', 'json')):
+            if file.endswith('.html') or file.endswith('.js') or file.endswith('.css'):
                 file_path = os.path.join(root, file)
                 # Use file metadata (name, size, and modification time) for hashing
                 stat = os.stat(file_path)
@@ -87,7 +94,7 @@ def StandaloneHTTPServer():
     httpd.serve_forever()
 
 def main():
-    if WEBSOCKET_SERVER:
+    if REALTIME_UPDATE:
         WebSocketServer()
     else:
         StandaloneHTTPServer()
