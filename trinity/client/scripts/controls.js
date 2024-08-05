@@ -156,5 +156,23 @@ export default class CharacterController {
 
         this._velocity.copy(velocity);
         this._target.position.copy(control.position);
+
+        let total_velocity = Math.sqrt(velocity.x ** 2 + velocity.z ** 2);
+
+        if (!move.forward && !move.backward && total_velocity < 0.1) {
+            this.setState('idle');
+        } else if (velocity.y > 0) {
+            if (move.run) {
+                this.setState('runjump');
+            } else {
+                this.setState('jump');
+            }
+        } else if (move.backward) {
+            this.setState('backwalk');
+        } else if (move.run) {
+            this.setState('run');
+        } else {
+            this.setState('walk');
+        }
     }
 }

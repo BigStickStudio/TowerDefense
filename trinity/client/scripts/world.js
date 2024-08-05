@@ -82,10 +82,6 @@ export default class World {
         }
     }
 
-    initPlayer = () => {
-        
-    }  
-
     onWindowResize = () => {
         this._character.refreshCamera();
         this._renderer.setSize(window.innerWidth, window.innerHeight);
