@@ -1,8 +1,5 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.118/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/controls/OrbitControls.js';
-import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/loaders/FBXLoader.js';
-import config from './config.js';
-import { CharacterControls } from './character.js';
+import * as THREE from 'three';
+import Character from './character.js';
 
 export default class World {
     constructor() { this.init(); }
@@ -11,14 +8,19 @@ export default class World {
         this._mixers = [];
         this.initRenderer();
         this.clock = new THREE.Clock();
+        this._scene = new THREE.Scene();
+        this._character = new Character(this._scene);
+
         document.body.appendChild(this._renderer.domElement);
         window.addEventListener('resize', this.onWindowResize, false);
-        this.initCamera();
+        
         this.initAmbientLight();
         this.initPlane();
-        this.loadModel();
         this.initObjects();
-    
+    }
+
+    get camera() {
+        return this._character.camera.instance;
     }
 
     initRenderer = () => {
@@ -31,22 +33,11 @@ export default class World {
         this._renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    initCamera = () => {
-        this._camera = new THREE.PerspectiveCamera(config.fov, window.innerWidth / window.innerHeight, config.near, config.far);
-        this._scene = new THREE.Scene();
-        const controls = new OrbitControls(this._camera, this._renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.25;
-        controls.enableZoom = true;
-
-        this._camera.position.set(0, 20, -10);
-        this._camera.lookAt(0, 9, 20);
-    }
 
     initAmbientLight = () => {
         this._scene.add(new THREE.AmbientLight(0x404040));
         const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(1, 100, 1).normalize();
+        light.position.set(1, 500, 1).normalize();
         light.castShadow = true;
         light.shadow.camera.top = 180;
         light.shadow.camera.bottom = -100;
@@ -56,6 +47,7 @@ export default class World {
         light.shadow.mapSize.height = 2048;
         light.shadow.camera.far = 500;
         light.shadow.bias = -0.0001;
+        this._sun = light;
         this._scene.add(light);
     }
 
@@ -88,34 +80,32 @@ export default class World {
             this._cubes[i] = _cube;
             this._scene.add(_cube);
         }
-
     }
 
+    initPlayer = () => {
+        
+    }  
+
     onWindowResize = () => {
-        this._camera.aspect = window.innerWidth / window.innerHeight;
-        this._camera.updateProjectionMatrix();
+        this._character.refreshCamera();
         this._renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     render = (t) => {
-
         for (let i = 0; i < this._cubes.length; i++) {
             this._cubes[i].rotation.x += 0.01;
             this._cubes[i].rotation.y += 0.01;
         }
 
         this.requestFrame();
-        this._renderer.render(this._scene, this._camera);
+        this._renderer.render(this._scene, this.camera);
         this.step();
     }
 
-    requestFrame = () => {
-        requestAnimationFrame(this.render);
-    }
+    requestFrame = () => { requestAnimationFrame(this.render); }
 
     step = () => {
         const elapsed = this.clock.getDelta() * 0.2;
-        this._controls?.update(elapsed);
-        this._mixers?.map(mixer => mixer.update(elapsed));
+        this._character?.update(elapsed);
     }
 }

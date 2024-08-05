@@ -9,7 +9,15 @@
             overflow: hidden;
         }
     </style>
-    <script src="scripts/client.js" type="module"></script>
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.167.1/examples/jsm/"
+          }
+        }
+      </script>
+    <script src="scripts/app.js" type="module"></script>
 </head>
 
 <body>
