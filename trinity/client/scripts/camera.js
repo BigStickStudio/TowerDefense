@@ -148,6 +148,5 @@ export default class Camera {
             this.instance.position.copy(this._current_position);
             this.instance.lookAt(this._current_lookat);   
         }
-
-      }
+    }
 }

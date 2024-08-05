@@ -20,8 +20,8 @@ export default class Character extends CharacterController {
         this._animations = {};
         this._controls = null;
         this._target = null;
-        this._mixer = null;
         this._manager = null;
+        this._mixer = null;
         this._mixers = [];
         this.state = "idle";
         this.createModel();
@@ -31,6 +31,14 @@ export default class Character extends CharacterController {
     refreshCamera = () => {
         this.camera.instance.aspect = window.innerWidth / window.innerHeight;
         this.camera.instance.updateProjectionMatrix();
+    }
+
+    setState = (state) => {
+        if (this.state === state) { return; }
+        this.state = state;
+        this._mixer.stopAllAction();
+        this._mixer.uncacheAction(this._animations[state].clip);
+        this._animations[state].action.play();
     }
 
     loadAnimation = (name, animation) => {
@@ -54,12 +62,12 @@ export default class Character extends CharacterController {
  
 
             const animation = new FBXLoader();
-            animation.load('models/Idle.fbx', (anim) => {
-                const mixer = new THREE.AnimationMixer(object);
-                this._mixers.push(mixer);
-                const action = mixer.clipAction(anim.animations[0]);
-                action.play();
-            });
+            animation.load('models/Idle.fbx', (a) => { this.loadAnimation('idle', a); });
+            animation.load('models/Walking.fbx', (a) => { this.loadAnimation('walk', a); });
+            animation.load('models/Running.fbx', (a) => { this.loadAnimation('run', a); });
+            animation.load('models/StillJump.fbx', (a) => { this.loadAnimation('jump', a); });
+            animation.load('models/RunningJump.fbx', (a) => { this.loadAnimation('runjump', a); });
+            animation.load('models/BackWalk.fbx', (a) => { this.loadAnimation('backwards', a); });
         });
     }
 
