@@ -100,6 +100,11 @@ export default class CharacterController {
         const control = this._target;
         const _quat = new THREE.Quaternion();
         const _axis = new THREE.Vector3(0, 1, 0);
+
+        if (control.quaternion === undefined) {
+            control.quaternion = new THREE.Quaternion();
+        }
+
         const _rotation = control.quaternion.clone();
 
         if (move.left) {
@@ -150,6 +155,10 @@ export default class CharacterController {
         sideways.multiplyScalar(velocity.x);
         forward.multiplyScalar(velocity.z);
 
+        if (control?.position === undefined) {
+            control.position = new THREE.Vector3();
+        }
+
         control.position.add(forward);
         control.position.add(sideways);
         control.position.y += velocity.y;
@@ -160,19 +169,19 @@ export default class CharacterController {
         let total_velocity = Math.sqrt(velocity.x ** 2 + velocity.z ** 2);
 
         if (!move.forward && !move.backward && total_velocity < 0.1) {
-            this.setState('idle');
+            this.setState('Resting');
         } else if (velocity.y > 0) {
             if (move.run) {
-                this.setState('runjump');
+                this.setState('Jump');
             } else {
-                this.setState('jump');
+                this.setState('Jump');
             }
         } else if (move.backward) {
-            this.setState('backwalk');
+            this.setState('Walking');
         } else if (move.run) {
-            this.setState('run');
+            this.setState('Running');
         } else {
-            this.setState('walk');
+            this.setState('Walking');
         }
     }
 }

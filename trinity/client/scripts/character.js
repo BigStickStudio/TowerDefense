@@ -1,5 +1,5 @@
-import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.167.1/examples/jsm/loaders/FBXLoader.js';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import Camera from './camera.js';
 import CharacterController from './controls.js';
 
@@ -30,7 +30,7 @@ export default class Character extends CharacterController {
         this._manager = null;
         this._mixer = null;
         this._mixers = [];
-        this.state = "";
+        this.state = "Resting";
         this.createModel();
         this.camera = new Camera();
     }
@@ -47,39 +47,35 @@ export default class Character extends CharacterController {
 
         if (!this._mixer) {
             console.error("Mixer not initialized");
-            return;
+            this._mixer = new THREE.AnimationMixer(this._target);
         }
 
-        const clip = animation.animations[0];
-        const action = this._mixer.clipAction(clip);
+        //const clip = animation.clip;
+        const action = this._mixer.clipAction(animation);
         action.enabled = true;
         action.setEffectiveWeight(0.5);
-        this._animations = { ...this._animations, [name]: { clip, action } };
+        this._animations = { ...this._animations, [name]: { animation, action } };
     }
 
     createModel = () => {
         let obj = null;
-        const loader = new FBXLoader();
-        loader.load('models/character.fbx', (object) => {
-            object.scale.setScalar(0.1);
-            object.position.set(0, 0, 0);
-            object.traverse(child => { child.castShadow = true; });
+        const loader = new GLTFLoader();
+        loader.load('models/MrMan.glb', (gltf) => {
+            let model = gltf.scene;
+            model.scale.setScalar(4);
+            model.position.set(0, 0, 0);
+            model.traverse(child => { child.castShadow = true; });
     
-            this._target = object;
+            this._target = model;
             this._scene.add(this._target);
-            this._mixer = new THREE.AnimationMixer(object);
-            this._manager = new THREE.LoadingManager();
- 
+            this._mixer = new THREE.AnimationMixer(model);
 
-            const animation = new FBXLoader();
-            animation.load('models/Walking.fbx', (a) => { this.loadAnimation('walk', a); });
-            animation.load('models/Running.fbx', (a) => { this.loadAnimation('run', a); });
-            animation.load('models/StillJump.fbx', (a) => { this.loadAnimation('jump', a); });
-            animation.load('models/Landing.fbx', (a) => { this.loadAnimation('land', a); });
-            animation.load('models/RunningJump.fbx', (a) => { this.loadAnimation('runjump', a); });
-            animation.load('models/HardLanding.fbx', (a) => { this.loadAnimation('hardland', a); });
-            animation.load('models/BackWalk.fbx', (a) => { this.loadAnimation('backwalk', a); });
-            animation.load('models/Idle.fbx', (a) => { this.loadAnimation('idle', a); });
+            const animations = gltf.animations;
+            animations.forEach((animation) => {
+                this.loadAnimation(animation.name, animation);
+            });
+
+            this._manager = new THREE.LoadingManager();
         });
     }
 
@@ -95,7 +91,7 @@ export default class Character extends CharacterController {
     }
     
     prepareCrossFade = (start, end, duration) => {
-        if (this.set_state === 'idle' || !start || !end) {
+        if (this.set_state === 'Resting' || !start || !end) {
             this.crossFade(start, end, duration);
         } else {
             this.syncCrossfade(start, end, duration);
