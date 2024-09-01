@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import Camera from './camera.js';
-import CharacterController from './controls.js';
+import CharacterController from './character_controls.js';
 
 class Animations {
     constructor(a) {

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import Character from './character.js';
 import Map from './map.js';
+import MapInterface from './map_controller.js';
 
 export default class World {
     constructor() { this.init(); }
@@ -17,7 +18,8 @@ export default class World {
         
         this.initAmbientLight();
         this.initSkyBox();
-        Map.init(this._scene);
+        this.map = new Map(this._scene);
+        this.map_listener = new MapInterface();
         this.initObjects();
     }
 
@@ -98,6 +100,7 @@ export default class World {
         this.requestFrame();
         this._renderer.render(this._scene, this.camera);
         this.step();
+        this.map_listener.getIntersection(this.camera, this._scene.children);
     }
 
     requestFrame = () => { requestAnimationFrame(this.render); }

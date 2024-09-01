@@ -54,7 +54,7 @@ ws_connections = set()
 
 def run_http_server():
     with MyTCPServer(("", PORT), HttpRequestHandler) as httpd:
-        print(f"Serving HTTP at port {PORT}")
+        print(f"Serving HTTP at http://localhost:{PORT}")
         httpd.serve_forever()
 
 async def run_ws_server(websocket, path):
@@ -90,7 +90,7 @@ def WebSocketServer():
 
 def StandaloneHTTPServer():
     httpd = http.server.HTTPServer(('', PORT), HttpRequestHandler)
-    print(f"Serving HTTP at port {PORT}")
+    print(f"Serving HTTP at http://localhost:{PORT}")
     httpd.serve_forever()
 
 def main():

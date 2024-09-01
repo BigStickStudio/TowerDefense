@@ -3,11 +3,15 @@ import * as THREE from 'three';
 const grid_size = 50;
 
 export default class Map {
-    static grid = [];
+    grid = [];
+    map_listener = undefined;
 
-    static init(scene) {
+    constructor(scene) 
+        { this.init(scene); }
+
+    init = (scene) => {
         for (let i = -(grid_size / 2); i < (grid_size/2); i++) {
-            Map.grid[i] = [];
+            this.grid[i] = [];
             for (let j =  -(grid_size / 2); j < (grid_size/2); j++) {
                 const geometry = new THREE.PlaneGeometry(9.5, 9.5, 1, 1);
                 const material = new THREE.MeshBasicMaterial({ color: 0x329c11, side: THREE.DoubleSide });
@@ -23,6 +27,5 @@ export default class Map {
             plane.position.set(0, -0.2, 0);
             scene.add(plane);
         }
-        
     }
 }
