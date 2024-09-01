@@ -19,7 +19,7 @@ export default class MapInterface {
             this.raycaster.setFromCamera(this.mouse2D, camera);
             let intersects = this.raycaster.intersectObjects(objects, true);
 
-            if (intersects.length > 0) { return; }
+            if (intersects.length <= 0) { return; }
 
             for (let i = 0; i < intersects.length; i++) 
                 { intersects[i].object.material.color.set(0x9a23c4); }
