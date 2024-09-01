@@ -170,7 +170,9 @@ export default class CharacterController {
 
         if (!move.forward && !move.backward && total_velocity < 0.1) {
             console.log('Resting');
-            this.setState('Resting');
+            if (this._state !== 'Resting') {
+                this.setState('Resting');
+            }
         } else if (velocity.y > 0) {
             if (move.run) {
                 console.log('Jump');

@@ -63,7 +63,7 @@ export default class Character extends CharacterController {
         loader.load('models/MrMan.glb', (gltf) => {
             let model = gltf.scene;
             model.scale.setScalar(4);
-            model.position.set(0, 0, 0);
+            model.position.set(0, 0, -3);
             model.traverse(child => { child.castShadow = true; });
     
             this._target = model;

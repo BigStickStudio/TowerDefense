@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import Character from './character.js';
+import Map from './map.js';
 
 export default class World {
     constructor() { this.init(); }
@@ -15,7 +16,8 @@ export default class World {
         window.addEventListener('resize', this.onWindowResize, false);
         
         this.initAmbientLight();
-        this.initPlane();
+        this.initSkyBox();
+        Map.init(this._scene);
         this.initObjects();
     }
 
@@ -33,6 +35,18 @@ export default class World {
         this._renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    initSkyBox = () => {
+        const loader = new THREE.CubeTextureLoader();
+        const texture = loader.load([
+            '../assets/SkyCenterRight.png',
+            '../assets/SkyLeft.png',
+            '../assets/SkyTop.png',
+            '../assets/SkyBottom.png',
+            '../assets/SkyCenter.png',
+            '../assets/SkyRight.png',
+        ]);
+        this._scene.background = texture;
+    }
 
     initAmbientLight = () => {
         this._scene.add(new THREE.AmbientLight(0x404040));
@@ -50,18 +64,6 @@ export default class World {
         this._sun = light;
         this._scene.add(light);
     }
-
-    initPlane = () => {
-        const plane = new THREE.Mesh(
-            new THREE.PlaneGeometry(1000, 1000, 10, 10),
-            new THREE.MeshBasicMaterial({ color: 0x0c852c })
-        );
-        plane.rotation.x = -Math.PI / 2;
-        plane.castShadow = false;
-        plane.receiveShadow = true;
-        this._scene.add(plane);
-    }
-
 
     initObjects = () => {
         // This is just a placeholder to show that we have something in the scene
