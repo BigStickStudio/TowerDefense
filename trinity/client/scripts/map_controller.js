@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import map_config from "./map_config.js";
 import State from './state.js';
 
 const state_instance = State.instance;
@@ -19,7 +20,7 @@ export default class MapInterface {
             this.raycaster = new THREE.Raycaster();
             this.mouse2D = new THREE.Vector2();
             
-            const geometry = new THREE.PlaneGeometry(10, 10, 1, 1);
+            const geometry = new THREE.PlaneGeometry(map_config.square_size, map_config.square_size, 1, 1);
             const material = new THREE.MeshBasicMaterial({ color: 0x8a53f4, side: THREE.DoubleSide , opacity: 0.5, transparent: true });
             const plane = new THREE.Mesh(geometry, material);
             plane.rotation.x = Math.PI / 2;

@@ -1,9 +1,5 @@
 import * as THREE from 'three';
-
-const grid_size = 50;
-const square_size = 10;
-const frame_size = 0.5;
-const frame_buffer = frame_size / 2;
+import config from './map_config.js';
 
 export default class Map {
     grid = [];
@@ -13,28 +9,30 @@ export default class Map {
         { this.init(scene); }
 
     init = (scene) => {
-        const half_grid = grid_size / 2;
-        const field_size = grid_size * 10;
-        const field_geometry = new THREE.PlaneGeometry(field_size, field_size, 1, 1);
+        const half_grid_x = config.grid_size.x / 2;
+        const half_grid_y = config.grid_size.y / 2;
+        const field_size_x = config.grid_size.x * config.square_size;
+        const field_size_y = config.grid_size.y * config.square_size;
+        const field_geometry = new THREE.PlaneGeometry(field_size_x, field_size_y, 1, 1);
         const field_material = new THREE.MeshBasicMaterial({ color: 0x603010, side: THREE.DoubleSide });
-        const square_inset = square_size - frame_size;
+        const square_inset = config.square_size - config.frame_size;
         const plane_geometry = new THREE.PlaneGeometry(square_inset, square_inset, 1, 1);
         const material = new THREE.MeshBasicMaterial({ color: 0x329c11, side: THREE.DoubleSide });
 
-        for (let i = -half_grid; i < half_grid; i++) {
+        for (let i = -half_grid_x; i < field_size_x; i++) {
             this.grid[i] = [];
 
-            for (let j =  -half_grid; j < half_grid; j++) {
+            for (let j =  -half_grid_y; j < half_grid_y; j++) {
                 const plane = new THREE.Mesh(plane_geometry, material);
                 plane.rotation.x = Math.PI / 2;
-                plane.position.set(i * square_size, 0, j * square_size);
+                plane.position.set(i * config.square_size, 0, j * config.square_size);
                 plane.name = "grid";
                 scene.add(plane);
             }
 
             const underpinning = new THREE.Mesh(field_geometry, field_material);
             underpinning.rotation.x = Math.PI / 2;
-            underpinning.position.set(0 - 5, -0.1, 0 - 5);
+            underpinning.position.set(0, -0.5, 0);
             underpinning.name = "underpinning";
             scene.add(underpinning);
         }

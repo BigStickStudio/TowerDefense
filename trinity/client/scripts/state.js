@@ -8,12 +8,12 @@ export default class State {
     
     constructor() {
         local_state = {
+            "camera_target": null, // Must be a player object or null (free fly)
             "selection_mode": null, // This will be used for 'building' or 'selecting' objects
             "selected_target": null,
             "cursor_target": null,
-            "third_person": false,
             "moving_state": "Resting",
-            "camera_mode": "attached", 
+            "camera_mode": "third-person", // first-person, third-person, top-down
         }
     }
 
@@ -40,7 +40,28 @@ export default class State {
         this.redraw();
     }
 
-    get moving_state() { 
-        const moving_state = local_state["moving_state"];
-        return moving_state ? moving_state : 'none'; }
+    get moving_state() 
+        { return unwrap(local_state["moving_state"]); }
+
+    set camera_mode(state) {
+        local_state["camera_mode"] = state;
+    //    this.redraw();
+    }
+
+    get camera_mode() 
+        { return local_state["camera_mode"]; }
+
+    get top_down() 
+        { return local_state["camera_mode"] === "top-down"; }
+    
+    get first_person() 
+        { return local_state["camera_mode"] === "first-person"; }
+
+    set camera_target(target) {
+        local_state["camera_target"] = target;
+        this.redraw();
+    }
+
+    get camera_target() 
+        { return local_state["camera_target"]; }
 }

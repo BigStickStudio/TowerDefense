@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import Camera from './camera.js';
-import CharacterController from './character_controls.js';
+import Camera from './camera_controller.js';
+import CharacterController from './character_controller.js';
 import State from './state.js';
 
 const state_instance = State.instance;
@@ -64,10 +64,11 @@ export default class Character extends CharacterController {
         loader.load('models/MrMan.glb', (gltf) => {
             let model = gltf.scene;
             model.scale.setScalar(4);
-            model.position.set(0, 0, -3);
+            model.position.set(0, 0, 0); // TODO: Blender: Move model back 3
             model.traverse(child => { child.castShadow = true; });
     
             this._target = model;
+            state_instance.camera_target = this._target;
             this._scene.add(this._target);
             this._mixer = new THREE.AnimationMixer(model);
 
