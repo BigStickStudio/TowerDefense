@@ -39,7 +39,7 @@ export default class Character extends CharacterController {
 
     setState = (state) => { 
         this.state = state; 
-        state_instance.movingState = this.state;
+        state_instance.moving_state = this.state;
     }
 
     loadAnimation = (name, animation) => {

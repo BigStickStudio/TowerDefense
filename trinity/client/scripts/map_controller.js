@@ -55,7 +55,7 @@ export default class MapInterface {
                             if (this.highlighter.position.equals(object_position)) { return; }
 
                             this.highlighter.position.copy(object_position);
-                            state_instance.target = object_position;
+                            state_instance.cursor_target = object_position;
                         }
                 }
 
@@ -76,6 +76,6 @@ export default class MapInterface {
             this.mouse2D = new THREE.Vector2();
             this.scene.remove(this.highlighter);
             this.cursor = false; 
-            state_instance.target = undefined;
+            state_instance.cursor_target = undefined;
         }
 }

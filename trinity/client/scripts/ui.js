@@ -3,7 +3,6 @@ import State from "./state.js";
 const state_instance = State.instance;
 
 const ui = document.getElementById("ui")
-let fn = () => { return 1 + 2; }
 
 const updateUI = () => {
     ui.style = "display: flex; position: relative; top: 0; width: 100%;";
@@ -13,13 +12,10 @@ const updateUI = () => {
             <div class="container">
                 <div class="col py-2 px-4 bg-light rounded-3">        
                     <div class="row">        
-                        Menu ${fn()}
+                            Target Position: ${state_instance.cursor_target}
                     </div>
                     <div class="row">        
-                            Target Position: ${state_instance.target}
-                    </div>
-                    <div class="row">        
-                            Moving State: ${state_instance.movingState}
+                            Moving State: ${state_instance.moving_state}
                     </div>
                 </div>
             </div>

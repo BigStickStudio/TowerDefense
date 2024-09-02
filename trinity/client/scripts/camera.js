@@ -1,11 +1,6 @@
 
 import * as THREE from 'three';
-import config from './config.js';
-
-const max_zoom = 5;
-const min_zoom = 0;
-const default_zoom = 2;
-const default_zoom_height = 2.5;
+import config from './camera_config.js';
 
 let mouse = new THREE.Vector2();
 let prev_mouse = new THREE.Vector2();
@@ -16,9 +11,9 @@ export default class Camera {
         this._target_offset = new THREE.Vector3(0, 20, -10);
         this._target_lookat = new THREE.Vector3(0, 16, 10);
         this.initCamera();
-        this._zoom_level = default_zoom;
+        this._zoom_level = config.default_zoom;
         this._target_offset.z = -10 * this._zoom_level;
-        this._zoom_height = default_zoom_height;
+        this._zoom_height = config.default_zoom_height;
         this._lookat_point = 0;
         this._additional_zoom_height = 0;
         this._mouse_down = false;
@@ -61,21 +56,27 @@ export default class Camera {
             lookat_point += 0.3;
         }
 
-        if (zoom > max_zoom) {
-            zoom = max_zoom;
+        if (zoom > config.max_zoom) {
+            if (!third_person) {
+                zoom = config.max_zoom;
+                zoom_height = config.top_down_height;
+                lookat_point = config.top_down_zoom;
+            }
+
+            zoom = config.max_zoom;
             zoom_height = this._zoom_height;
         }
-        else if (zoom < min_zoom) {
+        else if (zoom < config.min_zoom) {
             zoom = -0.1;
             lookat_point = 0;
         }
 
-        if (zoom > default_zoom) {
+        if (zoom > config.default_zoom) {
             lookat_point = 0;
         }
 
-        if (zoom < default_zoom) {
-            zoom_height = default_zoom_height;
+        if (zoom < config.default_zoom) {
+            zoom_height = config.default_zoom_height;
         }
 
         this._zoom_level = zoom;
@@ -120,7 +121,7 @@ export default class Camera {
         let target_clone = target.clone();
         const mouseRotation = this._CalculateMouseRotation();
 
-        if (this._mouse_down && this._zoom_level > min_zoom) { 
+        if (this._mouse_down && this._zoom_level > config.min_zoom) { 
             target_clone.quaternion.multiply(mouseRotation); 
         }
         else { 
@@ -136,7 +137,7 @@ export default class Camera {
 
         const idealLookat = this._CalculateIdealLookat(target_clone);
 
-        if (this._zoom_level < min_zoom) {
+        if (this._zoom_level < config.min_zoom) {
             this.instance.position.copy(idealOffset);
             this.instance.lookAt(idealLookat);
         } else {
