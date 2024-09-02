@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import Camera from './camera.js';
 import CharacterController from './character_controls.js';
+import State from './state.js';
+
+const state_instance = State.instance;
 
 class Animations {
     constructor(a) {
@@ -12,13 +15,6 @@ class Animations {
         return this._animations;
     }
 }
-
-const walk_to_idle = 1.0;
-const walk_to_run = 2.5;
-const run_to_walk = 5.0;
-const move_to_jump = 1.0;
-const idle_jump = 1.0;
-const walk_to_backwards = 1.5;
 
 export default class Character extends CharacterController {
     constructor(scene) {
@@ -31,6 +27,7 @@ export default class Character extends CharacterController {
         this._mixer = null;
         this._mixers = [];
         this.state = "Resting";
+        state_instance.movingState = this.state;
         this.createModel();
         this.camera = new Camera();
     }
@@ -40,7 +37,10 @@ export default class Character extends CharacterController {
         this.camera.instance.updateProjectionMatrix();
     }
 
-    setState = (state) => { this.state = state; }
+    setState = (state) => { 
+        this.state = state; 
+        state_instance.movingState = this.state;
+    }
 
     loadAnimation = (name, animation) => {
         console.log(`Loading animation ${name}`);
@@ -54,6 +54,7 @@ export default class Character extends CharacterController {
         const action = this._mixer.clipAction(animation);
         action.enabled = true;
         action.setEffectiveWeight(0.5);
+        action.play();
         this._animations = { ...this._animations, [name]: { animation, action } };
     }
 
@@ -79,74 +80,10 @@ export default class Character extends CharacterController {
         });
     }
 
-    crossFade = (start, end, duration) => {
-        if (end) {
-            end.enabled = true;
-            end.setEffectiveWeight(1);
-            end.setEffectiveTimeScale(1);
-            end.time = 0;
-
-            start.crossFadeTo(end, duration, true);
-        }
-    }
-    
-    prepareCrossFade = (start, end, duration) => {
-        if (this.set_state === 'Resting' || !start || !end) {
-            this.crossFade(start, end, duration);
-        } else {
-            this.syncCrossfade(start, end, duration);
-        }
-
-        if (end) {
-            this.setState(end);
-        } else {
-            this.setState(start);
-        }
-    }
-
-    syncCrossfade = (start, end, duration) => {
-        this._mixer.addEventListener('loop', onLoopFinished);
-
-        function onLoopFinished(e) {
-            if (e.action === start) {
-                console.log(`Crossfade finished ${JSON.stringify(start)}`);
-                this._mixer.removeEventListener('loop', onLoopFinished);
-                this.crossFade(start, end, duration);
-            }
-        }
-    }
-
-    updateAnimation = (elapsed) => {
-        if (this.state === "")
-            { return; }
-
-        let animation = this._animations[this.state];
-
-        if (animation && this.state !== this.set_state) {
-            let prev_animation = this._animations[this.set_state];
-
-            if (prev_animation) {
-                this.syncCrossfade(animation.action, prev_animation.action, 0.35);
-            } else {
-                animation.action.enabled = true;
-                animation.action.setEffectiveWeight(1);
-                animation.action.setEffectiveTimeScale(1);
-                animation.action.play();
-            }
-
-            this.set_state = this.state;
-        }
-
-        this._mixer.update(elapsed);
-    }
-
     update = (delta) => {
         if (!this._target) { return; }
 
-        let elapsed = delta * 5;
-
         super.update(delta);
         this.camera.update(this._target, delta);
-        this.updateAnimation(elapsed);
     }
 }

@@ -19,8 +19,7 @@ export default class World {
         this.initAmbientLight();
         this.initSkyBox();
         this.map = new Map(this._scene);
-        this.map_listener = new MapInterface();
-        this.initObjects();
+        this.map_listener = new MapInterface(this._scene);
     }
 
     get camera() {
@@ -67,36 +66,12 @@ export default class World {
         this._scene.add(light);
     }
 
-    initObjects = () => {
-        // This is just a placeholder to show that we have something in the scene
-        const geometry = new THREE.BoxGeometry(5, 5, 5);
-        const material = new THREE.MeshBasicMaterial({ color: 0x36ada9 });
-        
-        this._cubes = [];
-
-        for (let i = 0; i < 10; i++) {
-            let _cube = new THREE.Mesh(geometry, material);
-            const rand_x = Math.random() * 100 - 50;
-            const rand_z = Math.random() * 100 - 50;
-            _cube.position.set(rand_x, 10, rand_z);
-            _cube.castShadow = true;
-            _cube.receiveShadow = true;
-            this._cubes[i] = _cube;
-            this._scene.add(_cube);
-        }
-    }
-
     onWindowResize = () => {
         this._character.refreshCamera();
         this._renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     render = (t) => {
-        for (let i = 0; i < this._cubes.length; i++) {
-            this._cubes[i].rotation.x += 0.01;
-            this._cubes[i].rotation.y += 0.01;
-        }
-
         this.requestFrame();
         this._renderer.render(this._scene, this.camera);
         this.step();
