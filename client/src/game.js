@@ -1,7 +1,8 @@
 import * as THREE from 'three';
-import Engine from './engine.js';
+import Engine from './engine/engine.js';
 import Character from './entities/character/character.js';
-import * as World from './world/index.js';
+import Map from './world/map.js';
+import Skybox from './world/skybox.js';
 
 export default class Game extends Engine {
     constructor() { 
@@ -17,8 +18,8 @@ export default class Game extends Engine {
         window.addEventListener('resize', this.onWindowResize, false);
         
         this.initAmbientLight();
-        this.skybox = new World.Skybox(this.scene);
-        this.map = new World.Map(this.scene);
+        this.skybox = new Skybox(this.scene);
+        this.map = new Map(this.scene);
         this.configureListeners();
     }
 
@@ -39,7 +40,7 @@ export default class Game extends Engine {
     }
 
     onWindowResize = () => {
-        this.refreshCamera();
+        this.camera.refresh();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
@@ -47,9 +48,9 @@ export default class Game extends Engine {
         this.skybox.fade(this.night_cycle, this.day_cycle);
         this.skybox.rotate();
         this.requestFrame();
-        this.renderer.render(this.scene, this.camera);
+        this.renderer.render(this.scene, this.camera.instance);
         this.step();
-        this.map.getIntersection(this.camera, this.scene.children);
+        this.map.getIntersection(this.camera.instance, this.scene.children);
     }
 
     requestFrame = () => { requestAnimationFrame(this.render); }
@@ -57,6 +58,6 @@ export default class Game extends Engine {
     step = () => {
         const elapsed = this.clock.getDelta() * 0.2;
         this.character?.update(elapsed);
-        this.updateSkyCycle(elapsed);
+        this.skybox.update(elapsed);
     }
 }

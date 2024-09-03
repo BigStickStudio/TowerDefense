@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import map_config from "../configs/map_config.js";
+import StateManager from "../engine/state_manager.js";
+
+const state = StateManager.instance;
 
 export default class MapInterface {
     raycaster = undefined;
@@ -32,12 +35,14 @@ export default class MapInterface {
 
     enable = () =>
         {
+            console.log("Enabling Map Cursor");
             document.addEventListener('mousemove', this.trackMouse, false);
             document.addEventListener('mouseout', this.cleanUp, false);
         }
 
     disable = () =>
         {
+            console.log("Disabling Map Cursor");
             document.removeEventListener('mousemove', this.trackMouse, false);
             document.removeEventListener('mouseout', this.cleanUp, false);
             this.cursor = false;
@@ -51,10 +56,11 @@ export default class MapInterface {
             this.raycaster.setFromCamera(this.mouse2D, camera);
             let intersects = this.raycaster.intersectObjects(objects, true);
 
-            if (intersects.length <= 0) { 
-                this.cleanUp();
-                return; 
-            }
+            if (intersects.length <= 0) 
+                { 
+                    this.cleanUp();
+                    return; 
+                }
 
             for (let i = 0; i < intersects.length; i++) 
                 { 
@@ -91,4 +97,18 @@ export default class MapInterface {
             this.cursor = false; 
             this.cursor_target = undefined;
         }
+
+
+    set cursor_target(target) 
+        { 
+            state.set("cursor_target", target);
+            this.redrawUI();
+        }
+
+    get cursor_target() 
+        { 
+            const target = state.get("cursor_target"); 
+            return target ? `${target.x}, ${target.z}` : 'none';
+        }
+
 }

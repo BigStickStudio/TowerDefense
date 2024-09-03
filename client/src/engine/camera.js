@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import config from '../configs/camera_config.js';
+import StateManager from "./state_manager.js";
+
+const state = StateManager.instance;
 
 let mouse = new THREE.Vector2();
 let prev_mouse = new THREE.Vector2();
@@ -20,7 +23,7 @@ export default class Camera {
     constructor(_renderer) {
         this._renderer = _renderer; // TODO: Move this to State and Make State into Singleton Engine
 
-        this.initCamera();
+        this.init();
 
         // Set the camera to the default zoom level
         this._target_offset.z = -10 * this._zoom_level;
@@ -49,13 +52,19 @@ export default class Camera {
         this.camera_enabled = false;
     }
 
-    initCamera = () => {
+    init = () => {
         this.instance = new THREE.PerspectiveCamera(config.fov, window.innerWidth / window.innerHeight, config.near, config.far);
         this.instance.position.set(this._target_offset.x, this._target_offset.y, this._target_offset.z);
         this.instance.lookAt(this._target_lookat);
 
         this.enable();
     }
+
+    refresh = () => 
+        {
+            this.instance.aspect = window.innerWidth / window.innerHeight;
+            this.instance.updateProjectionMatrix();
+        }
 
     mouseDown = (event) => { this._mouse_down = true; }
     mouseUp = (event) => { this._mouse_down = false; }
@@ -87,16 +96,16 @@ export default class Camera {
         // If we are over the max third person zoom
         if (zoom > config.max_zoom) {
             // If we are not in top down mode, switch to top down
-            if (!state_instance.top_down) {
+            if (!this.top_down) {
                 zoom = config.top_down_height;
                 zoom_height = 0;
-                state_instance.camera_mode = "top-down";
+                this.camera_mode = "top-down";
             } else 
             // If we are zooming in under top down mode, switch to third person
             if (!zoom_out && zoom < config.top_down_height) {
                 zoom = config.max_zoom;
                 zoom_height = config.max_zoom_height;
-                state_instance.camera_mode = "third-person";                
+                this.camera_mode = "third-person";                
             } else {
                 // Else we want to scale top down zoom
                 if (zoom_out) {
@@ -116,12 +125,12 @@ export default class Camera {
 
         else if (zoom < config.min_zoom) {
             if (!zoom_out) {
-                state_instance.camera_mode = "first-person";
+                this.camera_mode = "first-person";
                 zoom = -0.6;
             } else {
                 zoom = config.min_zoom;
                 zoom_height = config.default_zoom_height;
-                state_instance.camera_mode = "third-person";
+                this.camera_mode = "third-person";
             }
         }
 
@@ -132,7 +141,7 @@ export default class Camera {
         this._zoom_level = zoom;
         this._zoom_height = zoom_height;
 
-        if (state_instance.top_down) {
+        if (this.top_down) {
             this._target_offset.y = this._zoom_level;
             this._target_offset.z = 0;
         }
@@ -151,7 +160,7 @@ export default class Camera {
         }
 
     _CalculateIdealLookat(target) {
-        if (state_instance.top_down) {
+        if (this.top_down) {
             return new THREE.Vector3(0, 0, 0);
         }
 
@@ -173,7 +182,7 @@ export default class Camera {
         let idealOffset;
         let idealLookat;
         
-        if (state_instance.top_down) {
+        if (this.top_down) {
             target_clone = new THREE.Object3D();
             target_clone.position.set(target.position.x, -1, target.position.z);
             
@@ -227,4 +236,26 @@ export default class Camera {
             }
         }
     }
+
+    set camera_mode(state) {
+        state.set("camera_mode", state);
+        this.redrawUI();
+    }
+
+    get camera_mode() 
+        { return state.get("camera_mode"); }
+
+    get top_down() 
+        { return state.get("camera_mode") === "top-down"; }
+    
+    get first_person() 
+        { return state.get("camera_mode") === "first-person"; }
+
+    set camera_target(target) {
+        state.set("camera_target", target);
+        this.redrawUI();
+    }
+
+    get camera_target() 
+        { return state.get("camera_target"); }
 }

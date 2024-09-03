@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import StateManager from '../engine/state_manager.js';
+
+const state = StateManager.instance;
 
 const vertex_shader = `
     varying vec3 vPosition;
@@ -124,4 +127,54 @@ export default class Skybox {
         let sky_value = this.skybox.material.uniforms.sky_rotation.value;
         this.skybox.material.uniforms.sky_rotation.value = (sky_value + 0.00002) % (2 * Math.PI);
     }
+
+    update = (elapsed) => 
+        {
+            let night_cycle = state.get("night_cycle");
+            let day_cycle = state.get("day_cycle");
+
+            let night_elapsed = elapsed * 30;
+            let day_elapsed = elapsed * 10;
+
+            if (this.morning)
+                { 
+                    // We only want to incriment the night cycle until we reach the peak
+                    if (!this.noon)
+                        {
+                            night_cycle = night_cycle + night_elapsed;
+                            this.noon = (night_cycle >= 255);
+                        }
+
+                    day_cycle = day_cycle + day_elapsed;
+                    this.morning = (day_cycle <= 255);
+                }
+            else 
+                {
+                    day_cycle = day_cycle - day_elapsed;
+
+                    // Noon Ends when the day cycle is a third over
+                    this.noon = this.noon ? (day_cycle >= 170) : true;
+
+                    if (!this.noon)
+                        { night_cycle = night_cycle - night_elapsed; }
+
+                    this.morning = (night_cycle <= 0);
+                }
+
+            state.set("night_cycle", night_cycle);
+            state.set("day_cycle", day_cycle);
+        }
+
+    get night_cycle()
+        { 
+            let sky_cycle = state.get("night_cycle");
+            return (clamp(sky_cycle) / 255).toFixed(3);
+        }
+
+    get day_cycle()
+        { 
+            let sky_cycle = state.get("day_cycle");
+            return (clamp(sky_cycle) / 255).toFixed(3);; 
+        }
+
 }
