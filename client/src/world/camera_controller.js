@@ -1,51 +1,52 @@
 import * as THREE from 'three';
 import config from '../configs/camera_config.js';
-import Engine from '../engine.js';
-
-const state_instance = Engine.instance;
 
 let mouse = new THREE.Vector2();
 let prev_mouse = new THREE.Vector2();
 let d_mouse = new THREE.Vector2();
 
 export default class Camera {
+    camera_enabled = false;
+    _target_offset = new THREE.Vector3(0, 20, -10);
+    _target_lookat = new THREE.Vector3(0, 16, 10);
+    _zoom_level = config.default_zoom;
+    _zoom_height = config.default_zoom_height;
+    _additional_zoom_height = 0;
+    _mouse_down = false;
+    _mouse_rotation = new THREE.Euler(0, 0, 0); 
+    _current_position = new THREE.Vector3();
+    _current_lookat = new THREE.Vector3();
+ 
     constructor(_renderer) {
         this._renderer = _renderer; // TODO: Move this to State and Make State into Singleton Engine
-        this._target_offset = new THREE.Vector3(0, 20, -10);
-        this._target_lookat = new THREE.Vector3(0, 16, 10);
-        this.initCamera();
-        this._zoom_level = config.default_zoom;
-        this._target_offset.z = -10 * this._zoom_level;
-        this._zoom_height = config.default_zoom_height;
-        this._additional_zoom_height = 0;
-        this._mouse_down = false;
-        this._mouse_rotation = new THREE.Euler(0, 0, 0); 
 
-        this._current_position = new THREE.Vector3();
-        this._current_lookat = new THREE.Vector3();
+        this.initCamera();
+
+        // Set the camera to the default zoom level
+        this._target_offset.z = -10 * this._zoom_level;
     }
 
     enable = () => {
         console.log("Enabling Camera");
-        if (state_instance.camera_enabled) { return; }
+        if (this.camera_enabled) { return; }
         
         document.addEventListener('wheel', this.zoom, false);
         document.addEventListener('mousemove', this.moveMouse, false);
         document.addEventListener('mousedown', this.mouseDown, false);
         document.addEventListener('mouseup', this.mouseUp, false);
 
-        state_instance.camera_enabled = true;
+        this.camera_enabled = true;
     }
 
     disable = () => {
         console.log("Disabling Camera");
-        if (!state_instance.camera_enabled) { return; }
+        if (!this.camera_enabled) { return; }
 
         document.removeEventListener('wheel', this.zoom, false);
         document.removeEventListener('mousemove', this.moveMouse, false);
         document.removeEventListener('mousedown', this.mouseDown, false);
         document.removeEventListener('mouseup', this.mouseUp, false);
-        state_instance.camera_enabled = false;
+        this.camera_enabled = false;
     }
 
     initCamera = () => {
@@ -54,10 +55,6 @@ export default class Camera {
         this.instance.lookAt(this._target_lookat);
 
         this.enable();
-
-        // disable camera controls from the state_instance
-        state_instance.disableCamera = this.disable;
-        state_instance.enableCamera = this.enable;
     }
 
     mouseDown = (event) => { this._mouse_down = true; }

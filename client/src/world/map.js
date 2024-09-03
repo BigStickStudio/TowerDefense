@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import template from '../configs/game_modes.js';
 import config from '../configs/map_config.js';
+import MapInterface from './map_controller.js';
 
 const mode = template["pvp"]["battle"]["1v1"];
 let grid_size = config.grid_size;
@@ -11,17 +12,16 @@ const field_size_x = grid_size.x * square_size;
 const field_size_y = grid_size.y * square_size;
 const square_inset = square_size - config.frame_size;
 
-export default class Map {
+export default class Map extends MapInterface {
     grid = [];
-    map_listener = undefined;
 
     constructor(scene) 
         { 
-            this._scene = scene;
-            this.init(scene); 
+            super(scene);
+            this.init(); 
         }
 
-    init = (scene) => {
+    init = () => {
         console.log(mode);
         this.createUnderlay();
         this.createPaths();
@@ -90,6 +90,6 @@ export default class Map {
             underpinning.rotation.x = Math.PI / 2;
             underpinning.position.set(0, -0.5, 0);
             underpinning.name = "underpinning";
-            this._scene.add(underpinning);
+            this.scene.add(underpinning);
         }
 }

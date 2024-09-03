@@ -1,22 +1,22 @@
 import * as THREE from 'three';
 import map_config from "../configs/map_config.js";
-import Engine from '../engine.js';
-
-const state_instance = Engine.instance;
 
 export default class MapInterface {
     raycaster = undefined;
     mouse2D = undefined;
     highlighter = undefined;
     cursor = false;
+    cursor_target = undefined;
     scene = undefined;
 
     constructor (scene) 
-        { this.init(scene); }
-
-    init = (scene) => 
-        {
+        { 
             this.scene = scene;
+            this.init(); 
+        }
+
+    init = () => 
+        {
             this.raycaster = new THREE.Raycaster();
             this.mouse2D = new THREE.Vector2();
             
@@ -26,10 +26,6 @@ export default class MapInterface {
             plane.rotation.x = Math.PI / 2;
             plane.name = "cursor";
             this.highlighter = plane;
-
-            // Bind the functions to the state instance for UI control
-            state_instance.enableMapCursor = this.enable;
-            state_instance.disableMapCursor = this.disable;
 
             this.enable();
         }
@@ -72,7 +68,7 @@ export default class MapInterface {
                             if (this.highlighter.position.equals(object_position)) { return; }
 
                             this.highlighter.position.copy(object_position);
-                            state_instance.cursor_target = object_position;
+                            this.cursor_target = object_position;
                         }
                 }
 
@@ -93,6 +89,6 @@ export default class MapInterface {
             this.mouse2D = new THREE.Vector2();
             this.scene.remove(this.highlighter);
             this.cursor = false; 
-            state_instance.cursor_target = undefined;
+            this.cursor_target = undefined;
         }
 }

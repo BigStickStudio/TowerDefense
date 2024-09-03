@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import Engine from '../../engine.js';
-import Camera from '../../world/camera_controller.js';
 import CharacterController from './character_controller.js';
 
 const state_instance = Engine.instance;
@@ -18,12 +17,6 @@ export default class Character extends CharacterController {
         this._mixers = [];
         this.state = "Resting";
         this.createModel();
-        this.camera = new Camera(renderer);
-    }
-
-    refreshCamera = () => {
-        this.camera.instance.aspect = window.innerWidth / window.innerHeight;
-        this.camera.instance.updateProjectionMatrix();
     }
 
     setState = (state) => { 
@@ -72,6 +65,5 @@ export default class Character extends CharacterController {
         if (!this._target) { return; }
 
         super.update(delta);
-        this.camera.update(this._target, delta);
     }
 }

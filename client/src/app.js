@@ -1,8 +1,8 @@
-import Engine from './engine.js';
+import Game from './game.js';
 
 let instance = null;
 
 window.addEventListener('DOMContentLoaded', () => {
-    instance = Engine.instance;
+    instance = new Game();
     // TODO: Add Server Connection + Session Management
 });

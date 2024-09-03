@@ -1,26 +1,25 @@
 import * as THREE from 'three';
+import Engine from './engine.js';
 import Character from './entities/character/character.js';
 import * as World from './world/index.js';
 
-const state_instance = World.Engine.instance;
-
-export default class Game {
-    constructor() { this.init(); }
+export default class Game extends Engine {
+    constructor() { 
+        super();
+        this.init(); 
+        this.requestFrame();
+    }
 
     init = () => {
-        this._mixers = []; // Move to EntityManager
-        this._character = new Character(this._scene, this._renderer);
+        this.mixers = []; // Move to EntityManager
+        this.character = new Character(this.scene, this.renderer); // Create as Entity
 
         window.addEventListener('resize', this.onWindowResize, false);
         
         this.initAmbientLight();
-        this.skybox = new World.Skybox(this._scene);
-        this.map = new World.Map(this._scene);
-        this.map_listener = new World.MapInterface(this._scene);
-    }
-
-    get camera() {
-        return this._character.camera.instance;
+        this.skybox = new World.Skybox(this.scene);
+        this.map = new World.Map(this.scene);
+        this.configureListeners();
     }
 
     initAmbientLight = () => {
@@ -35,29 +34,29 @@ export default class Game {
         light.shadow.mapSize.height = 2048;
         light.shadow.camera.far = 500;
         light.shadow.bias = -0.0001;
-        this._sun = light;
-        this._scene.add(light);
+        this.sun = light;
+        this.scene.add(light);
     }
 
     onWindowResize = () => {
-        this._character.refreshCamera();
-        this._renderer.setSize(window.innerWidth, window.innerHeight);
+        this.refreshCamera();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     render = (t) => {
-        this.skybox.fade(state_instance.night_cycle, state_instance.day_cycle);
+        this.skybox.fade(this.night_cycle, this.day_cycle);
         this.skybox.rotate();
         this.requestFrame();
-        this._renderer.render(this._scene, this.camera);
+        this.renderer.render(this.scene, this.camera);
         this.step();
-        this.map_listener.getIntersection(this.camera, this._scene.children);
+        this.map.getIntersection(this.camera, this.scene.children);
     }
 
     requestFrame = () => { requestAnimationFrame(this.render); }
 
     step = () => {
         const elapsed = this.clock.getDelta() * 0.2;
-        this._character?.update(elapsed);
-        state_instance.updateSkyCycle(elapsed);
+        this.character?.update(elapsed);
+        this.updateSkyCycle(elapsed);
     }
 }

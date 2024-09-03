@@ -1,5 +1,6 @@
-import Game from './game.js';
+import * as THREE from 'three';
 import UI from './ui.js';
+import Camera from './world/camera_controller.js';
 
 let local_state = {}
 
@@ -11,21 +12,20 @@ export default class Engine {
     
     // TODO: Maybe we move these out somewhere else
     camera_enabled = false;
-    enableCamera = undefined;
-    disableCamera = undefined;
-    enableMapCursor = undefined;
-    disableMapCursor = undefined;
+    enableCamera = () => { console.error("[Engine]::error : Camera fn() not defined."); };
+    disableCamera = () => { console.error("[Engine]::error : Camera fn() not defined."); };
+    enableMapCursor = () => { console.error("[Engine]::error : Map Cursor fn() not defined."); };
+    disableMapCursor = () => { console.error("[Engine]::error : Map Cursor fn() not defined."); };
     morning = true; // Morning determines if we've reached the PEAK of the day cycle
     noon = false; // Noon determines if we are in the Day cycle
     
-    game = null;
 
     constructor() {
         this.clock = new THREE.Clock();
         this.scene = new THREE.Scene();
         this.initRenderer();
-        this.game = new Game();
         this.ui = new UI(this.enableListeners, this.disableListeners);
+        this.camera = new Camera(this.renderer);
 
         local_state = {
             "night_cycle": 0, // 255 is full night, 0 is full day
@@ -37,28 +37,33 @@ export default class Engine {
             "moving_state": "Resting",
             "camera_mode": "third-person", // first-person, third-person, top-down
         }
-
-        game.requestFrame();
     }
 
     initRenderer = () => {
-        this._renderer = new THREE.WebGLRenderer({ antialias: true });
-        this._renderer.setClearColor(0x000000);
-        this._renderer.gammaFactor = 2.2;
-        this._renderer.shadowMap.enabled = true;
-        this._renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this._renderer.setPixelRatio(window.devicePixelRatio);
-        this._renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setClearColor(0x000000);
+        this.renderer.gammaFactor = 2.2;
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
 
         let canvas = document.getElementById('canvas');
-        canvas.appendChild(this._renderer.domElement);
+        canvas.appendChild(this.renderer.domElement);
     }
 
-    static get instance() {
-        if (!Engine.this_instance) 
-            { Engine.this_instance = new Engine(); }
+    // This function has to be called at the end of the Game Initialization
+    // as the Camera is a part of the Engine, but the Map is part of the Game
+    configureListeners = () => {
+        this.enableCamera = this.camera.enable;
+        this.disableCamera = this.camera.disable;
+        this.enableMapCursor = this.map.enable;
+        this.disableMapCursor = this.map.disable;
+    }
 
-        return Engine.this_instance;
+    refreshCamera = () => {
+        this.camera.instance.aspect = window.innerWidth / window.innerHeight;
+        this.camera.instance.updateProjectionMatrix();
     }
 
     enableListeners = () => {
