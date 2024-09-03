@@ -1,5 +1,5 @@
-const grid_width = 30;
-const grid_height = 50;
+const grid_width = 40;
+const grid_height = 40;
 const square_size = 15;
 const frame_size = 0.5;
 
@@ -10,7 +10,7 @@ const config = {
     },
     square_size: square_size,
     frame_size: frame_size,
-    map_offset: (square_size / 4).toFixed(1),
+    map_offset: (square_size / 2),
 }
 
 export default config;

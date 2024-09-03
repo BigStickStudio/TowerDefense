@@ -2,6 +2,10 @@ import * as THREE from 'three';
 import Character from './character.js';
 import Map from './map.js';
 import MapInterface from './map_controller.js';
+import Skybox from './skybox.js';
+import State from './state.js';
+
+const state_instance = State.instance;
 
 export default class World {
     constructor() { this.init(); }
@@ -17,7 +21,7 @@ export default class World {
         window.addEventListener('resize', this.onWindowResize, false);
         
         this.initAmbientLight();
-        this.initSkyBox();
+        this.skybox = new Skybox(this._scene);
         this.map = new Map(this._scene);
         this.map_listener = new MapInterface(this._scene);
     }
@@ -34,19 +38,6 @@ export default class World {
         this._renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this._renderer.setPixelRatio(window.devicePixelRatio);
         this._renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    initSkyBox = () => {
-        const loader = new THREE.CubeTextureLoader();
-        const texture = loader.load([
-            '../assets/SkyCenterRight.png',
-            '../assets/SkyLeft.png',
-            '../assets/SkyTop.png',
-            '../assets/SkyBottom.png',
-            '../assets/SkyCenter.png',
-            '../assets/SkyRight.png',
-        ]);
-        this._scene.background = texture;
     }
 
     initAmbientLight = () => {
@@ -72,6 +63,8 @@ export default class World {
     }
 
     render = (t) => {
+        this.skybox.fade(state_instance.night_cycle, state_instance.day_cycle);
+        this.skybox.rotate();
         this.requestFrame();
         this._renderer.render(this._scene, this.camera);
         this.step();
@@ -83,5 +76,6 @@ export default class World {
     step = () => {
         const elapsed = this.clock.getDelta() * 0.2;
         this._character?.update(elapsed);
+        state_instance.updateSkyCycle(elapsed);
     }
 }
