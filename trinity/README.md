@@ -3,10 +3,10 @@ Our Client uses Python + ThreeJS
 Our Server uses Golang
 
 ## TODO:
+ [X] Ability to Toggle between 3rd Person and Top Down 
+    [X] Scrolling Out Zooms to Top Down
  - Ability to Toggle between Free Form Camera and Player Mounted Camera 
     - Double Click Follows Player
- - Ability to Toggle between 3rd Person and Top Down 
-    - Scrolling Out Zooms to Top Down
  - Static Map Generation
     - Create Walls and Top-Level Terrain
     - Interpolate between heightmap for coloring
@@ -19,3 +19,5 @@ Our Server uses Golang
  - Select Spawnable (Floor)
  - Create Spawnable Zones
  - NPC Spawn Areas
+ - Add MiniMap
+   - Add Fast Navigation when Free
