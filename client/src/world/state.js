@@ -5,7 +5,9 @@ const clamp = (v) => { return v < 0 ? 0 : v > 255 ? 255 : v; }
 
 export default class State {
     static this_instance = null;
-    redrawUI = undefined; // TODO: Rename this RedrawUI  
+    redrawUI = undefined;
+    disableCamera = undefined;
+    enableCamera = undefined;
     morning = true; // Morning determines if we've reached the PEAK of the day cycle
     noon = false; // Noon determines if we are in the Day cycle
     

@@ -7,7 +7,7 @@ import CharacterController from './character_controller.js';
 const state_instance = State.instance;
 
 export default class Character extends CharacterController {
-    constructor(scene) {
+    constructor(scene, renderer) {
         super(self);
         this._scene = scene;
         this._animations = {};
@@ -19,7 +19,7 @@ export default class Character extends CharacterController {
         this.state = "Resting";
         state_instance.movingState = this.state;
         this.createModel();
-        this.camera = new Camera();
+        this.camera = new Camera(renderer);
     }
 
     refreshCamera = () => {

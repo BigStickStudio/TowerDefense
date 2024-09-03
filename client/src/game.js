@@ -12,9 +12,8 @@ export default class Game {
         this.initRenderer();
         this.clock = new THREE.Clock();
         this._scene = new THREE.Scene();
-        this._character = new Character(this._scene);
+        this._character = new Character(this._scene, this._renderer);
 
-        document.body.appendChild(this._renderer.domElement);
         window.addEventListener('resize', this.onWindowResize, false);
         
         this.initAmbientLight();
@@ -35,15 +34,17 @@ export default class Game {
         this._renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this._renderer.setPixelRatio(window.devicePixelRatio);
         this._renderer.setSize(window.innerWidth, window.innerHeight);
+
+        let canvas = document.getElementById('canvas');
+        canvas.appendChild(this._renderer.domElement);
     }
 
     initAmbientLight = () => {
-        this._scene.add(new THREE.AmbientLight(0x404040));
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(1, 500, 1).normalize();
+        const light = new THREE.DirectionalLight(0xffffff, 1); // TODO: Add Brightness
+        light.position.set(1, 500, 1).normalize(); // TODO: Add Orbit
         light.castShadow = true;
         light.shadow.camera.top = 180;
-        light.shadow.camera.bottom = -100;
+        light.shadow.camera.bottom = -360;
         light.shadow.camera.left = -120;
         light.shadow.camera.right = 120;
         light.shadow.mapSize.width = 2048;

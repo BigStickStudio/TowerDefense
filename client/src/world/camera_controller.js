@@ -1,5 +1,5 @@
-
 import * as THREE from 'three';
+import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import config from '../configs/camera_config.js';
 import State from './state.js';
 
@@ -10,7 +10,8 @@ let prev_mouse = new THREE.Vector2();
 let d_mouse = new THREE.Vector2();
 
 export default class Camera {
-    constructor() {
+    constructor(_renderer) {
+        this._renderer = _renderer; // TODO: Move this to State and Make State into Singleton Engine
         this._target_offset = new THREE.Vector3(0, 20, -10);
         this._target_lookat = new THREE.Vector3(0, 16, 10);
         this.initCamera();
@@ -24,10 +25,51 @@ export default class Camera {
         this._current_position = new THREE.Vector3();
         this._current_lookat = new THREE.Vector3();
 
+
+    }
+
+    initControls = () => {
+        this._controls = new TrackballControls(this.instance, this._renderer.domElement);
+    }
+
+    enable = () => {
+        return;
+        if (state_instance.camera_enabled) { return; }
+        
+        console.log("Enabling camera controls");
         document.addEventListener('wheel', this.zoom, false);
         document.addEventListener('mousemove', this.moveMouse, false);
         document.addEventListener('mousedown', this.mouseDown, false);
         document.addEventListener('mouseup', this.mouseUp, false);
+
+        this.initControls();
+
+        state_instance.camera_enabled = true;
+    }
+
+    disable = () => {
+        console.log("Disabling camera controls");
+        if (!state_instance.camera_enabled) { return; }
+
+        this._controls.dispose();
+
+        document.removeEventListener('wheel', this.zoom, false);
+        document.removeEventListener('mousemove', this.moveMouse, false);
+        document.removeEventListener('mousedown', this.mouseDown, false);
+        document.removeEventListener('mouseup', this.mouseUp, false);
+        state_instance.camera_enabled = false;
+    }
+
+    initCamera = () => {
+        this.instance = new THREE.PerspectiveCamera(config.fov, window.innerWidth / window.innerHeight, config.near, config.far);
+        this.instance.position.set(this._target_offset.x, this._target_offset.y, this._target_offset.z);
+        this.instance.lookAt(this._target_lookat);
+
+        this.enable();
+
+        // disable camera controls from the state_instance
+        state_instance.disableCamera = this.disable;
+        state_instance.enableCamera = this.enable;
     }
 
     mouseDown = (event) => { this._mouse_down = true; }
@@ -67,7 +109,6 @@ export default class Camera {
             } else 
             // If we are zooming in under top down mode, switch to third person
             if (!zoom_out && zoom < config.top_down_height) {
-                console.log("Max zoom reached");
                 zoom = config.max_zoom;
                 zoom_height = config.max_zoom_height;
                 state_instance.camera_mode = "third-person";                
@@ -116,13 +157,6 @@ export default class Camera {
             this._target_lookat.z += Math.abs(this._target_offset.z);
         }
     }
-
-    initCamera = () => {
-        this.instance = new THREE.PerspectiveCamera(config.fov, window.innerWidth / window.innerHeight, config.near, config.far);
-        this.instance.position.set(this._target_offset.x, this._target_offset.y, this._target_offset.z);
-        this.instance.lookAt(this._target_lookat);
-    }
-
 
     _CalculateIdealOffset(target) {
         const idealOffset = this._target_offset.clone();
