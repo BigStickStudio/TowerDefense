@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import Camera from '../world/camera_controller.js';
-import State from '../world/state.js';
+import Engine from '../../engine.js';
+import Camera from '../../world/camera_controller.js';
 import CharacterController from './character_controller.js';
 
-const state_instance = State.instance;
+const state_instance = Engine.instance;
 
 export default class Character extends CharacterController {
     constructor(scene, renderer) {
@@ -17,7 +17,6 @@ export default class Character extends CharacterController {
         this._mixer = null;
         this._mixers = [];
         this.state = "Resting";
-        state_instance.movingState = this.state;
         this.createModel();
         this.camera = new Camera(renderer);
     }
@@ -29,7 +28,6 @@ export default class Character extends CharacterController {
 
     setState = (state) => { 
         this.state = state; 
-        state_instance.moving_state = this.state;
     }
 
     loadAnimation = (name, animation) => {
@@ -58,7 +56,6 @@ export default class Character extends CharacterController {
             model.traverse(child => { child.castShadow = true; });
     
             this._target = model;
-            state_instance.camera_target = this._target;
             this._scene.add(this._target);
             this._mixer = new THREE.AnimationMixer(model);
 

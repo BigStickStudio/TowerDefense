@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import map_config from "../configs/map_config.js";
-import State from './state.js';
+import Engine from '../engine.js';
 
-const state_instance = State.instance;
+const state_instance = Engine.instance;
 
 export default class MapInterface {
     raycaster = undefined;
@@ -27,8 +27,24 @@ export default class MapInterface {
             plane.name = "cursor";
             this.highlighter = plane;
 
+            // Bind the functions to the state instance for UI control
+            state_instance.enableMapCursor = this.enable;
+            state_instance.disableMapCursor = this.disable;
+
+            this.enable();
+        }
+
+    enable = () =>
+        {
             document.addEventListener('mousemove', this.trackMouse, false);
             document.addEventListener('mouseout', this.cleanUp, false);
+        }
+
+    disable = () =>
+        {
+            document.removeEventListener('mousemove', this.trackMouse, false);
+            document.removeEventListener('mouseout', this.cleanUp, false);
+            this.cursor = false;
         }
 
     getIntersection = (camera, objects) => 

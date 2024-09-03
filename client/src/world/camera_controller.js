@@ -1,9 +1,8 @@
 import * as THREE from 'three';
-import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import config from '../configs/camera_config.js';
-import State from './state.js';
+import Engine from '../engine.js';
 
-const state_instance = State.instance;
+const state_instance = Engine.instance;
 
 let mouse = new THREE.Vector2();
 let prev_mouse = new THREE.Vector2();
@@ -24,34 +23,23 @@ export default class Camera {
 
         this._current_position = new THREE.Vector3();
         this._current_lookat = new THREE.Vector3();
-
-
-    }
-
-    initControls = () => {
-        this._controls = new TrackballControls(this.instance, this._renderer.domElement);
     }
 
     enable = () => {
-        return;
+        console.log("Enabling Camera");
         if (state_instance.camera_enabled) { return; }
         
-        console.log("Enabling camera controls");
         document.addEventListener('wheel', this.zoom, false);
         document.addEventListener('mousemove', this.moveMouse, false);
         document.addEventListener('mousedown', this.mouseDown, false);
         document.addEventListener('mouseup', this.mouseUp, false);
 
-        this.initControls();
-
         state_instance.camera_enabled = true;
     }
 
     disable = () => {
-        console.log("Disabling camera controls");
+        console.log("Disabling Camera");
         if (!state_instance.camera_enabled) { return; }
-
-        this._controls.dispose();
 
         document.removeEventListener('wheel', this.zoom, false);
         document.removeEventListener('mousemove', this.moveMouse, false);

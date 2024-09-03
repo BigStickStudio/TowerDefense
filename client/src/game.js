@@ -1,17 +1,14 @@
 import * as THREE from 'three';
-import Character from './character/character.js';
+import Character from './entities/character/character.js';
 import * as World from './world/index.js';
 
-const state_instance = World.State.instance;
+const state_instance = World.Engine.instance;
 
 export default class Game {
     constructor() { this.init(); }
 
     init = () => {
-        this._mixers = [];
-        this.initRenderer();
-        this.clock = new THREE.Clock();
-        this._scene = new THREE.Scene();
+        this._mixers = []; // Move to EntityManager
         this._character = new Character(this._scene, this._renderer);
 
         window.addEventListener('resize', this.onWindowResize, false);
@@ -24,19 +21,6 @@ export default class Game {
 
     get camera() {
         return this._character.camera.instance;
-    }
-
-    initRenderer = () => {
-        this._renderer = new THREE.WebGLRenderer({ antialias: true });
-        this._renderer.setClearColor(0x000000);
-        this._renderer.gammaFactor = 2.2;
-        this._renderer.shadowMap.enabled = true;
-        this._renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this._renderer.setPixelRatio(window.devicePixelRatio);
-        this._renderer.setSize(window.innerWidth, window.innerHeight);
-
-        let canvas = document.getElementById('canvas');
-        canvas.appendChild(this._renderer.domElement);
     }
 
     initAmbientLight = () => {
