@@ -1,3 +1,5 @@
+import camera_config from "../configs/camera_config.js";
+
 let instance = null;
 
 // TODO: Move these to a utility file
@@ -19,7 +21,7 @@ export default class StateManager {
             "selected_target": 'none',
             "cursor_target": 'none',
             "moving_state": "Resting",
-            "camera_mode": "third-person", // first-person, third-person, top-down
+            "camera_mode": camera_config.default_camera_mode, // first-person, third-person, top-down
         }; }
 
     static get instance()

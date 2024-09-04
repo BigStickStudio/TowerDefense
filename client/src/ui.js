@@ -2,7 +2,7 @@ const blocked_keys = ["night_cycle", "day_cycle"];
 
 export default class UI {
     ui = document.getElementById("ui")
-    expanded = true;
+    expanded = false;
     local_state = {};
 
     constructor(enableListeners, disableListeners) {
@@ -21,7 +21,7 @@ export default class UI {
 
             ui_components.push(`
                 <div class="row my-2 px-4 mr-4">
-                    <div class="col-6 text-uppercase">
+                    <div class="col-6 text-capitalize">
                         <span><b>${key}:</b></span>
                     </div>
                     <div class="col-6 border-bottom border-primary text-center">

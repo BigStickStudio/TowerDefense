@@ -149,13 +149,13 @@ export default class Camera {
                     else 
                         {
                             zoom = config.min_zoom;
-                            zoom_height = config.default_zoom_height;
+                            zoom_height = config.standard_zoom_height;
                             state.camera_mode = "third-person";
                         }
                 }
 
-            if (zoom < config.default_zoom) 
-                { zoom_height = config.default_zoom_height; }
+            if (zoom < config.standard_zoom) 
+                { zoom_height = config.standard_zoom_height; }
 
             this._zoom_level = zoom;
             this._zoom_height = zoom_height;
