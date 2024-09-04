@@ -79,27 +79,24 @@ export default class CharacterController {
             let acc = this._acceleration.clone();
             let max_vel = this._max_velocity;
 
-            if (move.run) {
-                acc.z *= 1.5;
-                acc.x /= velocity.z > 0 ? velocity.z * 2 : 1;
-                max_vel *= 1.5;
-            }
+            if (move.run) 
+                {
+                    acc.z *= 1.5;
+                    acc.x /= velocity.z > 0 ? velocity.z * 2 : 1;
+                    max_vel *= 1.5;
+                }
 
-            if (!move.run) {
-                dec.z *= 2;
-            }
+            if (!move.run) 
+                { dec.z *= 2; }
 
             // Acceleration
-            if (move.forward) {
-                velocity.z = THREE.MathUtils.clamp(velocity.z + acc.z * delta, 0, max_vel);
-            }
-            if (move.backward) {
-                velocity.z = THREE.MathUtils.clamp(velocity.z - acc.z * delta, -max_vel, 0);
-            }
+            if (move.forward) 
+                { velocity.z = THREE.MathUtils.clamp(velocity.z + acc.z * delta, 0, max_vel); }
+            if (move.backward) 
+                { velocity.z = THREE.MathUtils.clamp(velocity.z - acc.z * delta, -max_vel, 0); }
 
-            if (move.jump) {
-                velocity.y = THREE.MathUtils.clamp(velocity.y + acc.y * delta, -max_vel, max_vel);
-            }
+            if (move.jump) 
+                { velocity.y = THREE.MathUtils.clamp(velocity.y + acc.y * delta, -max_vel, max_vel); }
 
             if (!this.target) 
                 { return; }
@@ -108,48 +105,53 @@ export default class CharacterController {
             const _quat = new THREE.Quaternion();
             const _axis = new THREE.Vector3(0, 1, 0);
 
-            if (control.quaternion === undefined) {
-                control.quaternion = new THREE.Quaternion();
-            }
+            if (control.quaternion === undefined) 
+                { control.quaternion = new THREE.Quaternion(); }
 
             const _rotation = control.quaternion.clone();
 
-            if (move.left) {
-                _quat.setFromAxisAngle(_axis, 0.05);
-                _rotation.multiply(_quat);
-            }
+            if (move.left) 
+                {
+                    _quat.setFromAxisAngle(_axis, 0.05);
+                    _rotation.multiply(_quat);
+                }
 
-            if (move.right) {
-                _quat.setFromAxisAngle(_axis, -0.05);
-                _rotation.multiply(_quat);
-            }
+            if (move.right) 
+                {
+                    _quat.setFromAxisAngle(_axis, -0.05);
+                    _rotation.multiply(_quat);
+                }
 
             control.quaternion.copy(_rotation);
 
             // Deceleration
-            if (!move.forward && !move.backward) {
-                if (velocity.z > 0) {
-                    const damping = Math.min(velocity.z, -dec.z * delta);
-                    velocity.z -= damping;
-                } else {
-                    const damping = Math.max(velocity.z, dec.z * delta);
-                    velocity.z -= damping;
+            if (!move.forward && !move.backward) 
+                {
+                    if (velocity.z > 0) 
+                        {
+                            const damping = Math.min(velocity.z, -dec.z * delta);
+                            velocity.z -= damping;
+                        } 
+                    else 
+                        {
+                            const damping = Math.max(velocity.z, dec.z * delta);
+                            velocity.z -= damping;
+                        }
                 }
-            }
 
-            if (!move.left && !move.right) {
-                if (velocity.x > 0) {
-                    velocity.x -= Math.min(velocity.x, -dec.x * delta);
-                } else {
-                    velocity.x -= Math.max(velocity.x, dec.x * delta);
+            if (!move.left && !move.right) 
+                {
+                    if (velocity.x > 0) 
+                        { velocity.x -= Math.min(velocity.x, -dec.x * delta); } 
+                    else 
+                        { velocity.x -= Math.max(velocity.x, dec.x * delta); }
                 }
-            }
 
-            if (!move.jump) {
-                if (velocity.y > -10) {
-                    velocity.y -= Math.min(velocity.y, -dec.y * delta);
-                } 
-            }
+            if (!move.jump) 
+                {
+                    if (velocity.y > -10) 
+                        { velocity.y -= Math.min(velocity.y, -dec.y * delta); } 
+                }
 
             const forward = new THREE.Vector3(0, 0, 1);
             forward.applyQuaternion(control.quaternion);
@@ -162,9 +164,8 @@ export default class CharacterController {
             sideways.multiplyScalar(velocity.x);
             forward.multiplyScalar(velocity.z);
 
-            if (control?.position === undefined) {
-                control.position = new THREE.Vector3();
-            }
+            if (control?.position === undefined) 
+                { control.position = new THREE.Vector3(); }
 
             control.position.add(forward);
             control.position.add(sideways);
@@ -175,29 +176,23 @@ export default class CharacterController {
 
             let total_velocity = Math.sqrt(velocity.x ** 2 + velocity.z ** 2);
 
-            if (!move.forward && !move.backward && total_velocity < 0.1) {
-                if (this._state !== 'Resting') {
-                    this.setState('Resting');
-                }
-            } else if (velocity.y > 0) {
-                if (move.run) {
-                    this.setState('Jump');
-                } else {
-                    this.setState('Jump');
-                }
-            } else if (move.backward) {
-                this.setState('Reverse');
-            } else if (move.run) {
-                this.setState('Running');
-            } else {
-                this.setState('Walking');
-            }
-        }
-
-    set moving_state(state) 
-        {
-            console.log("Setting Moving State to: ", state);
-            state.set("moving_state", state);
-            state.redrawUI();
+            if (!move.forward && !move.backward && total_velocity < 0.1) 
+                {
+                    if (this.state !== 'Resting') 
+                        { this.setState = 'Resting'; }
+                } 
+            else if (velocity.y > 0) 
+                {
+                    if (move.run) 
+                        { this.setState = 'Jump'; } 
+                    else 
+                        { this.setState = 'Jump'; }
+                } 
+            else if (move.backward) 
+                { this.setState = 'Reverse'; } 
+            else if (move.run) 
+                { this.setState = 'Running'; } 
+            else 
+                { this.setState = 'Walking'; }
         }
 }

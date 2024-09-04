@@ -2,8 +2,6 @@ import * as THREE from 'three';
 import StateManager from '../engine/state_manager.js';
 
 const state = StateManager.instance;
-const unwrap = (t) => { return t ? t : 'none'; }
-const clamp = (v) => { return v < 0 ? 0 : v > 255 ? 255 : v; }
 
 const vertex_shader = `
     varying vec3 vPosition;
@@ -107,8 +105,11 @@ export default class Skybox {
         scene.add(this.skybox);
     }
 
-    fade = (night_value, day_value) =>
+    fade = () =>
         { 
+            let night_value = state.normalized_night_cycle;
+            let day_value = state.normalized_day_cycle;
+
             if (this.prev_night_value !== night_value)
                 {
                     this.prev_night_value = night_value;
@@ -134,9 +135,8 @@ export default class Skybox {
 
     update = (elapsed) => 
         {
-            let night_cycle = state.get("night_cycle");
-            let day_cycle = state.get("day_cycle");
-
+            let night_cycle = state.night_cycle;
+            let day_cycle = state.day_cycle;
             let night_elapsed = elapsed * 30;
             let day_elapsed = elapsed * 10;
 
@@ -165,20 +165,7 @@ export default class Skybox {
                     this.morning = (night_cycle <= 0);
                 }
 
-            state.set("night_cycle", night_cycle);
-            state.set("day_cycle", day_cycle);
+            state.night_cycle = night_cycle;
+            state.day_cycle = day_cycle;
         }
-
-    get night_cycle()
-        { 
-            let sky_cycle = state.get("night_cycle");
-            return (clamp(sky_cycle) / 255).toFixed(3);
-        }
-
-    get day_cycle()
-        { 
-            let sky_cycle = state.get("day_cycle");
-            return (clamp(sky_cycle) / 255).toFixed(3);; 
-        }
-
 }

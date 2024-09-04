@@ -1,8 +1,11 @@
 import * as THREE from 'three';
 import Engine from './engine/engine.js';
+import StateManager from './engine/state_manager.js';
 import Character from './entities/character/character.js';
 import Map from './world/map.js';
 import Skybox from './world/skybox.js';
+
+const state = StateManager.instance;
 
 export default class Game extends Engine {
     constructor() { 
@@ -45,7 +48,7 @@ export default class Game extends Engine {
     }
 
     render = (t) => {
-        this.skybox.fade(this.skybox.night_cycle, this.skybox.day_cycle);
+        this.skybox.fade(state.night_cycle, state.day_cycle);
         this.skybox.rotate();
         this.requestFrame();
         this.renderer.render(this.scene, this.camera.instance);

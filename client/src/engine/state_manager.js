@@ -1,13 +1,26 @@
 let instance = null;
 
+// TODO: Move these to a utility file
+const unwrap = (t) => { return t ? t : 'none'; }
+const clamp = (v) => { return v < 0 ? 0 : v > 255 ? 255 : v; }
+
 export default class StateManager {
-    redrawUI = () => { console.error("[StateManager]::error : UI redraw fn() not defined."); }
+    updateUI = () => { console.error("[StateManager]::error : UI redraw fn() not defined."); }
 
     constructor() 
         { this.init(); }
         
     init = () => 
-        { this.state = {}; }
+        { this.state = {
+            "night_cycle": 0.0, // 255 is full night, 0 is full day
+            "day_cycle": 0.0, // 255 is full day, 0 is full night
+            "camera_target": 'none', // Must be a player object or null (free fly)
+            "selection_mode": 'none', // This will be used for 'building' or 'selecting' objects
+            "selected_target": 'none',
+            "cursor_target": 'none',
+            "moving_state": "Resting",
+            "camera_mode": "third-person", // first-person, third-person, top-down
+        }; }
 
     static get instance()
         {
@@ -17,16 +30,51 @@ export default class StateManager {
             return instance
         }
 
-    // dynamic setter
-    set = (key, value) =>
-        { this.state[key] = value; }
 
-    get = (key) => 
-        { return this.state[key]; }
+    redrawUI = () => 
+        { this.updateUI(this.state); }
+    
+    set camera_target(value)
+        { this.state["camera_target"] = value; this.redrawUI(); }
 
-    setState = (state) => 
-        { this.state = state; }
+    // set selection_mode(value) {}
 
-    getState = () => 
-        { return this.state; }
+    set camera_mode(value)
+        { this.state["camera_mode"] = value; this.redrawUI(); }
+    
+    get camera_mode()
+        { return this.state["camera_mode"]; }
+
+    get top_down()
+        { return this.state["camera_mode"] === "top-down"; }
+
+    set moving_state(value)
+        { this.state["moving_state"] = value; this.redrawUI(); }
+
+    get moving_state()
+        { return this.state["moving_state"]; }
+
+    set night_cycle(value)
+        { this.state["night_cycle"] = value; }
+    
+    get night_cycle()
+        { return this.state["night_cycle"]; }
+
+    get normalized_night_cycle()
+        { 
+            let sky_cycle = this.state["night_cycle"];
+            return +(clamp(sky_cycle) / 255).toFixed(3);
+        }
+
+    set day_cycle(value)
+        { this.state["day_cycle"] = value; }
+
+    get day_cycle()
+        { return this.state["day_cycle"]; }
+
+    get normalized_day_cycle()
+        { 
+            let sky_cycle = this.state["day_cycle"];
+            return +(clamp(sky_cycle) / 255).toFixed(3); 
+        }
 }

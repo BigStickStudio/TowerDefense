@@ -1,3 +1,5 @@
+const blocked_keys = ["night_cycle", "day_cycle"];
+
 export default class UI {
     ui = document.getElementById("ui")
     expanded = true;
@@ -10,41 +12,57 @@ export default class UI {
         this.updateUI();
     }
 
-    updateUI = (val = undefined) => {
+    display = () => {
+        let state = this.local_state;
+        let ui_components = [];
+
+        Object.keys(state).forEach((key) => {
+            if (blocked_keys.includes(key)) { return; }
+
+            ui_components.push(`
+                <div class="row my-2 px-4 mr-4">
+                    <div class="col-6 text-uppercase">
+                        <span><b>${key}:</b></span>
+                    </div>
+                    <div class="col-6 border-bottom border-primary text-center">
+                        <span>${state[key]}</span>
+                    </div>
+                </div>
+            `);
+        });
+
+        return ui_components.join("");
+    }
+
+
+    updateUI = (val) => {
         this.local_state = val ? val : this.local_state;
 
-        ui.innerHTML = `
-            <div class="d-flex justify-content-end" 
-                style="position: absolute; right: 2vw; top: 2vh; width: 20rem; z-index=100;">
-                <div class="container d-flex">
-                    <div class="col py-2 rounded-3 border border-primary"
-                        style="background-color: #43434365; color: white;">
-                        <div id="toggle-menu" class="row text-end" style="width: 100%">
-                            ${this.expanded ? 
-                                '<i class="bi bi-chevron-compact-up"></i>' :
-                                '<i class="bi bi-chevron-compact-down"></i>'
-                            }
-                        </div>
-                        ${this.expanded ? `
-                        <!--
-                        <div class="row">
-                            Camera Target: ${this.local_state?.camera_target}
-                        </div>
-                        -->
-                        <div class="row px-4">
-                            Camera Mode: ${this.local_state?.camera_mode}
-                        </div>        
-                        <div class="row px-4">        
-                            Target Position: ${this.local_state?.cursor_target}
-                        </div>
-                        <div class="row px-4">        
-                            Moving State: ${this.local_state?.moving_state}
-                            ` : ''}
+        ui.innerHTML = this.expanded ? 
+            `
+                <div style="position: absolute; right: 2vw; top: 2vh; width: 20rem;">
+                    <div class="container d-flex">
+                        <div class="col py-2 rounded-3 border border-primary"
+                            style="background-color: #434343af; color: white;">
+                            <div id="toggle-menu" class="row text-end px-3">
+                                <i class="bi bi-chevron-compact-up"></i>
+                            </div>
+                                ${this.display()}
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `
+                :
+            `
+                <div style="position: absolute; right: 3vw; top: 2vh; width: '20rem'; height: 2rem;">
+                    <div class="py-1 rounded-3 border border-primary"
+                        style="background-color: #434343af; color: white;">
+                        <div id="toggle-menu" class="text-center px-3">
+                            <i class="bi bi-chevron-compact-down"></i>
+                        </div>
+                    </div>
+                </div>
+            `;
 
         // This has to be here, or it will get erased when we update the UI
         let toggle_menu = document.getElementById("toggle-menu");

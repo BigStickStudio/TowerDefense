@@ -24,18 +24,7 @@ export default class Engine {
             this.ui = new UI(this.enableListeners, this.disableListeners);
             this.camera = new Camera(this.renderer);
 
-            state.setState({
-                "night_cycle": 0, // 255 is full night, 0 is full day
-                "day_cycle": 0, // 255 is full day, 0 is full night
-                "camera_target": 'none', // Must be a player object or null (free fly)
-                "selection_mode": 'none', // This will be used for 'building' or 'selecting' objects
-                "selected_target": 'none',
-                "cursor_target": 'none',
-                "moving_state": "Resting",
-                "camera_mode": "third-person", // first-person, third-person, top-down
-            });
-
-            state.redrawUI = this.redrawUI;
+            state.updateUI = this.ui.updateUI;
         }
 
     initRenderer = () => 
@@ -64,25 +53,15 @@ export default class Engine {
 
     enableListeners = () => 
         {
-            console.log("Enabling Listeners");
+            console.log("[Engine]: Enabling Listeners");
             this.enableCamera();
             this.enableMapCursor();
         }
 
     disableListeners = () => 
         {
-            console.log("Disabling Listeners");
+            console.log("[Engine]: Disabling Listeners");
             this.disableCamera();
             this.disableMapCursor();
         }
-
-
-    redrawUI = () => 
-        { 
-            console.log("Redrawing UI");
-            let local_state = state.getState();
-            console.log(local_state);
-            
-            this.ui.updateUI(state); }
-
 }

@@ -35,14 +35,12 @@ export default class MapInterface {
 
     enable = () =>
         {
-            console.log("Enabling Map Cursor");
             document.addEventListener('mousemove', this.trackMouse, false);
             document.addEventListener('mouseout', this.cleanUp, false);
         }
 
     disable = () =>
         {
-            console.log("Disabling Map Cursor");
             document.removeEventListener('mousemove', this.trackMouse, false);
             document.removeEventListener('mouseout', this.cleanUp, false);
             this.cursor = false;
@@ -97,18 +95,4 @@ export default class MapInterface {
             this.cursor = false; 
             this.cursor_target = undefined;
         }
-
-
-    set cursor_target(target) 
-        { 
-            state.set("cursor_target", target);
-            this.redrawUI();
-        }
-
-    get cursor_target() 
-        { 
-            const target = state.get("cursor_target"); 
-            return target ? `${target.x}, ${target.z}` : 'none';
-        }
-
 }
