@@ -45,7 +45,7 @@ export default class Game extends Engine {
     }
 
     render = (t) => {
-        this.skybox.fade(this.night_cycle, this.day_cycle);
+        this.skybox.fade(this.skybox.night_cycle, this.skybox.day_cycle);
         this.skybox.rotate();
         this.requestFrame();
         this.renderer.render(this.scene, this.camera.instance);
@@ -58,6 +58,7 @@ export default class Game extends Engine {
     step = () => {
         const elapsed = this.clock.getDelta() * 0.2;
         this.character?.update(elapsed);
+        this.camera.update(this.character.target, elapsed);
         this.skybox.update(elapsed);
     }
 }

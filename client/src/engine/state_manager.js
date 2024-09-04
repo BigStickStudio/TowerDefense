@@ -1,6 +1,8 @@
 let instance = null;
 
 export default class StateManager {
+    redrawUI = () => { console.error("[StateManager]::error : UI redraw fn() not defined."); }
+
     constructor() 
         { this.init(); }
         

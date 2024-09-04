@@ -27,13 +27,15 @@ export default class Engine {
             state.setState({
                 "night_cycle": 0, // 255 is full night, 0 is full day
                 "day_cycle": 0, // 255 is full day, 0 is full night
-                "camera_target": null, // Must be a player object or null (free fly)
-                "selection_mode": null, // This will be used for 'building' or 'selecting' objects
-                "selected_target": null,
-                "cursor_target": null,
+                "camera_target": 'none', // Must be a player object or null (free fly)
+                "selection_mode": 'none', // This will be used for 'building' or 'selecting' objects
+                "selected_target": 'none',
+                "cursor_target": 'none',
                 "moving_state": "Resting",
                 "camera_mode": "third-person", // first-person, third-person, top-down
             });
+
+            state.redrawUI = this.redrawUI;
         }
 
     initRenderer = () => 
@@ -76,6 +78,11 @@ export default class Engine {
 
 
     redrawUI = () => 
-        { this.ui.updateUI(state); }
+        { 
+            console.log("Redrawing UI");
+            let local_state = state.getState();
+            console.log(local_state);
+            
+            this.ui.updateUI(state); }
 
 }

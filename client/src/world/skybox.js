@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import StateManager from '../engine/state_manager.js';
 
 const state = StateManager.instance;
+const unwrap = (t) => { return t ? t : 'none'; }
+const clamp = (v) => { return v < 0 ? 0 : v > 255 ? 255 : v; }
 
 const vertex_shader = `
     varying vec3 vPosition;
@@ -45,6 +47,8 @@ const fragment_shader = `
 
 export default class Skybox {
     skybox = undefined;
+    noon = false;
+    morning = true;
     prev_night_value = 0;
     prev_day_value = 0;
 

@@ -6,12 +6,11 @@ import CharacterController from './character_controller.js';
 const state_instance = Engine.instance;
 
 export default class Character extends CharacterController {
-    constructor(scene, renderer) {
+    constructor(scene) {
         super(self);
         this._scene = scene;
         this._animations = {};
-        this._controls = null;
-        this._target = null;
+        this.target = null;
         this._manager = null;
         this._mixer = null;
         this._mixers = [];
@@ -28,7 +27,7 @@ export default class Character extends CharacterController {
 
         if (!this._mixer) {
             console.error("Mixer not initialized");
-            this._mixer = new THREE.AnimationMixer(this._target);
+            this._mixer = new THREE.AnimationMixer(this.target);
         }
 
         //const clip = animation.clip;
@@ -48,8 +47,8 @@ export default class Character extends CharacterController {
             model.position.set(0, 0, 0); // TODO: Blender: Move model back 3
             model.traverse(child => { child.castShadow = true; });
     
-            this._target = model;
-            this._scene.add(this._target);
+            this.target = model;
+            this._scene.add(this.target);
             this._mixer = new THREE.AnimationMixer(model);
 
             const animations = gltf.animations;
@@ -62,7 +61,7 @@ export default class Character extends CharacterController {
     }
 
     update = (delta) => {
-        if (!this._target) { return; }
+        if (!this.target) { return; }
 
         super.update(delta);
     }

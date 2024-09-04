@@ -101,10 +101,10 @@ export default class CharacterController {
                 velocity.y = THREE.MathUtils.clamp(velocity.y + acc.y * delta, -max_vel, max_vel);
             }
 
-            if (!this._target) 
+            if (!this.target) 
                 { return; }
 
-            const control = this._target;
+            const control = this.target;
             const _quat = new THREE.Quaternion();
             const _axis = new THREE.Vector3(0, 1, 0);
 
@@ -171,7 +171,7 @@ export default class CharacterController {
             control.position.y += velocity.y;
 
             this._velocity.copy(velocity);
-            this._target.position.copy(control.position);
+            this.target.position.copy(control.position);
 
             let total_velocity = Math.sqrt(velocity.x ** 2 + velocity.z ** 2);
 
@@ -196,7 +196,8 @@ export default class CharacterController {
 
     set moving_state(state) 
         {
+            console.log("Setting Moving State to: ", state);
             state.set("moving_state", state);
-            this.redrawUI();
+            state.redrawUI();
         }
 }

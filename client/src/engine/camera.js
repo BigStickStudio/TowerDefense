@@ -177,7 +177,11 @@ export default class Camera {
         return quaternion;
     }
 
-    update(target, elapsed) {   
+    update(target, elapsed) {
+        // There is a bug somewhere that causes 
+        // this to be called before the target is set
+        if (!target) { return; } 
+
         let target_clone;
         let idealOffset;
         let idealLookat;
