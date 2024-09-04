@@ -1,10 +1,12 @@
-const grid_width = 40;
+const grid_width = 30;
 const grid_height = 40;
 const square_size = 15;
 const frame_size = 0.5;
-const path_buffer = 5;
+const spawn_buffer = 5;
+const path_buffer = 4;
 
 const config = {
+    spawn_buffer: spawn_buffer,
     path_buffer: path_buffer,
     grid_size: {
         x: grid_width,

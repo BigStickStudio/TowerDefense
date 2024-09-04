@@ -17,6 +17,12 @@ const game_modes = {
                         "min_y": 1,
                         "max_y": 1
                     }
+                ],
+                "paths": [
+                    { 
+                        "red": 0,
+                        "blue": 0
+                    }
                 ]
             },
             "2v2": {},
