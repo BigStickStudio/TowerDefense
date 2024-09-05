@@ -61,6 +61,7 @@ export default class MapInterface {
 
             for (let i = 0; i < intersects.length; i++) 
                 { 
+                    // TODO: Intergrate logic for Selection Player Areas versus Navigation
                     if (intersects[i].object.name === "grid") 
                         {
                             let intersect = intersects[i].object;
@@ -71,7 +72,7 @@ export default class MapInterface {
                             if (this.highlighter.position.equals(object_position)) { return; }
 
                             this.highlighter.position.copy(object_position);
-                            state.cursor_target = `${intersect.position.x / map_config.square_size},${intersect.position.z / map_config.square_size}`;
+                            state.cursor_target = `${intersect.team}_${intersect.player}: (${intersect.location.x},${intersect.location.y})`;
                         }
                 }
 

@@ -76,7 +76,7 @@ export default class UI {
 
         ui.innerHTML = this.expanded ? 
             `
-                <div style="position: absolute; right: 2vw; top: 2vh; width: 23rem;">
+                <div style="position: absolute; right: 1vw; top: 2vh; width: 23rem;">
                     <div class="container d-flex">
                         <div class="col py-2 rounded-3 border border-primary"
                             style="background-color: #434343af; color: white;">
@@ -90,7 +90,7 @@ export default class UI {
             `
                 :
             `
-                <div style="position: absolute; right: 3vw; top: 2vh; width: '20rem'; height: 2rem;">
+                <div style="position: absolute; right: 2vw; top: 2vh; width: '20rem'; height: 2rem;">
                     <div class="py-1 rounded-3 border border-primary"
                         style="background-color: #434343af; color: white;">
                         <div id="toggle-menu" class="text-center px-3">

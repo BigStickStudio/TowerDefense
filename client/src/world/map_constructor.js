@@ -41,8 +41,6 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
 
         let slope = (end_y - start_y) / (end_x - start_x);
 
-        console.log(slope);
-        
         let ascending = slope < 0;
         let shallow = Math.abs(slope) < 1;
         console.log("ascending", ascending, "shallow", shallow);
@@ -67,6 +65,11 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
         right_start_y = ascending ? Math.ceil(right_start_y) : Math.floor(right_start_y);
         right_start_y = shallow ? ascending ? right_start_y - 1 : right_start_y + 1 : right_start_y;
 
+        const beyondLimits = (condition, x, min_x, max_x) => 
+            { return condition && x > max_x || !condition && x < min_x; }
+
+        console.log(bounds);
+
         for (let i = 0; i < steps; i++)
             {
                 x += dx;
@@ -82,14 +85,23 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
                         let _x = Math.round(left_start_x + j);
                         let _y = ascending ? Math.floor(left_start_y + dy) : Math.ceil(left_start_y + dy);
                         
-                        if (shallow) 
-                            {
-                                if (ascending && _x <= bounds.min_x) { continue; }
-                                else if (!ascending && _x >= bounds.max_x) { continue; }
-                            }
-
+                        if (shallow && beyondLimits(ascending, _x, bounds.start.x.min, bounds.start.x.max) || 
+                            shallow && beyondLimits(!ascending, _x, bounds.end.x.min, bounds.end.x.max)) 
+                            { continue; }
+                            
                         if (validStep(_y, _x, bounds))
-                            { path.push({ x: _x, y: _y }); }
+                            { 
+                                let position = { x: _x, y: _y };
+
+                                // If we have duplicates we want to remove both
+                                if (path.includes(position)) 
+                                    { 
+                                        path.filter((p) => p !== position);
+                                        continue; 
+                                    } 
+                                else 
+                                    { path.push(position); }
+                            }
                     }
                 
                 left_start_x += dx;
@@ -124,7 +136,7 @@ export default class MapConstructor {
                     let position = this.pickRandomXY(node, red_team);
                     let player_position = this.constructPlayerBounds(position);
                     player_positions.push(player_position);
-                    let plane = this.createSpawnArea(player_position, red_team);
+                    let plane = this.createSpawnArea(player_position, red_team, i);
                     squares = [...squares, ...plane];
                 }
 
@@ -167,27 +179,34 @@ export default class MapConstructor {
             }
         }
 
-    static createSpawnArea = (position, red_team) => 
+    static createSpawnArea = (position, red_team, player) => 
         {
             let squares = [];
 
-            for (let i = position.y.min; i <= position.y.max; i++)
+            let x_dim = position.x.max - position.x.min;
+            let y_dim = position.y.max - position.y.min;
+
+            for (let i = 0; i <= y_dim; i++)
                 {
+                    let y = position.y.min + i;
                     const material = new THREE.MeshBasicMaterial({ 
                     color: red_team ? 0xfc3c11 : 0x113c9c, 
                     side: THREE.BackSide });
                     const plane = new THREE.Mesh(plane_geometry, material);
 
-                    for (let j = position.x.min; j <= position.x.max; j++)
+                    for (let j = 0; j <= x_dim; j++)
                         {
+                            let x = position.x.min + j;
                             let square = plane.clone();
 
                             square.rotation.x = Math.PI / 2;
-                            let scaled_x = (j * square_size) + config.map_offset;
-                            let scaled_z = (i * square_size) + config.map_offset;
+                            let scaled_x = (x * square_size) + config.map_offset;
+                            let scaled_z = (y * square_size) + config.map_offset;
                             square.position.set(scaled_x, 0, scaled_z);
                             square.name = "grid";
                             square.team = red_team ? "red" : "blue"; // TODO: Add Number of Players for Unique Access
+                            square.player = player;
+                            square.location = { x: j, y: i };
 
                             squares.push(square);
                         }
@@ -257,7 +276,9 @@ export default class MapConstructor {
                     let scaled_z = (position.y * square_size) + config.map_offset;
                     square.position.set(scaled_x, 0, scaled_z);
                     square.name = "grid";
-                    square.team = "path";
+                    square.team = "none";
+                    square.player = -1;
+                    square.location = { x: position.x, y: position.y };
 
                     squares.push(square);
                 }
