@@ -63,7 +63,7 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
                 y += 1;
 
                 let cross_walk = right_start_x - left_start_x;
-                let dy = Math.min(right_start_y, left_start_y) - Math.max(right_start_y, left_start_y);
+                let dy = Math.max(right_start_y, left_start_y) - Math.min(right_start_y, left_start_y) ;
 
                 for (let j = 0; j <= cross_walk; j++)
                     {
