@@ -19,10 +19,10 @@ const game_modes = {
                     }
                 ],
                 "paths": [
-                    { 
-                        "red": 0,
-                        "blue": 0
-                    }
+                    [ 
+                        { "red": 0 },
+                        { "blue": 0 }
+                    ]
                 ]
             },
             "2v2": {
@@ -35,7 +35,7 @@ const game_modes = {
                     },
                     {
                         "min_x": 0.5,
-                        "max_x": 0.1,
+                        "max_x": 1,
                         "min_y": 0,
                         "max_y": 0
                     }
@@ -55,14 +55,14 @@ const game_modes = {
                     }
                 ],
                 "paths": [
-                    { 
-                        "red": 0,
-                        "blue": 0
-                    },
-                    { 
-                        "red": 1,
-                        "blue": 1
-                    }
+                    [ 
+                        { "red": 0 },
+                        { "blue": 0 }
+                    ],
+                    [ 
+                        { "red": 1 },
+                        { "blue": 1 }
+                    ]
                 ]
             },
             "3v3": {
@@ -107,26 +107,26 @@ const game_modes = {
                     }
                 ],
                 "paths": [
-                    { 
-                        "red": 0,
-                        "red": 2
-                    },
-                    { 
-                        "red": 1,
-                        "red": 2
-                    },
-                    { 
-                        "red": 2,
-                        "blue": 2
-                    },
-                    { 
-                        "blue": 0,
-                        "blue": 2
-                    },
-                    { 
-                        "blue": 1,
-                        "blue": 2
-                    }
+                    [ 
+                        { "red": 0 },
+                        { "red": 2 },
+                    ],
+                    [
+                        { "red": 1 },
+                        { "red": 2 }
+                    ],
+                    [ 
+                        { "red": 2 },
+                        { "blue": 2 }
+                    ],
+                    [ 
+                        { "blue": 2 },
+                        { "blue": 0 }
+                    ],
+                    [ 
+                        { "blue": 2 },
+                        { "blue": 1 }
+                    ]
                 ]
             },
             "5v5": {},

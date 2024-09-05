@@ -165,11 +165,11 @@ export default class MapConstructor {
                     let start_bounds = {};
                     let end_bounds = {};
 
-                    Object.keys(path).forEach((team) => 
+                    path.forEach((mapping) => 
                         {
-                            console.log("Path", path);
-                            console.log("Team", team);
-                            let region = regions[team][path[team]];
+                            let [team, index] = Object.entries(mapping)[0];
+                            console.log("Mapping", mapping);
+                            let region = regions[team][index];
                             console.log("Region", region);
                             
                             // If we don't have a start we need to find it first

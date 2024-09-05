@@ -1,9 +1,9 @@
-const grid_width = 75;
-const grid_height = 80;
+const grid_width = 80;
+const grid_height = 100;
 const square_size = 15;
 const frame_size = 0.5;
-const spawn_buffer = 5;
-const path_buffer = 4;
+const spawn_buffer = 6;
+const path_buffer = 3.5;
 
 const config = {
     spawn_buffer: spawn_buffer,

@@ -14,6 +14,7 @@ export default class CameraController {
 
     updateFreeCamera = (target) =>
         {
+            if (!target) { return; }
             if (state.top_down) 
                 {
                     this.free_target.position.set(target.position.x, -1, target.position.z);

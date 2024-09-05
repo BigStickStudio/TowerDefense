@@ -13,7 +13,7 @@ const button_map = {
 
 export default class UI {
     ui = document.getElementById("ui")
-    expanded = true;
+    expanded = false;
     local_state = {};
     button_fns = [];
 
