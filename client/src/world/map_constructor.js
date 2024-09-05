@@ -40,22 +40,32 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
         let path = [];
 
         let slope = (end_y - start_y) / (end_x - start_x);
-        let descending = slope < 0;
+
+        console.log(slope);
+        
+        let ascending = slope < 0;
+        let shallow = Math.abs(slope) < 1;
+        console.log("ascending", ascending, "shallow", shallow);
+
         let steps = (end_y - start_y);
         let dx = (end_x - start_x) / steps;
 
         let x = start_x;
         let y = start_y;
 
-        let left_start_x = start_x - config.path_buffer;
-        let left_start_y = descending ? start_y - config.path_buffer : start_y + config.path_buffer;
-        let left_end_x = end_x - config.path_buffer;
-        let left_end_y = descending ? end_y - config.path_buffer : end_y + config.path_buffer;
+        let left_start_x = shallow ? start_x - config.path_buffer / Math.abs(slope) : start_x - config.path_buffer;
+        left_start_x = Math.floor(left_start_x);
 
-        let right_start_x = start_x + config.path_buffer;
-        let right_start_y = descending ? start_y + config.path_buffer : start_y - config.path_buffer;
-        let right_end_x = end_x + config.path_buffer;
-        let right_end_y = descending ? end_y + config.path_buffer : end_y - config.path_buffer;
+        let left_start_y = ascending ? start_y - config.path_buffer : start_y + config.path_buffer;
+        left_start_y = shallow ? ascending ? left_start_y + 1 : left_start_y - 1 : left_start_y;
+        left_start_y = ascending ? Math.floor(left_start_y) : Math.ceil(left_start_y);
+
+        let right_start_x = shallow ? start_x + config.path_buffer / Math.abs(slope) : start_x + config.path_buffer;
+        right_start_x = Math.floor(right_start_x);
+
+        let right_start_y = ascending ? start_y + config.path_buffer : start_y - config.path_buffer;
+        right_start_y = ascending ? Math.ceil(right_start_y) : Math.floor(right_start_y);
+        right_start_y = shallow ? ascending ? right_start_y - 1 : right_start_y + 1 : right_start_y;
 
         for (let i = 0; i < steps; i++)
             {
@@ -63,13 +73,23 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
                 y += 1;
 
                 let cross_walk = right_start_x - left_start_x;
-                let dy = Math.max(right_start_y, left_start_y) - Math.min(right_start_y, left_start_y) ;
+                let dy = ascending ? 
+                            Math.max(right_start_y, left_start_y) - Math.min(right_start_y, left_start_y) :
+                            Math.min(right_start_y, left_start_y) - Math.max(right_start_y, left_start_y);
 
                 for (let j = 0; j <= cross_walk; j++)
                     {
-                        let _x = left_start_x + j;
-                        let _y = Math.floor(left_start_y + dy);
-                        path.push({ x: _x, y: _y });
+                        let _x = Math.round(left_start_x + j);
+                        let _y = ascending ? Math.floor(left_start_y + dy) : Math.ceil(left_start_y + dy);
+                        
+                        if (shallow) 
+                            {
+                                if (ascending && _x <= bounds.min_x) { continue; }
+                                else if (!ascending && _x >= bounds.max_x) { continue; }
+                            }
+
+                        if (validStep(_y, _x, bounds))
+                            { path.push({ x: _x, y: _y }); }
                     }
                 
                 left_start_x += dx;

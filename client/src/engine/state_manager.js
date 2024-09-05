@@ -89,4 +89,13 @@ export default class StateManager {
             let sky_cycle = this.state["day_cycle"];
             return +(clamp(sky_cycle) / 255).toFixed(3); 
         }
+
+    set cursor_target(value)
+        { 
+            this.state["cursor_target"] = value; 
+            this.redrawUI();
+        }
+
+    get cursor_target()
+        { return this.state["cursor_target"]; }
 }

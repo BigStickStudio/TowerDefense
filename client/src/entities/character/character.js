@@ -47,7 +47,6 @@ export default class Character extends CharacterController {
             const loader = new GLTFLoader();
             loader.load('assets/models/MrMan.glb', (gltf) => {
                 let model = gltf.scene;
-                model.scale.setScalar(4);
                 model.position.set(0, 0, 0); // TODO: Blender: Move model back 3
                 model.traverse(child => { child.castShadow = true; });
         

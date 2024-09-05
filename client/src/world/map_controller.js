@@ -9,7 +9,6 @@ export default class MapInterface {
     mouse2D = undefined;
     highlighter = undefined;
     cursor = false;
-    cursor_target = undefined;
     scene = undefined;
 
     constructor (scene) 
@@ -72,7 +71,7 @@ export default class MapInterface {
                             if (this.highlighter.position.equals(object_position)) { return; }
 
                             this.highlighter.position.copy(object_position);
-                            this.cursor_target = object_position;
+                            state.cursor_target = `${intersect.position.x / map_config.square_size},${intersect.position.z / map_config.square_size}`;
                         }
                 }
 
@@ -93,6 +92,6 @@ export default class MapInterface {
             this.mouse2D = new THREE.Vector2();
             this.scene.remove(this.highlighter);
             this.cursor = false; 
-            this.cursor_target = undefined;
+            state.cursor_target = undefined;
         }
 }

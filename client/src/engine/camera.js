@@ -11,10 +11,11 @@ let prev_mouse = new THREE.Vector2();
 export default class Camera extends CameraController {
     instance = null;
     camera_enabled = false;
-    _target_offset = new THREE.Vector3(0, 20, -10);
-    _target_lookat = new THREE.Vector3(0, 16, 10);
+
     _zoom_level = config.default_zoom;
     _zoom_height = config.default_zoom_height;
+    _target_offset = new THREE.Vector3(0, config.default_zoom_height, -10);
+    _target_lookat = new THREE.Vector3(0, 8, 5);
     _additional_zoom_height = 0;
     _mouse_down = false;
     _mouse_rotation = new THREE.Euler(0, 0, 0); 
@@ -24,12 +25,9 @@ export default class Camera extends CameraController {
     constructor(_renderer) 
         {
             super();
+            this.init();
             this._renderer = _renderer; // TODO: Move this to State and Make State into Singleton Engine
 
-            this.init();
-
-            // Set the camera to the default zoom level
-            this._target_offset.z = -10 * this._zoom_level;
         }
 
 

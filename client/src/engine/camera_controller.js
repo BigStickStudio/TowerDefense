@@ -65,12 +65,12 @@ export default class CameraController {
 
             if (event.deltaY > 0) 
                 {
-                    zoom += 0.3;
+                    zoom += 0.15;
                     zoom_height += 0.2;
                 } 
             else 
                 {
-                    zoom -= 0.3;
+                    zoom -= 0.15;
                     zoom_height -= 0.2;
                 }
 
@@ -113,6 +113,7 @@ export default class CameraController {
                     }
             }       
 
+            // Handles Minimum Zoom Levels when Transitioning from 1st<->3rd Person
             else if (zoom < config.min_zoom) 
                 {
                     if (!zoom_out) 
@@ -141,8 +142,8 @@ export default class CameraController {
                 }
             else 
                 {
-                    this._target_offset.z = -10 * this._zoom_level;
-                    this._target_offset.y = 6.6 * this._zoom_height;
+                    this._target_offset.z = this._zoom_level * config.zoom_scalar;
+                    this._target_offset.y = this._zoom_height * config.height_scalar;
                     this._target_lookat.z += Math.abs(this._target_offset.z);
                 }
         }
