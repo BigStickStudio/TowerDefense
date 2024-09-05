@@ -43,7 +43,6 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
 
         let ascending = slope < 0;
         let shallow = Math.abs(slope) < 1;
-        console.log("ascending", ascending, "shallow", shallow);
 
         let steps = (end_y - start_y);
         let dx = (end_x - start_x) / steps;
@@ -68,7 +67,8 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
         const beyondLimits = (condition, x, min_x, max_x) => 
             { return condition && x > max_x || !condition && x < min_x; }
 
-        console.log(bounds);
+        const filterPositions = (p1, p2) =>
+            { return !(p1.x === p2.x && p1.y === p2.y); }
 
         for (let i = 0; i < steps; i++)
             {
@@ -85,23 +85,13 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
                         let _x = Math.round(left_start_x + j);
                         let _y = ascending ? Math.floor(left_start_y + dy) : Math.ceil(left_start_y + dy);
                         
-                        if (shallow && beyondLimits(ascending, _x, bounds.start.x.min, bounds.start.x.max) || 
-                            shallow && beyondLimits(!ascending, _x, bounds.end.x.min, bounds.end.x.max)) 
+                        if (shallow && 
+                                (beyondLimits(ascending, _x, bounds.start.x.min, bounds.start.x.max) || 
+                                beyondLimits(!ascending, _x, bounds.end.x.min, bounds.end.x.max))) 
                             { continue; }
                             
                         if (validStep(_y, _x, bounds))
-                            { 
-                                let position = { x: _x, y: _y };
-
-                                // If we have duplicates we want to remove both
-                                if (path.includes(position)) 
-                                    { 
-                                        path.filter((p) => p !== position);
-                                        continue; 
-                                    } 
-                                else 
-                                    { path.push(position); }
-                            }
+                            { path.push({ x: _x, y: _y }); }
                     }
                 
                 left_start_x += dx;
@@ -255,7 +245,6 @@ export default class MapConstructor {
 
                     let region = { start: start_bounds, end: end_bounds };
                     let pathway = lerpPath(start_x, start_y, end_x, end_y, region);
-                    console.log(pathway);
                     let patharea = this.createPathArea(pathway);
                     pathways = [...pathways, ...patharea];
                 }
