@@ -6,6 +6,7 @@ const state = StateManager.instance;
 export default class CharacterController {
     constructor() 
         {
+            this.enabled = true;
             this._move = {
                 forward: false,
                 backward: false,
@@ -19,8 +20,19 @@ export default class CharacterController {
             this._velocity = new THREE.Vector3(0, -5, 0);
             this._max_velocity = 2;
 
+            this.enable();
+        }
+
+    enable = () =>
+        {
             document.addEventListener('keydown', (event) => this.keyDown(event), false);
             document.addEventListener('keyup', (event) => this.keyUp(event), false);
+        }
+
+    disable = () =>
+        {
+            document.removeEventListener('keydown', (event) => this.keyDown(event), false);
+            document.removeEventListener('keyup', (event) => this.keyUp(event), false);
         }
 
     keyDown(event) 

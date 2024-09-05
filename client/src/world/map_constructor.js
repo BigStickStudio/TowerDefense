@@ -137,7 +137,7 @@ export default class MapConstructor {
                             let scaled_z = (i * square_size) + config.map_offset;
                             square.position.set(scaled_x, 0, scaled_z);
                             square.name = "grid";
-                            square.team = "red"; // TODO: Add Number of Players for Unique Access
+                            square.team = red_team ? "red" : "blue"; // TODO: Add Number of Players for Unique Access
 
                             squares.push(square);
                         }
@@ -200,9 +200,9 @@ export default class MapConstructor {
 
             path_center.forEach((position) =>
                 {
+                    console.log("Position", position);
                     const material = new THREE.MeshBasicMaterial({ color: 0x3c9f19, side: THREE.BackSide });
                     const plane = new THREE.Mesh(plane_geometry, material);
-                    let square = plane.clone();
 
                     for (let i = position.y - path_buffer; i <= position.y + path_buffer; i++)
                         {
@@ -210,7 +210,6 @@ export default class MapConstructor {
 
                             for (let j = position.x - path_buffer; j <= position.x + path_buffer; j++)
                                 {
-
                                     if (withinBounds(i, j, bounds))
                                         { continue; }
 
@@ -223,8 +222,6 @@ export default class MapConstructor {
                                     squares.push(square);
                                 }
                         }
-
-                    squares.push(square);
                 }
             );
 

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import UI from '../ui.js';
 import Camera from './camera.js';
 import StateManager from './state_manager.js';
+import UI from './ui.js';
 
 const state = StateManager.instance;
 
@@ -53,15 +53,15 @@ export default class Engine {
 
     enableListeners = () => 
         {
-            console.log("[Engine]: Enabling Listeners");
             this.enableCamera();
             this.enableMapCursor();
         }
 
     disableListeners = () => 
         {
-            console.log("[Engine]: Disabling Listeners");
             this.disableCamera();
             this.disableMapCursor();
         }
+
+    // TODO: Create UpdateEngine function
 }

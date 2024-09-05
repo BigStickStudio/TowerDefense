@@ -1,9 +1,21 @@
+import StateManager from "./state_manager.js";
+
+const state = StateManager.instance;
 const blocked_keys = ["night_cycle", "day_cycle"];
+const buttons = ["camera_mode"];
+
+const button_map = {
+    "camera_mode": {
+        fn: state.toggleCameraMode,
+        title: () => { return state.camera_mode ? "Free Fly" : "Fixed" },
+    },
+}
 
 export default class UI {
     ui = document.getElementById("ui")
-    expanded = false;
+    expanded = true;
     local_state = {};
+    button_fns = [];
 
     constructor(enableListeners, disableListeners) {
         this.ui.style = "display: flex; position: relative; top: 0; width: 100%;";
@@ -15,20 +27,42 @@ export default class UI {
     display = () => {
         let state = this.local_state;
         let ui_components = [];
+        this.button_fns = [];
 
         Object.keys(state).forEach((key) => {
             if (blocked_keys.includes(key)) { return; }
 
-            ui_components.push(`
-                <div class="row my-2 px-4 mr-4">
-                    <div class="col-6 text-capitalize">
-                        <span><b>${key}:</b></span>
-                    </div>
-                    <div class="col-6 border-bottom border-primary text-center">
-                        <span>${state[key]}</span>
-                    </div>
-                </div>
-            `);
+            if (buttons.includes(key)) 
+                {
+                    ui_components.push(`
+                        <div class="row my-2 px-4 mr-4">
+                            <button id="${key}" type="button" class="btn btn-outline-primary w-100">
+                                ${button_map[key].title()}
+                            </button>
+                        </div>
+                        `);
+
+                    // We create a function to initialize the button after the UI is rendered
+                    function initButton() {
+                        let button = document.getElementById(key);
+                        button.onclick = button_map[key].fn;
+                    }
+
+                    this.button_fns.push(initButton);
+                }
+            else 
+                {
+                    ui_components.push(`
+                        <div class="row my-2 px-4 mr-4">
+                            <div class="col-6 text-capitalize">
+                                <span><b>${key}:</b></span>
+                            </div>
+                            <div class="col-6 border-bottom border-primary text-center">
+                                <span>${state[key]}</span>
+                            </div>
+                        </div>
+                    `);
+                }
         });
 
         return ui_components.join("");
@@ -67,6 +101,8 @@ export default class UI {
         // This has to be here, or it will get erased when we update the UI
         let toggle_menu = document.getElementById("toggle-menu");
         toggle_menu.onclick = this.toggleUI;
+
+        this.button_fns.forEach((fn) => { fn(); });
     }
 
     toggleUI = () => {

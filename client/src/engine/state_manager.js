@@ -21,7 +21,8 @@ export default class StateManager {
             "selected_target": 'none',
             "cursor_target": 'none',
             "moving_state": "Resting",
-            "camera_mode": camera_config.default_camera_mode, // first-person, third-person, top-down
+            "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
+            "camera_mode": false, // (Free Fly vs Fixed)
         }; }
 
     static get instance()
@@ -36,19 +37,28 @@ export default class StateManager {
     redrawUI = () => 
         { this.updateUI(this.state); }
     
-    set camera_target(value)
-        { this.state["camera_target"] = value; this.redrawUI(); }
-
-    // set selection_mode(value) {}
-
     set camera_mode(value)
         { this.state["camera_mode"] = value; this.redrawUI(); }
     
     get camera_mode()
         { return this.state["camera_mode"]; }
 
+    toggleCameraMode = () =>
+        { this.camera_mode = !this.camera_mode; }
+
+    set camera_target(value)
+        { this.state["camera_target"] = value; this.redrawUI(); }
+
+    // set selection_mode(value) {}
+
+    set camera_position(value)
+        { this.state["camera_position"] = value; this.redrawUI(); }
+    
+    get camera_position()
+        { return this.state["camera_position"]; }
+
     get top_down()
-        { return this.state["camera_mode"] === "top-down"; }
+        { return this.state["camera_position"] === "top-down"; }
 
     set moving_state(value)
         { this.state["moving_state"] = value; this.redrawUI(); }
