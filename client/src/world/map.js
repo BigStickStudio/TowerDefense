@@ -4,7 +4,7 @@ import config from '../configs/map_config.js';
 import MapConstructor from './map_constructor.js';
 import MapInterface from './map_controller.js';
 
-const mode = template["pvp"]["battle"]["1v1"];
+const mode = template["pvp"]["battle"]["3v3"];
 let square_size = config.square_size;
 const field_size_x = config.grid_size.x * square_size;
 const field_size_y = config.grid_size.y * square_size;
@@ -21,7 +21,6 @@ export default class Map extends MapInterface {
         }
 
     init = () => {
-        console.log(mode);
         this.createUnderlay();
         this.createPaths();
         const material = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
@@ -35,7 +34,6 @@ export default class Map extends MapInterface {
             let [red_squares, red_regions] = MapConstructor.createPlayerAreas(red_team, "red");
             let [blue_squares, blue_regions] = MapConstructor.createPlayerAreas(blue_team, "blue");
             let paths = MapConstructor.createPathways(mode["paths"], {"red": red_regions, "blue": blue_regions});
-            console.log("Paths:", paths);
 
             this.grid = [...red_squares, ...blue_squares, ...paths];
             this.grid.forEach((square) => 

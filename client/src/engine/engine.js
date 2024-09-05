@@ -23,7 +23,7 @@ export default class Engine {
             this.initRenderer();
             this.ui = new UI(this.enableListeners, this.disableListeners);
             this.camera = new Camera(this.renderer);
-
+            this.scene.add(this.camera.free_target);
             state.updateUI = this.ui.updateUI;
         }
 

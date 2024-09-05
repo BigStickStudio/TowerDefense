@@ -2,12 +2,12 @@ import StateManager from "./state_manager.js";
 
 const state = StateManager.instance;
 const blocked_keys = ["night_cycle", "day_cycle"];
-const buttons = ["camera_mode"];
+const buttons = ["fixed_camera"];
 
 const button_map = {
-    "camera_mode": {
+    "fixed_camera": {
         fn: state.toggleCameraMode,
-        title: () => { return state.camera_mode ? "Free Fly" : "Fixed" },
+        title: () => { return state.fixed_camera ? "Fixed" : "Free Fly"; },
     },
 }
 

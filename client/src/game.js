@@ -60,8 +60,19 @@ export default class Game extends Engine {
 
     step = () => {
         const elapsed = this.clock.getDelta() * 0.2;
-        this.character?.update(elapsed);
-        this.camera.update(this.character.target, elapsed);
+
+        if (state.fixed_camera) 
+            {
+                this.character?.update(elapsed);
+                this.camera.updateFreeCamera(this.character.target);
+                this.camera.update(this.character.target, elapsed);
+            }
+        else 
+            {
+                this.character.disable();
+                console.log("Free Camera:", this.camera.free_target);
+                this.camera.update(this.camera.free_target, elapsed);
+            }
         this.skybox.update(elapsed);
     }
 }

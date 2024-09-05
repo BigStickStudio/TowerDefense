@@ -1,5 +1,5 @@
-const grid_width = 30;
-const grid_height = 40;
+const grid_width = 75;
+const grid_height = 80;
 const square_size = 15;
 const frame_size = 0.5;
 const spawn_buffer = 5;

@@ -25,8 +25,110 @@ const game_modes = {
                     }
                 ]
             },
-            "2v2": {},
-            "3v3": {},
+            "2v2": {
+                "red": [
+                    {
+                        "min_x": 0,
+                        "max_x": 0.5,
+                        "min_y": 0,
+                        "max_y": 0
+                    },
+                    {
+                        "min_x": 0.5,
+                        "max_x": 0.1,
+                        "min_y": 0,
+                        "max_y": 0
+                    }
+                ],
+                "blue": [
+                    {
+                        "min_x": 0,
+                        "max_x": 0.5,
+                        "min_y": 1,
+                        "max_y": 1
+                    },
+                    {
+                        "min_x": 0.5,
+                        "max_x": 1,
+                        "min_y": 1,
+                        "max_y": 1
+                    }
+                ],
+                "paths": [
+                    { 
+                        "red": 0,
+                        "blue": 0
+                    },
+                    { 
+                        "red": 1,
+                        "blue": 1
+                    }
+                ]
+            },
+            "3v3": {
+                "red": [
+                    {
+                        "min_x": 0,
+                        "max_x": 0.5,
+                        "min_y": 0,
+                        "max_y": 0
+                    },
+                    {
+                        "min_x": 0.5,
+                        "max_x": 1,
+                        "min_y": 0,
+                        "max_y": 0
+                    },
+                    {
+                        "min_x": 0.3,
+                        "max_x": 0.6,
+                        "min_y": 0.2,
+                        "max_y": 0.4
+                    }
+                ],
+                "blue": [
+                    {
+                        "min_x": 0,
+                        "max_x": 0.5,
+                        "min_y": 1,
+                        "max_y": 1
+                    },
+                    {
+                        "min_x": 0.5,
+                        "max_x": 1,
+                        "min_y": 1,
+                        "max_y": 1
+                    },
+                    {
+                        "min_x": 0.3,
+                        "max_x": 0.6,
+                        "min_y": 0.6,
+                        "max_y": 0.8
+                    }
+                ],
+                "paths": [
+                    { 
+                        "red": 0,
+                        "red": 2
+                    },
+                    { 
+                        "red": 1,
+                        "red": 2
+                    },
+                    { 
+                        "red": 2,
+                        "blue": 2
+                    },
+                    { 
+                        "blue": 0,
+                        "blue": 2
+                    },
+                    { 
+                        "blue": 1,
+                        "blue": 2
+                    }
+                ]
+            },
             "5v5": {},
             "7v7": {}
         },

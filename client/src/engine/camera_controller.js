@@ -8,7 +8,53 @@ const state = StateManager.instance;
 export default class CameraController {
     d_mouse = new THREE.Vector2();
 
-    constructor() {}
+    constructor() {
+        this.free_target = new THREE.Object3D();
+    }
+
+    updateFreeCamera = (target) =>
+        {
+            if (state.top_down) 
+                {
+                    this.free_target.position.set(target.position.x, -1, target.position.z);
+                    this.free_target.lookAt(new THREE.Vector3(target.position.x, 0, target.position.z));
+                }
+            else 
+                {
+                    this.free_target.position.copy(target.position);
+                    this.free_target.rotation.copy(target.rotation);
+                }
+        }
+
+    set position(pos) 
+        { 
+            this.instance.position.set(pos.x, pos.y, pos.z); 
+            this.free_target.position.set(pos.x, pos.y, pos.z);
+        }
+
+    set copyPosition(pos) 
+        { 
+            this.instance.position.copy(pos); 
+            this.free_target.position.copy(pos);
+        }
+
+    set rotation(rot) 
+        { 
+            this.instance.rotation.set(rot.x, rot.y, rot.z); 
+            this.free_target.rotation.set(rot.x, rot.y, rot.z);
+        }
+    
+    set lookAt(pos) 
+        { 
+            this.instance.lookAt(pos); 
+            this.free_target.lookAt(pos);
+        }
+
+    set aspect(aspect) 
+        { 
+            this.instance.aspect = aspect; 
+            this.instance.updateProjectionMatrix();
+        }
 
     zoom = (event) => 
         {

@@ -22,7 +22,7 @@ export default class StateManager {
             "cursor_target": 'none',
             "moving_state": "Resting",
             "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
-            "camera_mode": false, // (Free Fly vs Fixed)
+            "fixed_camera": true, // (Fixed vs Free Fly)
         }; }
 
     static get instance()
@@ -37,14 +37,14 @@ export default class StateManager {
     redrawUI = () => 
         { this.updateUI(this.state); }
     
-    set camera_mode(value)
-        { this.state["camera_mode"] = value; this.redrawUI(); }
+    set fixed_camera(value)
+        { this.state["fixed_camera"] = value; this.redrawUI(); }
     
-    get camera_mode()
-        { return this.state["camera_mode"]; }
+    get fixed_camera()
+        { return this.state["fixed_camera"]; }
 
     toggleCameraMode = () =>
-        { this.camera_mode = !this.camera_mode; }
+        { this.fixed_camera = !this.fixed_camera; }
 
     set camera_target(value)
         { this.state["camera_target"] = value; this.redrawUI(); }

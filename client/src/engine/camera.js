@@ -32,6 +32,17 @@ export default class Camera extends CameraController {
             this._target_offset.z = -10 * this._zoom_level;
         }
 
+
+    init = () => 
+        {
+            this.instance = new THREE.PerspectiveCamera(config.fov, window.innerWidth / window.innerHeight, config.near, config.far);
+            this.position = this._target_offset.x, this._target_offset.y, this._target_offset.z;
+            this.lookAt = this._target_lookat;
+
+            this.enable();
+        }
+
+
     enable = () => 
         {
             if (this.camera_enabled) { return; }
@@ -54,46 +65,6 @@ export default class Camera extends CameraController {
             document.removeEventListener('mousedown', this.mouseDown, false);
             document.removeEventListener('mouseup', this.mouseUp, false);
             this.camera_enabled = false;
-        }
-
-    init = () => 
-        {
-            this.free_target = new THREE.Object3D();
-            this.instance = new THREE.PerspectiveCamera(config.fov, window.innerWidth / window.innerHeight, config.near, config.far);
-            this.position = this._target_offset.x, this._target_offset.y, this._target_offset.z;
-            this.lookAt = this._target_lookat;
-
-            this.enable();
-        }
-
-    set position(pos) 
-        { 
-            this.instance.position.set(pos.x, pos.y, pos.z); 
-            this.free_target.position.set(pos.x, pos.y, pos.z);
-        }
-
-    set copyPosition(pos) 
-        { 
-            this.instance.position.copy(pos); 
-            this.free_target.position.copy(pos);
-        }
-
-    set rotation(rot) 
-        { 
-            this.instance.rotation.set(rot.x, rot.y, rot.z); 
-            this.free_target.rotation.set(rot.x, rot.y, rot.z);
-        }
-    
-    set lookAt(pos) 
-        { 
-            this.instance.lookAt(pos); 
-            this.free_target.lookAt(pos);
-        }
-
-    set aspect(aspect) 
-        { 
-            this.instance.aspect = aspect; 
-            this.instance.updateProjectionMatrix();
         }
 
     refresh = () => 

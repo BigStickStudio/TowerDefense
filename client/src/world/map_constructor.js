@@ -154,6 +154,8 @@ export default class MapConstructor {
         {
             let pathways = [];
 
+            console.log("Paths", paths);
+
             paths.forEach((path) =>
                 {
                     let start_x = 0;
@@ -163,10 +165,12 @@ export default class MapConstructor {
                     let start_bounds = {};
                     let end_bounds = {};
 
-                    console.log("Path", path);
                     Object.keys(path).forEach((team) => 
                         {
+                            console.log("Path", path);
+                            console.log("Team", team);
                             let region = regions[team][path[team]];
+                            console.log("Region", region);
                             
                             // If we don't have a start we need to find it first
                             if (start_x === 0) 
@@ -186,6 +190,7 @@ export default class MapConstructor {
 
                     let path_center = lerp(start_x, start_y, end_x, end_y);
                     let region = { start: start_bounds, end: end_bounds };
+                    console.log(path_center, region);
                     let squares = this.createPathArea(path_center, region);
                     pathways = [...pathways, ...squares];
                 }
@@ -200,7 +205,6 @@ export default class MapConstructor {
 
             path_center.forEach((position) =>
                 {
-                    console.log("Position", position);
                     const material = new THREE.MeshBasicMaterial({ color: 0x3c9f19, side: THREE.BackSide });
                     const plane = new THREE.Mesh(plane_geometry, material);
 

@@ -11,9 +11,9 @@ const config = {
     top_down_zoom: 1,
     top_down_height: 150,
     max_top_down_height: 1000,
-    default_zoom: 2,
-    default_zoom_height: 2.5,
-    default_camera_position: "third-person",
+    default_zoom: 1000,
+    default_zoom_height: 0,
+    default_camera_position: "top-down",
 }
 
 export default config;
