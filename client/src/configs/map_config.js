@@ -1,9 +1,9 @@
-const grid_width = 80;
-const grid_height = 100;
+const grid_width = 80;  // If these are not whole numbers
+const grid_height = 60; // We end up with .5s in the grid
 const square_size = 15;
 const frame_size = 0.5;
-const spawn_buffer = 6;
-const path_buffer = 3.5;
+const spawn_buffer = 4;
+const path_buffer = 2;
 
 const config = {
     spawn_buffer: spawn_buffer,

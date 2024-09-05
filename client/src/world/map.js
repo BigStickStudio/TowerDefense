@@ -4,7 +4,7 @@ import config from '../configs/map_config.js';
 import MapConstructor from './map_constructor.js';
 import MapInterface from './map_controller.js';
 
-const mode = template["pvp"]["battle"]["2v2"];
+const mode = template["pvp"]["battle"]["3v3"];
 let square_size = config.square_size;
 const field_size_x = config.grid_size.x * square_size;
 const field_size_y = config.grid_size.y * square_size;

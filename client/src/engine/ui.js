@@ -54,8 +54,10 @@ export default class UI {
                 {
                     ui_components.push(`
                         <div class="row my-2 px-4 mr-4">
-                            <div class="col-6 text-capitalize">
+                            <div class="col-3 text-capitalize">
                                 <span><b>${key}:</b></span>
+                            </div>
+                            <div class="col">
                             </div>
                             <div class="col-6 border-bottom border-primary text-center">
                                 <span>${state[key]}</span>
@@ -74,7 +76,7 @@ export default class UI {
 
         ui.innerHTML = this.expanded ? 
             `
-                <div style="position: absolute; right: 2vw; top: 2vh; width: 20rem;">
+                <div style="position: absolute; right: 2vw; top: 2vh; width: 23rem;">
                     <div class="container d-flex">
                         <div class="col py-2 rounded-3 border border-primary"
                             style="background-color: #434343af; color: white;">

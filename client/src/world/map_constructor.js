@@ -27,27 +27,57 @@ const clampSpawnY = (value) => { return clamp(value, min_y_buffer, max_y_buffer)
 const clampPathX = (value) => { return clamp(value, min_x_path, max_x_path); }
 const clampPathY = (value) => { return clamp(value, min_y_path, max_y_path); }
 
-const withinBounds = (i, j, bounds) =>
+const validStep = (y, x, bounds) =>
     {
-        return (i >= bounds.start.y.min && i <= bounds.start.y.max) && 
-                (j >= bounds.start.x.min && j <= bounds.start.x.max) ||
-                (i >= bounds.end.y.min && i <= bounds.end.y.max) && 
-                (j >= bounds.end.x.min && j <= bounds.end.x.max);
+        let start = bounds.start;
+        let end = bounds.end;
+        return (x > start.x.max || x < start.x.min || y > start.y.max || y < start.y.min) &&
+                (x > end.x.max || x < end.x.min || y > end.y.max || y < end.y.min);
     }
 
-const lerp = (start_x, start_y, end_x, end_y) =>
+const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
     {
         let path = [];
-        let x = start_x;
-        let y = start_y;
-        let steps = end_y - start_y;
+
+        let slope = (end_y - start_y) / (end_x - start_x);
+        let descending = slope < 0;
+        let steps = (end_y - start_y);
         let dx = (end_x - start_x) / steps;
 
-        for (let i = 0; i < steps; i++) 
+        let x = start_x;
+        let y = start_y;
+
+        let left_start_x = start_x - config.path_buffer;
+        let left_start_y = descending ? start_y - config.path_buffer : start_y + config.path_buffer;
+        let left_end_x = end_x - config.path_buffer;
+        let left_end_y = descending ? end_y - config.path_buffer : end_y + config.path_buffer;
+
+        let right_start_x = start_x + config.path_buffer;
+        let right_start_y = descending ? start_y + config.path_buffer : start_y - config.path_buffer;
+        let right_end_x = end_x + config.path_buffer;
+        let right_end_y = descending ? end_y + config.path_buffer : end_y - config.path_buffer;
+
+        for (let i = 0; i < steps; i++)
             {
                 x += dx;
                 y += 1;
-                path.push({ x: Math.round(x), y: Math.round(y) });
+
+                let cross_walk = right_start_x - left_start_x;
+                let dy = Math.min(right_start_y, left_start_y) - Math.max(right_start_y, left_start_y);
+
+                for (let j = 0; j <= cross_walk; j++)
+                    {
+                        let _x = left_start_x + j;
+                        let _y = Math.floor(left_start_y + dy);
+                        path.push({ x: _x, y: _y });
+                    }
+                
+                left_start_x += dx;
+                left_start_y += 1;
+
+                right_start_x += dx;
+                right_start_y += 1;
+                    
             }
 
         return path;
@@ -154,8 +184,6 @@ export default class MapConstructor {
         {
             let pathways = [];
 
-            console.log("Paths", paths);
-
             paths.forEach((path) =>
                 {
                     let start_x = 0;
@@ -168,64 +196,50 @@ export default class MapConstructor {
                     path.forEach((mapping) => 
                         {
                             let [team, index] = Object.entries(mapping)[0];
-                            console.log("Mapping", mapping);
                             let region = regions[team][index];
-                            console.log("Region", region);
                             
                             // If we don't have a start we need to find it first
-                            if (start_x === 0) 
+                            if (start_x === 0 && start_y === 0) 
                                 { 
-                                    start_x = Math.round((region.x.min + region.x.max) / 2);
-                                    start_y = Math.round((region.y.min + region.y.max) / 2);
+                                    start_x = region.position.x;
+                                    start_y = region.position.y;
                                     start_bounds = region;
                                 }
                             else 
                                 {
-                                    end_x = Math.round((region.x.min + region.x.max) / 2);
-                                    end_y = Math.round((region.y.min + region.y.max) / 2);
+                                    end_x = region.position.x;
+                                    end_y = region.position.y;
                                     end_bounds = region;
                                 }
                         }
                     );
 
-                    let path_center = lerp(start_x, start_y, end_x, end_y);
                     let region = { start: start_bounds, end: end_bounds };
-                    console.log(path_center, region);
-                    let squares = this.createPathArea(path_center, region);
-                    pathways = [...pathways, ...squares];
+                    let pathway = lerpPath(start_x, start_y, end_x, end_y, region);
+                    console.log(pathway);
+                    let patharea = this.createPathArea(pathway);
+                    pathways = [...pathways, ...patharea];
                 }
             );
 
             return pathways;
         }
 
-    static createPathArea = (path_center, bounds) =>
+    static createPathArea = (pathway) =>
         {
             let squares = [];
 
-            path_center.forEach((position) =>
+            pathway.forEach((position) =>
                 {
-                    const material = new THREE.MeshBasicMaterial({ color: 0x3c9f19, side: THREE.BackSide });
-                    const plane = new THREE.Mesh(plane_geometry, material);
+                    let square = new THREE.Mesh(plane_geometry, new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.BackSide }));
+                    square.rotation.x = Math.PI / 2;
+                    let scaled_x = (position.x * square_size) + config.map_offset;
+                    let scaled_z = (position.y * square_size) + config.map_offset;
+                    square.position.set(scaled_x, 0, scaled_z);
+                    square.name = "grid";
+                    square.team = "path";
 
-                    for (let i = position.y - path_buffer; i <= position.y + path_buffer; i++)
-                        {
-                            let scaled_z = (i * square_size) + config.map_offset;
-
-                            for (let j = position.x - path_buffer; j <= position.x + path_buffer; j++)
-                                {
-                                    if (withinBounds(i, j, bounds))
-                                        { continue; }
-
-                                    let square = plane.clone();
-                                    square.rotation.x = Math.PI / 2;
-                                    let scaled_x = (j * square_size) + config.map_offset;
-                                    square.position.set(scaled_x, 0, scaled_z);
-                                    square.name = "grid";
-
-                                    squares.push(square);
-                                }
-                        }
+                    squares.push(square);
                 }
             );
 
