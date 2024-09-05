@@ -1,15 +1,16 @@
 import * as THREE from 'three';
 import config from '../configs/map_config.js';
+import StateManager from '../engine/state_manager.js';
 
+const state = StateManager.instance;
 
-let grid_size = config.grid_size;
-let square_size = config.square_size;
-let spawn_buffer = config.spawn_buffer;
-let path_buffer = config.path_buffer;
+const spawn_buffer = config.spawn_buffer;
+const square_size = config.square_size;
+const path_buffer = config.path_buffer;
 
 // TODO: Move to Map Config
-const half_grid_x = grid_size.x / 2;
-const half_grid_y = (grid_size.y / 2);
+const half_grid_x = state.grid_size.x / 2;
+const half_grid_y = (state.grid_size.y / 2);
 const square_inset = square_size - config.frame_size;
 const min_x_buffer = -half_grid_x + spawn_buffer;
 const max_x_buffer = half_grid_x - spawn_buffer - 1;
@@ -19,6 +20,8 @@ const min_x_path = -half_grid_x + path_buffer;
 const max_x_path = half_grid_x - path_buffer - 1;
 const min_y_path = -half_grid_y + path_buffer;
 const max_y_path = half_grid_y - path_buffer - 1;
+
+const plane_geometry = new THREE.PlaneGeometry(square_inset, square_inset, 1, 1);
 
 // TODO : Move to Utility Fuction
 const clamp = (value, min, max) => { return Math.min(Math.max(value, min), max); }
@@ -105,9 +108,8 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
         return path;
     }
 
-const plane_geometry = new THREE.PlaneGeometry(square_inset, square_inset, 1, 1);
-
 export default class MapConstructor {
+    
     constructor() {} // TODO Instantiate entire Map Here
 
     /////////////////////////
@@ -155,6 +157,9 @@ export default class MapConstructor {
 
     static pickRandomXY = (node) => 
         {
+            let grid_size = state.grid_size;
+            let half_grid_x = grid_size.x / 2;
+            let half_grid_y = grid_size.y / 2;
             let min_x = node.min_x * grid_size.x;
             let max_x = node.max_x * grid_size.x - 1;
             let min_y = node.min_y * grid_size.y;
@@ -213,6 +218,7 @@ export default class MapConstructor {
         {
             let pathways = [];
 
+            console.log(paths);
             paths.forEach((path) =>
                 {
                     let start_x = 0;

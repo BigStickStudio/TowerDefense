@@ -2,7 +2,6 @@ import * as THREE from "three";
 import config from '../configs/camera_config.js';
 import StateManager from "./state_manager.js";
 
-
 const state = StateManager.instance;
 
 export default class CameraController {

@@ -11,8 +11,8 @@ Our Server uses Golang
          [X] Path and Node Generation Working
          - Remove Crossover Sections that allow bots to skip areas
       [ ] Single vs Multiplayer Map Generation
-         [ ] Map ConfigMap
-               - (PvP) Battle Royal - 1v1, 2v2, 3v3, 5v5, 7v7
+         [X] Map ConfigMap
+               [ ] (PvP) Battle Royal - 1v1, 2v2, 3v3, 5v5, 7v7
                - (PvP) Invasion - 1v2, 2v3, 3v5, 5v7
                - (PvC) Defense - 1v1, 1v2, 2v2, 2v4, 3v3, 3v5, 5v5, 5v7 
       [ ] Create Walls and Top-Level Terrain
@@ -31,8 +31,5 @@ Our Server uses Golang
    - NPC Spawn Areas
    - Add MiniMap
       - Add Fast Navigation when Free
-
-
-                     ~?~?~?~?~?   BE RIGHT BACK in 20 Min    ?~?~?~?~?~
-                     ~?~?~?~?~?   BE RIGHT BACK in 20 Min    ?~?~?~?~?~
-                     ~?~?~?~?~?   BE RIGHT BACK in 20 Min    ?~?~?~?~?~
+   - Add Bases
+   - Add Spawners
