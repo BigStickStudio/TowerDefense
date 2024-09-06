@@ -17,29 +17,29 @@ export default class CharacterController {
     update(delta) 
         {
             const velocity = this._velocity;
-            const move = state.keyboard.move;
+            const key_pressed = state.keyboard.key_pressed;
             let dec = this._decceleration.clone();
             let acc = this._acceleration.clone();
             let max_vel = this._max_velocity;
 
-            if (move.run) 
+            if (key_pressed.shift) 
                 {
                     acc.z *= 1.5;
                     acc.x /= velocity.z > 0 ? velocity.z * 2 : 1;
                     max_vel *= 1.5;
                 }
 
-            if (!move.run) 
+            if (!key_pressed.shift) 
                 { dec.z *= 2; }
 
             // Acceleration
-            if (move.forward) 
+            if (key_pressed.forward) 
                 { velocity.z = THREE.MathUtils.clamp(velocity.z + acc.z * delta, 0, max_vel); }
-            if (move.backward) 
+            if (key_pressed.backward) 
                 { velocity.z = THREE.MathUtils.clamp(velocity.z - acc.z * delta, -max_vel, 0); }
 
 
-            if (this.target.position.y <= 0 && !move.jump)
+            if (this.target.position.y <= 0 && !key_pressed.space)
                 { 
                     velocity.y = 0; 
                     this.target.position.y = 0;
@@ -49,7 +49,7 @@ export default class CharacterController {
                     this.jumping = false;
                     velocity.y = THREE.MathUtils.lerp(velocity.y, dec.y, 0.1); 
                 }
-            else if ((move.jump && this.target.position.y <= 0) || this.jumping)
+            else if ((key_pressed.space && this.target.position.y <= 0) || this.jumping)
                 { 
                     if (!this.jumping) 
                         {
@@ -74,13 +74,13 @@ export default class CharacterController {
 
             const _rotation = control.quaternion.clone();
 
-            if (move.left) 
+            if (key_pressed.left) 
                 {
                     _quat.setFromAxisAngle(_axis, 0.05);
                     _rotation.multiply(_quat);
                 }
 
-            if (move.right) 
+            if (key_pressed.right) 
                 {
                     _quat.setFromAxisAngle(_axis, -0.05);
                     _rotation.multiply(_quat);
@@ -89,7 +89,7 @@ export default class CharacterController {
             control.quaternion.copy(_rotation);
 
             // Deceleration
-            if (!move.forward && !move.backward) 
+            if (!key_pressed.forward && !key_pressed.backward) 
                 {
                     if (velocity.z > 0) 
                         {
@@ -103,7 +103,7 @@ export default class CharacterController {
                         }
                 }
 
-            if (!move.left && !move.right) 
+            if (!key_pressed.left && !key_pressed.right) 
                 {
                     if (velocity.x > 0) 
                         { velocity.x -= Math.min(velocity.x, -dec.x * delta); } 
@@ -134,21 +134,21 @@ export default class CharacterController {
 
             let total_velocity = Math.sqrt(velocity.x ** 2 + velocity.z ** 2);
 
-            if (!move.forward && !move.backward && total_velocity < 0.1) 
+            if (!key_pressed.forward && !key_pressed.backward && total_velocity < 0.1) 
                 {
                     if (this.state !== 'Resting') 
                         { this.setState = 'Resting'; }
                 } 
             else if (velocity.y > 0) 
                 {
-                    if (move.run) 
+                    if (key_pressed.shift) 
                         { this.setState = 'Jump'; } 
                     else 
                         { this.setState = 'Jump'; }
                 } 
-            else if (move.backward) 
+            else if (key_pressed.backward) 
                 { this.setState = 'Reverse'; } 
-            else if (move.run) 
+            else if (key_pressed.shift) 
                 { this.setState = 'Running'; } 
             else 
                 { this.setState = 'Walking'; }

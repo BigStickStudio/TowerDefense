@@ -5,13 +5,13 @@ export default class KeyBoardWarrior {
     }
 
     init = () => {
-        this.move = {
+        this.key_pressed = {
             forward: false,
             backward: false,
             left: false,
             right: false,
-            jump: false,
-            run: false
+            space: false,
+            shift: false
         };
 
         this.enable();
@@ -33,22 +33,22 @@ export default class KeyBoardWarrior {
         {
             switch (event.keyCode) {
                 case 87: // w
-                    this.move.forward = true;
+                    this.key_pressed.forward = true;
                     break;
                 case 65: // a
-                    this.move.left = true;
+                    this.key_pressed.left = true;
                     break;
                 case 83: // s
-                    this.move.backward = true;
+                    this.key_pressed.backward = true;
                     break;
                 case 68: // d
-                    this.move.right = true;
+                    this.key_pressed.right = true;
                     break;
                 case 32: // space
-                    this.move.jump = true;
+                    this.key_pressed.space = true;
                     break;
                 case 16: // shift
-                    this.move.run = true;
+                    this.key_pressed.shift = true;
                     break;
             }
         }
@@ -57,22 +57,22 @@ export default class KeyBoardWarrior {
         {
             switch (event.keyCode) {
                 case 87: // w
-                    this.move.forward = false;
+                    this.key_pressed.forward = false;
                     break;
                 case 65: // a
-                    this.move.left = false;
+                    this.key_pressed.left = false;
                     break;
                 case 83: // s
-                    this.move.backward = false;
+                    this.key_pressed.backward = false;
                     break;
                 case 68: // d
-                    this.move.right = false;
+                    this.key_pressed.right = false;
                     break;
                 case 32: // space
-                    this.move.jump = false;
+                    this.key_pressed.space = false;
                     break;
                 case 16: // shift
-                    this.move.run = false;
+                    this.key_pressed.shift = false;
                     break
             }
         }

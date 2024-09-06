@@ -70,7 +70,9 @@ export default class Game extends Engine {
         else 
             {
                 state.keyboard.disable();
-                this.camera.update(this.camera.free_target, elapsed);
+                if (!this.camera.moving)
+                    { this.camera.update(null, elapsed); }
+                else { console.log("Camera is moving"); }
             }
         this.sky.update(elapsed);
     }

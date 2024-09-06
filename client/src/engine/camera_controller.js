@@ -15,7 +15,8 @@ export default class CameraController {
     rotator = false;
 
     constructor() {
-        this.free_target = new THREE.Object3D();
+        this.free_target = new THREE.Object3D(0, 0, 0);
+        
         this.enable();
     }
 
@@ -58,11 +59,13 @@ export default class CameraController {
     get middle_click() { return this._mouse_button === 1; }
     get right_click() { return this._mouse_button === 2; }
 
+    get moving_camera()
+        { return this._mouse_down && !state.fixed_camera && state.top_down; }
+
     mouseUp = (event) =>
         {
             this.rotator = false;
             this._mouse_down = false;
-            this.controls.enable = false;
         }
 
     moveMouse = (event) => 
@@ -83,30 +86,9 @@ export default class CameraController {
             if (this._mouse_down && !state.fixed_camera) 
                 { this.moveCamera(); }
         }
-
-    set position(pos) 
-        { 
-            this.instance.position.set(pos.x, pos.y, pos.z); 
-            this.free_target.position.set(pos.x, pos.y, pos.z);
-        }
-
-    set copyPosition(pos) 
-        { 
-            this.instance.position.copy(pos); 
-            this.free_target.position.copy(pos);
-        }
-
-    set rotation(rot) 
-        { 
-            this.instance.rotation.set(rot.x, rot.y, rot.z); 
-            this.free_target.rotation.set(rot.x, rot.y, rot.z);
-        }
     
-    set lookAt(pos) 
-        { 
-            this.instance.lookAt(pos); 
-            this.free_target.lookAt(pos);
-        }
+    get instance_position()
+        { return this.instance.position.clone(); }
 
     set aspect(aspect) 
         { 
@@ -117,16 +99,8 @@ export default class CameraController {
     updateFreeCamera = (target) =>
         {
             if (!target) { return; }
-            if (state.top_down) 
-                {
-                    this.free_target.position.set(target.position.x, -1, target.position.z);
-                    this.free_target.lookAt(new THREE.Vector3(target.position.x, 0, target.position.z));
-                }
-            else 
-                {
-                    this.free_target.position.copy(target.position);
-                    this.free_target.rotation.copy(target.rotation);
-                }
+            
+            this.free_target.copy(target);
         }
 
     zoom = (event) => 
@@ -209,6 +183,7 @@ export default class CameraController {
 
             if (state.top_down) 
                 {
+                    this._target_offset.y = 0;
                     this._target_offset.y = this._zoom_level;
                     this._target_offset.z = 0;
                 }
@@ -234,6 +209,8 @@ export default class CameraController {
 
     _CalculateIdealLookat(target) 
         {
+            // This negates the IdealOffset being added to the target position
+            // Relative to the Quaternion of the target
             if (state.top_down) 
                 { return new THREE.Vector3(0, 0, 0); }
 
