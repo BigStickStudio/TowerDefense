@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import config from '../configs/camera_config.js';
 import CameraController from './camera_controller.js';
 import StateManager from "./state_manager.js";
@@ -21,14 +22,19 @@ export default class Camera extends CameraController {
     constructor(_renderer) 
         {
             super();
-            this.init();
             this._renderer = _renderer; // TODO: Move this to State and Make State into Singleton Engine
+            this.init();
         }
 
 
     init = () => 
         {
             this.instance = new THREE.PerspectiveCamera(config.fov, window.innerWidth / window.innerHeight, config.near, config.far);
+            this.controls = new OrbitControls(this.instance, this._renderer.domElement);
+            this.controls.enableDamping = true;
+            this.controls.dampingFactor = 0.25;
+            this.controls.screenSpacePanning = false;
+            this.controls.maxPolarAngle = Math.PI / 2;
             this.position = this._target_offset.x, this._target_offset.y, this._target_offset.z;
             this.lookAt = this._target_lookat;
         }
@@ -44,6 +50,10 @@ export default class Camera extends CameraController {
                 }
             if (this.left_click)
                 {
+                    this.controls.enable = true;
+                    let pos = this.instance.position.clone();
+                    this.controls.target.set(pos.x + this.d_mouse.x, 0, 0);
+                    this.controls.update();
                 }
         }
     

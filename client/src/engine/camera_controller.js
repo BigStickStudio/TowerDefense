@@ -62,6 +62,7 @@ export default class CameraController {
         {
             this.rotator = false;
             this._mouse_down = false;
+            this.controls.enable = false;
         }
 
     moveMouse = (event) => 
