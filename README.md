@@ -23,11 +23,12 @@ Our Server uses Golang
    - Select Spawnable (Floor)
    - Fix GTLF Animation
    [ ] Ability to Toggle between Free Form Camera and Player Mounted Camera 
-      - Double Click Switches to Fixed and Follows Player
-         - Zoom In Switches to Third Person 
-      [ ] Free Fly Camera Mode has Different Controls
-         [X] Middle Click moves the Map
-         [ ] Shift + Middle Click Rotates the Camera
+      - Switch to Fixed Mode
+         - Locks to a Character if we Double Click the Character
+         - Locks to a Spawn Area if we Double Click a Region from Free Form
+      [X] Free Fly Camera Mode has Different Controls
+         [X] Shift + Middle Click moves the Map
+         [X] Middle Click Rotates the Camera
    - Add Right Click Menu
    - Create Spawnable Zones
    - NPC Spawn Areas
