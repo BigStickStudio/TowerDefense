@@ -24,7 +24,7 @@ export default class StateManager {
             this.state = {
                 "game_mode": 'pvp',
                 "game_type": 'battle',
-                "game_size": '2v2',
+                "game_size": '5v5',
                 "night_cycle": 0.0, // 255 is full night, 0 is full day
                 "day_cycle": 0.0, // 255 is full day, 0 is full night
                 "camera_target": new THREE.Object3D(),
@@ -48,7 +48,10 @@ export default class StateManager {
             return instance;
         }
 
-    redrawUI = () => { this.updateUI(this.state); }
+    redrawUI = (from) => { 
+        console.debug(`[StateManager]::redrawUI(${from})`);
+        this.updateUI(this.state); 
+    }
     
     get key_pressed() { return this.keyboard.key_pressed; }
     
@@ -59,13 +62,30 @@ export default class StateManager {
     get game_config() 
         { return game_config_map[this.game_mode][this.game_type][this.match_size]["configuration"][this.configuration]; }
 
+    get half_grid() { 
+        let grid_size = this.grid_size;
+        return {
+            x: grid_size.x / 2,
+            y: grid_size.y / 2,
+        }; 
+    }
+
+    get map_center() {
+        let half_grid = this.half_grid;
+        let square_size = this.square_size;
+        return {
+            x: half_grid.x * square_size,
+            y: half_grid.y * square_size,
+        };
+    }
+
     get grid_size() { return this.game_config["grid_size"]; }
     get square_size() { return map_config.square_size; }
     get field_size_x() { return this.grid_size.x * map_config.square_size; }
     get field_size_y() { return this.grid_size.y * map_config.square_size; }
     
     set fixed_camera(value)
-        { this.state["fixed_camera"] = value; this.redrawUI(); }
+        { this.state["fixed_camera"] = value; this.redrawUI(`Fixed Camera(${value})`); }
     
     get fixed_camera()
         { return this.state["fixed_camera"]; }
@@ -79,15 +99,15 @@ export default class StateManager {
     get camera_target() { return this.state["camera_target"]; }
 
     set camera_target(value)
-        { this.state["camera_target"] = value; this.redrawUI(); }
+        { this.state["camera_target"] = value; this.redrawUI(`Camera Target(${value})`); }
     
     set camera_target_name(value)
-        { this.state["camera_target"].name = value; this.redrawUI(); }
+        { this.state["camera_target"].name = value; this.redrawUI(`Camera Target Name(${value})`); }
 
     // set selection_mode(value) {}
 
     set camera_position(value)
-        { this.state["camera_position"] = value; this.redrawUI(); }
+        { this.state["camera_position"] = value; this.redrawUI(`Camera Position(${value})`); }
     
     get camera_position()
         { return this.state["camera_position"]; }
@@ -96,7 +116,7 @@ export default class StateManager {
         { return this.state["camera_position"] === "top-down"; }
 
     set moving_state(value)
-        { this.state["moving_state"] = value; this.redrawUI(); }
+        { this.state["moving_state"] = value; this.redrawUI(`Moving State(${value})`); }
 
     get moving_state()
         { return this.state["moving_state"]; }
@@ -128,7 +148,7 @@ export default class StateManager {
     set cursor_target(value)
         { 
             this.state["cursor_target"] = value; 
-            this.redrawUI();
+            this.redrawUI(`Cursor Target(${value})`);
         }
 
     get cursor_target()

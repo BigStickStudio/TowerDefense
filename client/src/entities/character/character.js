@@ -21,6 +21,8 @@ export default class Character extends CharacterController {
 
     set setState(moving_state) 
         { 
+            if (this.state === moving_state) { return; }
+            
             this.state = moving_state; 
             state.moving_state = this.state;
         }
@@ -46,7 +48,8 @@ export default class Character extends CharacterController {
             const loader = new GLTFLoader();
             loader.load('assets/models/MrMan.glb', (gltf) => {
                 let model = gltf.scene;
-                model.position.set(0, 0, 0); // TODO: Blender: Move model back 3
+                let center = state.map_center;
+                model.position.set(center.x, 1, center.y); // TODO: Blender: Move model back 3
                 model.traverse(child => { child.castShadow = true; });
         
                 this.target = model;

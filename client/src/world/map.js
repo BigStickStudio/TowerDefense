@@ -17,8 +17,8 @@ export default class Map extends MapInterface {
         }
 
     init = () => {
-        this.createUnderlay();
         this.createPaths();
+        this.createTerrain();
         const material = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
     }
 
@@ -36,13 +36,14 @@ export default class Map extends MapInterface {
                 { this.scene.add(square); });
         }
 
-    createUnderlay = () => 
+    createTerrain = () => 
         {
             const field_geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, 1, 1);
-            const field_material = new THREE.MeshBasicMaterial({ color: 0x603010, side: THREE.DoubleSide });
+            const field_material = new THREE.MeshBasicMaterial({ color: 0x603010, side: THREE.FrontSide });
             const underpinning = new THREE.Mesh(field_geometry, field_material);
-            underpinning.rotation.x = Math.PI / 2;
-            underpinning.position.set(0, -0.5, 0);
+            underpinning.rotation.x = -Math.PI / 2;
+            let center = state.map_center;
+            underpinning.position.set(center.x, -1, center.y);
             underpinning.name = "underpinning";
             this.scene.add(underpinning);
         }

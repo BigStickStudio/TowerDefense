@@ -25,10 +25,6 @@ const plane_geometry = new THREE.PlaneGeometry(square_inset, square_inset, 1, 1)
 
 // TODO : Move to Utility Fuction
 const clamp = (value, min, max) => { return Math.min(Math.max(value, min), max); }
-const clampSpawnX = (value) => { return clamp(value, min_x_buffer, max_x_buffer); }
-const clampSpawnY = (value) => { return clamp(value, min_y_buffer, max_y_buffer); }
-const clampPathX = (value) => { return clamp(value, min_x_path, max_x_path); }
-const clampPathY = (value) => { return clamp(value, min_y_path, max_y_path); }
 
 const validStep = (y, x, bounds) =>
     {
@@ -158,19 +154,17 @@ export default class MapConstructor {
     static pickRandomXY = (node) => 
         {
             let grid_size = state.grid_size;
-            let half_grid_x = grid_size.x / 2;
-            let half_grid_y = grid_size.y / 2;
             let min_x = node.min_x * grid_size.x;
             let max_x = node.max_x * grid_size.x - 1;
             let min_y = node.min_y * grid_size.y;
             let max_y = node.max_y * grid_size.y - 1;
 
-            let x = (Math.floor(Math.random() * (max_x - min_x)) + min_x) - half_grid_x;
-            let y = (Math.floor(Math.random() * (max_y - min_y)) + min_y) - half_grid_y;
+            let x = (Math.floor(Math.random() * (max_x - min_x)) + min_x);
+            let y = (Math.floor(Math.random() * (max_y - min_y)) + min_y);
 
             return {
-                x: clampSpawnX(x),
-                y: clampSpawnY(y)
+                x: clamp(x, spawn_buffer, grid_size.x - 1 - spawn_buffer),
+                y: clamp(y, spawn_buffer, grid_size.y - 1 - spawn_buffer)
             }
         }
 
@@ -280,5 +274,14 @@ export default class MapConstructor {
             );
 
             return squares;
+        }
+
+    ////////////////////
+    // Create Terrain //
+    ////////////////////
+
+    static createTerrain = () => 
+        {
+
         }
 }

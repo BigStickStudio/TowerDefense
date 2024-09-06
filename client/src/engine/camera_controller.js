@@ -4,6 +4,7 @@ import StateManager from "./state_manager.js";
 
 const state = StateManager.instance;
 
+let map_center = state.map_center;
 let mouse = new THREE.Vector2();
 let prev_mouse = new THREE.Vector2();
 let p_xy = new THREE.Vector2();
@@ -13,6 +14,8 @@ export default class CameraController {
 
     constructor() {
         this.free_target = new THREE.Object3D(0, 0, 0);
+        this.free_target.position.set(map_center.x, 0, map_center.y);
+        this.free_target.rotation.y = Math.PI;
         this.free_target.name = "Free Fly";
 
         this.enable();

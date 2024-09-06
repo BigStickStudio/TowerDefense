@@ -5,12 +5,14 @@ import StateManager from "./state_manager.js";
 
 const state = StateManager.instance;
 
+let map_center = state.map_center;
+
 export default class Camera extends CameraController {
     instance = null;
 
     _zoom_level = config.default_zoom;
     _zoom_height = config.default_zoom_height;
-    _target_offset = new THREE.Vector3(0, config.default_zoom_height, -10);
+    _target_offset = new THREE.Vector3(map_center.x, config.default_zoom_height, map_center.y); // This won't work in 3rd person
     _target_lookat = new THREE.Vector3(0, 8, 5);
     _additional_zoom_height = 0;
     _mouse_down = false;
@@ -29,8 +31,7 @@ export default class Camera extends CameraController {
     init = () => 
         {
             this.instance = new THREE.PerspectiveCamera(config.fov, window.innerWidth / window.innerHeight, config.near, config.far);
-            this.position = this._target_offset.x, this._target_offset.y, this._target_offset.z;
-            this.lookAt = this._target_lookat;
+            this.instance.position.set(map_center.x, config.default_zoom_height, map_center.y);
         }
 
     moveCamera = () => 
@@ -163,7 +164,8 @@ export default class Camera extends CameraController {
                 }
             else // This is when we're in First or Third Person Mode
                 {
-                    state.camera_target = target.clone();
+                    state.camera_target.quaternion.setFromEuler(target.rotation);
+                    state.camera_target.position.setFromMatrixPosition(target.matrixWorld);
 
                     if (this._mouse_down && this._zoom_level > config.min_zoom) 
                         {
