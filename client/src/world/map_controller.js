@@ -38,6 +38,7 @@ export default class MapInterface {
             document.addEventListener('mouseout', this.cleanUp, false);
         }
 
+    // This is used by the UI to disable the cursor when the user is not interacting with the map
     disable = () =>
         {
             document.removeEventListener('mousemove', this.trackMouse, false);

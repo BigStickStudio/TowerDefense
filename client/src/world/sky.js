@@ -43,8 +43,8 @@ const fragment_shader = `
     }
 `
 
-export default class Skybox {
-    skybox = undefined;
+export default class Sky {
+    sky = undefined;
     noon = false;
     morning = true;
     prev_night_value = 0;
@@ -56,34 +56,45 @@ export default class Skybox {
         const night_loader = new THREE.CubeTextureLoader();
 
         const sky_texture = sky_loader.load([
-            'assets/textures/skybox/SkyRight.png',
-            'assets/textures/skybox/SkyLeft.png',
-            'assets/textures/skybox/SkyTop.png',
-            'assets/textures/skybox/SkyBottom.png',
-            'assets/textures/skybox/SkyFront.png',
-            'assets/textures/skybox/SkyBack.png',
+            'assets/textures/sky/SkyRight.png',
+            'assets/textures/sky/SkyLeft.png',
+            'assets/textures/sky/SkyTop.png',
+            'assets/textures/sky/SkyBottom.png',
+            'assets/textures/sky/SkyFront.png',
+            'assets/textures/sky/SkyBack.png',
         ]);
 
         const day_texture = day_loader.load([
-            'assets/textures/skybox/DayRight.png',
-            'assets/textures/skybox/DayLeft.png',
-            'assets/textures/skybox/DayTop.png',
-            'assets/textures/skybox/DayBottom.png',
-            'assets/textures/skybox/DayFront.png',
-            'assets/textures/skybox/DayBack.png',
+            'assets/textures/sky/DayRight.png',
+            'assets/textures/sky/DayLeft.png',
+            'assets/textures/sky/DayTop.png',
+            'assets/textures/sky/DayBottom.png',
+            'assets/textures/sky/DayFront.png',
+            'assets/textures/sky/DayBack.png',
         ]);
 
         const night_texture = night_loader.load([
-            'assets/textures/skybox/StarRight.png',
-            'assets/textures/skybox/StarLeft.png',
-            'assets/textures/skybox/StarTop.png',
-            'assets/textures/skybox/StarBottom.png',
-            'assets/textures/skybox/StarFront.png',
-            'assets/textures/skybox/StarBack.png',
+            'assets/textures/sky/StarRight.png',
+            'assets/textures/sky/StarLeft.png',
+            'assets/textures/sky/StarTop.png',
+            'assets/textures/sky/StarBottom.png',
+            'assets/textures/sky/StarFront.png',
+            'assets/textures/sky/StarBack.png',
         ]);
 
-        this.skybox = new THREE.Mesh(
-            new THREE.BoxGeometry(2000, 2000, 2000), 
+        let sky_net = new THREE.BoxGeometry(2000, 2000, 2000, 5, 5 ,5);
+        let v = new THREE.Vector3();
+
+        for (let i = 0; i < sky_net.attributes.position.count; i++)
+            {
+                v.fromBufferAttribute(sky_net.attributes.position, i);
+                v.normalize().multiplyScalar(3000);
+                sky_net.attributes.position.setXYZ(i, v.x, v.y, v.z);
+            }
+        sky_net.computeVertexNormals();
+
+        this.sky = new THREE.Mesh(
+            sky_net,
             new THREE.ShaderMaterial({
                 uniforms: {
                     day_fade: { type: 'f', value: 0 },
@@ -102,7 +113,7 @@ export default class Skybox {
             })
         );
 
-        scene.add(this.skybox);
+        scene.add(this.sky);
     }
 
     fade = () =>
@@ -113,24 +124,24 @@ export default class Skybox {
             if (this.prev_night_value !== night_value)
                 {
                     this.prev_night_value = night_value;
-                    this.skybox.material.uniforms.night_fade.value = night_value;
+                    this.sky.material.uniforms.night_fade.value = night_value;
                 }
             if (this.prev_day_value !== day_value)
                 {
                     this.prev_day_value = day_value;
-                    this.skybox.material.uniforms.day_fade.value = day_value; 
+                    this.sky.material.uniforms.day_fade.value = day_value; 
                 }
         }
 
     rotate = () => {
-        let star_value = this.skybox.material.uniforms.star_rotation.value;
-        this.skybox.material.uniforms.star_rotation.value = (star_value + 0.00001) % (2 * Math.PI);
+        let star_value = this.sky.material.uniforms.star_rotation.value;
+        this.sky.material.uniforms.star_rotation.value = (star_value + 0.00001) % (2 * Math.PI);
 
-        let day_value = this.skybox.material.uniforms.day_rotation.value;
-        this.skybox.material.uniforms.day_rotation.value = (day_value - 0.00003) % (2 * Math.PI);
+        let day_value = this.sky.material.uniforms.day_rotation.value;
+        this.sky.material.uniforms.day_rotation.value = (day_value - 0.00003) % (2 * Math.PI);
 
-        let sky_value = this.skybox.material.uniforms.sky_rotation.value;
-        this.skybox.material.uniforms.sky_rotation.value = (sky_value + 0.00002) % (2 * Math.PI);
+        let sky_value = this.sky.material.uniforms.sky_rotation.value;
+        this.sky.material.uniforms.sky_rotation.value = (sky_value + 0.00002) % (2 * Math.PI);
     }
 
     update = (elapsed) => 

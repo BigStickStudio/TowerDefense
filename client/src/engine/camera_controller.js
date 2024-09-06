@@ -4,26 +4,83 @@ import StateManager from "./state_manager.js";
 
 const state = StateManager.instance;
 
+let mouse = new THREE.Vector2();
+let prev_mouse = new THREE.Vector2();
+let p_xy = new THREE.Vector2();
+
 export default class CameraController {
     d_mouse = new THREE.Vector2();
+    dp_xy = new THREE.Vector2();
+    mouse_down_id = -1;
+    rotator = false;
 
     constructor() {
         this.free_target = new THREE.Object3D();
+        this.enable();
     }
 
-    updateFreeCamera = (target) =>
+    enable = () => 
         {
-            if (!target) { return; }
-            if (state.top_down) 
-                {
-                    this.free_target.position.set(target.position.x, -1, target.position.z);
-                    this.free_target.lookAt(new THREE.Vector3(target.position.x, 0, target.position.z));
-                }
-            else 
-                {
-                    this.free_target.position.copy(target.position);
-                    this.free_target.rotation.copy(target.rotation);
-                }
+            console.log("Enabling Camera");
+            if (this.camera_enabled) { return; }
+            
+            document.addEventListener('wheel', this.zoom, false);
+            document.addEventListener('mousemove', this.moveMouse, false);
+            document.addEventListener('mousedown', this.mouseDown, false);
+            document.addEventListener('mouseup', this.mouseUp, false);
+
+            this.camera_enabled = true;
+        }
+
+    disable = () => 
+        {
+            //console.log("Disabling Camera");
+            if (!this.camera_enabled) { return; }
+
+            document.removeEventListener('wheel', this.zoom, false);
+            document.removeEventListener('mousemove', this.moveMouse, false);
+            document.removeEventListener('mousedown', this.mouseDown, false);
+            document.removeEventListener('mouseup', this.mouseUp, false);
+            this.camera_enabled = false;
+        }
+
+    mouseDown = (e) => 
+        {
+            this._mouse_button = e.button;
+            this._mouse_down = true;
+
+            // We only want to switch to free camera mode if we are in top down mode
+            if (state.fixed_camera && state.top_down) 
+                { state.toggleCameraMode(); }
+        }
+    
+    get left_click() { return this._mouse_button === 0; }
+    get middle_click() { return this._mouse_button === 1; }
+    get right_click() { return this._mouse_button === 2; }
+
+    mouseUp = (event) =>
+        {
+            this.rotator = false;
+            this._mouse_down = false;
+        }
+
+    moveMouse = (event) => 
+        {
+            this.dp_xy.x = event.clientX - p_xy.x;
+            this.dp_xy.y = event.clientY - p_xy.y;
+            p_xy.x = event.clientX;
+            p_xy.y = event.clientY;
+
+            mouse.x = (p_xy.x / window.innerWidth) * 2 - 1;
+            mouse.y = -(p_xy.y / window.innerHeight) * 2 + 1;
+
+            this.d_mouse.x = +(mouse.x - prev_mouse.x).toFixed(3);
+            this.d_mouse.y = +(mouse.y - prev_mouse.y).toFixed(3);
+            prev_mouse.x = mouse.x;
+            prev_mouse.y = mouse.y;
+
+            if (this._mouse_down && !state.fixed_camera) 
+                { this.moveCamera(); }
         }
 
     set position(pos) 
@@ -56,6 +113,21 @@ export default class CameraController {
             this.instance.updateProjectionMatrix();
         }
 
+    updateFreeCamera = (target) =>
+        {
+            if (!target) { return; }
+            if (state.top_down) 
+                {
+                    this.free_target.position.set(target.position.x, -1, target.position.z);
+                    this.free_target.lookAt(new THREE.Vector3(target.position.x, 0, target.position.z));
+                }
+            else 
+                {
+                    this.free_target.position.copy(target.position);
+                    this.free_target.rotation.copy(target.rotation);
+                }
+        }
+
     zoom = (event) => 
         {
             let zoom = this._zoom_level;
@@ -85,7 +157,7 @@ export default class CameraController {
                         state.camera_position = "top-down";
                     }
                 // If we are zooming in under top down mode, switch to third person 
-                else if (!zoom_out && zoom < config.top_down_height) 
+                else if (!zoom_out && state.fixed_camera && zoom < config.top_down_height) 
                     {
                         zoom = config.max_zoom;
                         zoom_height = config.max_zoom_height;
@@ -107,20 +179,20 @@ export default class CameraController {
                                         zoom_height = 0;
                                     }
                             } 
-                        else // Otherwise scale down top down zoom 
+                        else if (state.fixed_camera ? zoom > config.min_zoom : zoom > config.top_down_height) // Otherwise scale down top down zoom 
                             { zoom *= 0.9; }
                     }
             }       
 
             // Handles Minimum Zoom Levels when Transitioning from 1st<->3rd Person
-            else if (zoom < config.min_zoom) 
+            else if (zoom < config.min_zoom && state.fixed_camera) 
                 {
                     if (!zoom_out) 
                         {
                             state.camera_position = "first-person";
                             zoom = -0.6;
                         } 
-                    else 
+                    else if (state.fixed_camera)
                         {
                             zoom = config.min_zoom;
                             zoom_height = config.standard_zoom_height;
@@ -139,7 +211,7 @@ export default class CameraController {
                     this._target_offset.y = this._zoom_level;
                     this._target_offset.z = 0;
                 }
-            else 
+            else if (state.fixed_camera)
                 {
                     this._target_offset.z = this._zoom_level * config.zoom_scalar;
                     this._target_offset.y = this._zoom_height * config.height_scalar;
@@ -147,6 +219,9 @@ export default class CameraController {
                 }
         }
 
+    refresh = () => 
+        { this.aspect = window.innerWidth / window.innerHeight; }
+    
     _CalculateIdealOffset(target) 
         {
             const idealOffset = this._target_offset.clone();
@@ -175,68 +250,4 @@ export default class CameraController {
             return quaternion;
         }
 
-    update(target, elapsed) 
-        {
-            if (!target) { return; }
-
-            let target_clone;
-            let idealOffset;
-            let idealLookat;
-
-            
-            
-            if (state.top_down) {
-                target_clone = new THREE.Object3D();
-                target_clone.position.set(target.position.x, -1, target.position.z);
-                
-                idealOffset = new THREE.Vector3(target.position.x, this._zoom_level, target.position.z);
-                idealLookat = target_clone.position.clone();
-                
-                const t = 1.0 - Math.pow(0.00000001, elapsed);
-                
-                let current_position = this.instance.position.clone();
-                let current_lookat = new THREE.Vector3(this.instance.position.x, 0, this.instance.position.z);
-
-                current_position.lerp(idealOffset, t);
-                current_lookat.lerp(idealLookat, t);
-
-                this.copyPosition = current_position;
-                this.lookAt = current_lookat;
-            }
-            else {
-                target_clone = target.clone();
-
-                const mouseRotation = this._CalculateMouseRotation();
-
-                if (this._mouse_down && this._zoom_level > config.min_zoom) { 
-                    target_clone.quaternion.multiply(mouseRotation); 
-                }
-                else { 
-                    this._mouse_rotation.y = 0; 
-                    this._additional_zoom_height = 0;
-                }
-
-                idealOffset = this._CalculateIdealOffset(target_clone);
-
-                if (this._mouse_down) {
-                    idealOffset.y += this._additional_zoom_height;
-                }   
-
-                idealLookat = this._CalculateIdealLookat(target_clone);
-
-                // Creates a 'lagging' camera that follows the target
-                if (this._zoom_level < config.min_zoom) {
-                    this.copyPosition = idealOffset;
-                    this.lookAt = idealLookat;
-                } else {
-                    const t = 1.0 - Math.pow(0.00000001, elapsed);
-                
-                    this._current_position.lerp(idealOffset, t);
-                    this._current_lookat.lerp(idealLookat, t);
-                
-                    this.instance.position.copy(this._current_position);
-                    this.instance.lookAt(this._current_lookat);   
-                }
-            }
-        }
 }

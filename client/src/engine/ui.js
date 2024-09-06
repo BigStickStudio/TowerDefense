@@ -42,6 +42,7 @@ export default class UI {
                         </div>
                         `);
 
+
                     // We create a function to initialize the button after the UI is rendered
                     function initButton() {
                         let button = document.getElementById(key);
@@ -104,7 +105,9 @@ export default class UI {
         let toggle_menu = document.getElementById("toggle-menu");
         toggle_menu.onclick = this.toggleUI;
 
-        this.button_fns.forEach((fn) => { fn(); });
+        if (this.expanded) {
+            this.button_fns.forEach((fn) => { fn(); });
+        }
     }
 
     toggleUI = () => {

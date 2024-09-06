@@ -1,6 +1,7 @@
 import camera_config from "../configs/camera_config.js";
 import game_config_map from "../configs/game_config_map.js";
 import map_config from "../configs/map_config.js";
+import KeyBoardWarrior from "./keyboard_controller.js";
 
 let instance = null;
 
@@ -12,14 +13,17 @@ export default class StateManager {
     updateUI = () => { console.error("[StateManager]::error : UI redraw fn() not defined."); }
 
     constructor() 
-        { this.init(); }
+        { 
+            this.keyboard = new KeyBoardWarrior();
+            this.init(); 
+        }
         
     init = () => 
         { 
             this.state = {
                 "game_mode": 'pvp',
                 "game_type": 'battle',
-                "game_size": '3v3',
+                "game_size": '5v5',
                 "night_cycle": 0.0, // 255 is full night, 0 is full day
                 "day_cycle": 0.0, // 255 is full day, 0 is full night
                 "camera_target": 'none', // Must be a player object or null (free fly)
@@ -28,7 +32,7 @@ export default class StateManager {
                 "cursor_target": 'none',
                 "moving_state": "Resting",
                 "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
-                "fixed_camera": true, // (Fixed vs Free Fly)
+                "fixed_camera": false, // (Fixed vs Free Fly)
             };
             this.configuration_count = game_config_map[this.game_mode][this.game_type][this.match_size].config_count;
             this.configuration = Math.floor(Math.random() * this.configuration_count);
@@ -57,13 +61,16 @@ export default class StateManager {
     get square_size() { return map_config.square_size; }
     get field_size_x() { return this.grid_size.x * map_config.square_size; }
     get field_size_y() { return this.grid_size.y * map_config.square_size; }
-
+    
     set fixed_camera(value)
         { this.state["fixed_camera"] = value; this.redrawUI(); }
     
     get fixed_camera()
         { return this.state["fixed_camera"]; }
 
+    // Called when we drag the mouse from top-down OR when we double click a character
+    // - When Enabled the camera should switch to a target
+    // - When Disabled the camera should switch to a free fly
     toggleCameraMode = () =>
         { this.fixed_camera = !this.fixed_camera; }
 

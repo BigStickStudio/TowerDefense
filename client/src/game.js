@@ -3,7 +3,7 @@ import Engine from './engine/engine.js';
 import StateManager from './engine/state_manager.js';
 import Character from './entities/character/character.js';
 import Map from './world/map.js';
-import Skybox from './world/skybox.js';
+import Sky from './world/sky.js';
 
 const state = StateManager.instance;
 
@@ -21,7 +21,7 @@ export default class Game extends Engine {
         window.addEventListener('resize', this.onWindowResize, false);
         
         this.initAmbientLight();
-        this.skybox = new Skybox(this.scene);
+        this.sky = new Sky(this.scene);
         this.map = new Map(this.scene);
         this.configureListeners();
     }
@@ -48,8 +48,8 @@ export default class Game extends Engine {
     }
 
     render = (t) => {
-        this.skybox.fade(state.night_cycle, state.day_cycle);
-        this.skybox.rotate();
+        this.sky.fade(state.night_cycle, state.day_cycle);
+        this.sky.rotate();
         this.requestFrame();
         this.renderer.render(this.scene, this.camera.instance);
         this.step();
@@ -69,10 +69,9 @@ export default class Game extends Engine {
             }
         else 
             {
-                this.character.disable();
-                console.log("Free Camera:", this.camera.free_target);
+                state.keyboard.disable();
                 this.camera.update(this.camera.free_target, elapsed);
             }
-        this.skybox.update(elapsed);
+        this.sky.update(elapsed);
     }
 }

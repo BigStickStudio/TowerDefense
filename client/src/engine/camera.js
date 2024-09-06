@@ -5,12 +5,8 @@ import StateManager from "./state_manager.js";
 
 const state = StateManager.instance;
 
-let mouse = new THREE.Vector2();
-let prev_mouse = new THREE.Vector2();
-
 export default class Camera extends CameraController {
     instance = null;
-    camera_enabled = false;
 
     _zoom_level = config.default_zoom;
     _zoom_height = config.default_zoom_height;
@@ -27,7 +23,6 @@ export default class Camera extends CameraController {
             super();
             this.init();
             this._renderer = _renderer; // TODO: Move this to State and Make State into Singleton Engine
-
         }
 
 
@@ -36,49 +31,89 @@ export default class Camera extends CameraController {
             this.instance = new THREE.PerspectiveCamera(config.fov, window.innerWidth / window.innerHeight, config.near, config.far);
             this.position = this._target_offset.x, this._target_offset.y, this._target_offset.z;
             this.lookAt = this._target_lookat;
-
-            this.enable();
         }
 
-
-    enable = () => 
+    moveCamera = () => 
         {
-            if (this.camera_enabled) { return; }
+            if (this.middle_click)
+                {
+                    let dx = this.dp_xy.x * this._zoom_level / 10;
+                    let dy = this.dp_xy.y * this._zoom_level / 10;
+                    let pos = this.instance.position.clone();
+                    this.free_target.position.set(pos.x - dx, pos.y, pos.z - dy);
+                }
+            if (this.left_click)
+                {
+                }
+        }
+    
+    update(target, elapsed) 
+        {
+            if (!target) { return; }
+
+            let target_clone;
+            let idealOffset;
+            let idealLookat;
             
-            document.addEventListener('wheel', this.zoom, false);
-            document.addEventListener('mousemove', this.moveMouse, false);
-            document.addEventListener('mousedown', this.mouseDown, false);
-            document.addEventListener('mouseup', this.mouseUp, false);
+            if (state.top_down) 
+                {
+                    const t = 1.0 - Math.pow(0.00000001, elapsed);
+                    target_clone = new THREE.Object3D();
+                    
+                    if (!this.rotator)
+                        { target_clone.position.set(target.position.x, -1, target.position.z);} 
+                    else 
+                        { target_clone.position.set(target.position.x, this._zoom_level, target.position.z); }
+                    
+                    idealOffset = new THREE.Vector3(target.position.x, this._zoom_level, target.position.z);
+                    let current_position = this.instance.position.clone();
+                    current_position.lerp(idealOffset, t);
+                    
 
-            this.camera_enabled = true;
+                    idealLookat = target_clone.position.clone();
+                    let current_lookat = new THREE.Vector3(this.instance.position.x, this.instance.position.y, this.instance.position.z);
+                    current_lookat.lerp(idealLookat, t);
+
+                    this.copyPosition = current_position;
+                    this.lookAt = current_lookat;
+                }
+            else // This is when we're in First or Third Person Mode
+                {
+                    target_clone = target.clone();
+
+                    const mouseRotation = this._CalculateMouseRotation();
+
+                    if (this._mouse_down && this._zoom_level > config.min_zoom) 
+                        { target_clone.quaternion.multiply(mouseRotation); }
+                    else 
+                        { 
+                            this._mouse_rotation.y = 0; 
+                            this._additional_zoom_height = 0;
+                        }
+
+                    idealOffset = this._CalculateIdealOffset(target_clone);
+
+                    if (this._mouse_down) 
+                        { idealOffset.y += this._additional_zoom_height; }   
+
+                    idealLookat = this._CalculateIdealLookat(target_clone);
+
+                    // Creates a 'lagging' camera that follows the target
+                    if (this._zoom_level < config.min_zoom) 
+                        {
+                            this.copyPosition = idealOffset;
+                            this.lookAt = idealLookat;
+                        } 
+                    else 
+                        {
+                            const t = 1.0 - Math.pow(0.00000001, elapsed);
+                        
+                            this._current_position.lerp(idealOffset, t);
+                            this._current_lookat.lerp(idealLookat, t);
+                        
+                            this.instance.position.copy(this._current_position);
+                            this.instance.lookAt(this._current_lookat);   
+                        }
+                }
         }
-
-    disable = () => 
-        {
-            //console.log("Disabling Camera");
-            if (!this.camera_enabled) { return; }
-
-            document.removeEventListener('wheel', this.zoom, false);
-            document.removeEventListener('mousemove', this.moveMouse, false);
-            document.removeEventListener('mousedown', this.mouseDown, false);
-            document.removeEventListener('mouseup', this.mouseUp, false);
-            this.camera_enabled = false;
-        }
-
-    refresh = () => 
-        { this.aspect = window.innerWidth / window.innerHeight; }
-
-    mouseDown = (event) => { this._mouse_down = true; }
-    mouseUp = (event) => { this._mouse_down = false; }
-
-    moveMouse = (event) => 
-        {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            this.d_mouse.x = mouse.x - prev_mouse.x;
-            this.d_mouse.y = mouse.y - prev_mouse.y;
-            prev_mouse.x = mouse.x;
-            prev_mouse.y = mouse.y;
-        }
-
 }

@@ -7,86 +7,17 @@ export default class CharacterController {
     constructor() 
         {
             this.enabled = true;
-            this._move = {
-                forward: false,
-                backward: false,
-                left: false,
-                right: false,
-                jump: false, // Add a Fall if not on ground
-                run: false
-            };
-            this._decceleration = new THREE.Vector3(-4, -3, -3);
-            this._acceleration = new THREE.Vector3(-0.1, 3, 0.7);
+            this._decceleration = new THREE.Vector3(-4, -0.475, -3);
+            this._acceleration = new THREE.Vector3(-0.1, 2.75, 0.7);
             this._velocity = new THREE.Vector3(0, -5, 0);
             this._max_velocity = 2;
-
-            this.enable();
-        }
-
-    enable = () =>
-        {
-            document.addEventListener('keydown', (event) => this.keyDown(event), false);
-            document.addEventListener('keyup', (event) => this.keyUp(event), false);
-        }
-
-    disable = () =>
-        {
-            document.removeEventListener('keydown', (event) => this.keyDown(event), false);
-            document.removeEventListener('keyup', (event) => this.keyUp(event), false);
-        }
-
-    keyDown(event) 
-        {
-            switch (event.keyCode) {
-                case 87: // w
-                    this._move.forward = true;
-                    break;
-                case 65: // a
-                    this._move.left = true;
-                    break;
-                case 83: // s
-                    this._move.backward = true;
-                    break;
-                case 68: // d
-                    this._move.right = true;
-                    break;
-                case 32: // space
-                    this._move.jump = true;
-                    break;
-                case 16: // shift
-                    this._move.run = true;
-                    break;
-            }
-        }
-
-    keyUp(event) 
-        {
-            switch (event.keyCode) {
-                case 87: // w
-                    this._move.forward = false;
-                    break;
-                case 65: // a
-                    this._move.left = false;
-                    break;
-                case 83: // s
-                    this._move.backward = false;
-                    break;
-                case 68: // d
-                    this._move.right = false;
-                    break;
-                case 32: // space
-                    this._move.jump = false;
-                    break;
-                case 16: // shift
-                    this._move.run = false;
-                    break
-            }
+            this.jumping = false;
         }
 
     update(delta) 
         {
             const velocity = this._velocity;
-            const move = this._move;
+            const move = state.keyboard.move;
             let dec = this._decceleration.clone();
             let acc = this._acceleration.clone();
             let max_vel = this._max_velocity;
@@ -107,8 +38,29 @@ export default class CharacterController {
             if (move.backward) 
                 { velocity.z = THREE.MathUtils.clamp(velocity.z - acc.z * delta, -max_vel, 0); }
 
-            if (move.jump) 
-                { velocity.y = THREE.MathUtils.clamp(velocity.y + acc.y * delta, -max_vel, max_vel); }
+
+            if (this.target.position.y <= 0 && !move.jump)
+                { 
+                    velocity.y = 0; 
+                    this.target.position.y = 0;
+                }
+            else if (this.target.position.y > 5)
+                { 
+                    this.jumping = false;
+                    velocity.y = THREE.MathUtils.lerp(velocity.y, dec.y, 0.1); 
+                }
+            else if ((move.jump && this.target.position.y <= 0) || this.jumping)
+                { 
+                    if (!this.jumping) 
+                        {
+                            // This triggers our 'jumping' loop AND gives and 'explosive' jump
+                            this.jumping = true;
+                            velocity.y = THREE.MathUtils.clamp(velocity.y + acc.y * delta * 2, -dec.y, acc.y); 
+                        }
+                    else 
+                        { velocity.y = THREE.MathUtils.lerp(velocity.y, acc.y, delta); }
+                }
+            
 
             if (!this.target) 
                 { return; }
@@ -157,12 +109,6 @@ export default class CharacterController {
                         { velocity.x -= Math.min(velocity.x, -dec.x * delta); } 
                     else 
                         { velocity.x -= Math.max(velocity.x, dec.x * delta); }
-                }
-
-            if (!move.jump) 
-                {
-                    if (velocity.y > -10) 
-                        { velocity.y -= Math.min(velocity.y, -dec.y * delta); } 
                 }
 
             const forward = new THREE.Vector3(0, 0, 1);
