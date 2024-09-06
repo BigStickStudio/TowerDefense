@@ -47,13 +47,14 @@ export default class Game extends Engine {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    // TODO: This should be moved to the engine and called as a run() with a closure
     render = (t) => {
         this.sky.fade(state.night_cycle, state.day_cycle);
         this.sky.rotate();
         this.requestFrame();
         this.renderer.render(this.scene, this.camera.instance);
-        this.step();
         this.map.getIntersection(this.camera.instance, this.scene.children);
+        this.step();
     }
 
     requestFrame = () => { requestAnimationFrame(this.render); }
@@ -63,6 +64,7 @@ export default class Game extends Engine {
 
         if (state.fixed_camera) 
             {
+                console.log(this.character.target);
                 this.character?.update(elapsed);
                 this.camera.updateFreeCamera(this.character.target);
                 this.camera.update(this.character.target, elapsed);
@@ -71,7 +73,7 @@ export default class Game extends Engine {
             {
                 state.keyboard.disable();
                 if (!this.camera.moving)
-                    { this.camera.update(null, elapsed); }
+                    { this.camera.update(this.camera.free_target, elapsed); }
                 else { console.log("Camera is moving"); }
             }
         this.sky.update(elapsed);

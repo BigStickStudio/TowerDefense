@@ -43,7 +43,6 @@ export default class Character extends CharacterController {
 
     createModel = () => 
         {
-            let obj = null;
             const loader = new GLTFLoader();
             loader.load('assets/models/MrMan.glb', (gltf) => {
                 let model = gltf.scene;

@@ -10,7 +10,6 @@ let p_xy = new THREE.Vector2();
 
 export default class CameraController {
     d_mouse = new THREE.Vector2();
-    dp_xy = new THREE.Vector2();
     mouse_down_id = -1;
     rotator = false;
 
@@ -70,11 +69,6 @@ export default class CameraController {
 
     moveMouse = (event) => 
         {
-            this.dp_xy.x = event.clientX - p_xy.x;
-            this.dp_xy.y = event.clientY - p_xy.y;
-            p_xy.x = event.clientX;
-            p_xy.y = event.clientY;
-
             mouse.x = (p_xy.x / window.innerWidth) * 2 - 1;
             mouse.y = -(p_xy.y / window.innerHeight) * 2 + 1;
 

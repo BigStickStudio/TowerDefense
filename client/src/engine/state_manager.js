@@ -23,7 +23,7 @@ export default class StateManager {
             this.state = {
                 "game_mode": 'pvp',
                 "game_type": 'battle',
-                "game_size": '5v5',
+                "game_size": '2v2',
                 "night_cycle": 0.0, // 255 is full night, 0 is full day
                 "day_cycle": 0.0, // 255 is full day, 0 is full night
                 "camera_target": 'none', // Must be a player object or null (free fly)
@@ -32,7 +32,7 @@ export default class StateManager {
                 "cursor_target": 'none',
                 "moving_state": "Resting",
                 "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
-                "fixed_camera": false, // (Fixed vs Free Fly)
+                "fixed_camera": true, // (Fixed vs Free Fly)
             };
             this.configuration_count = game_config_map[this.game_mode][this.game_type][this.match_size].config_count;
             this.configuration = Math.floor(Math.random() * this.configuration_count);
@@ -49,13 +49,14 @@ export default class StateManager {
 
     redrawUI = () => { this.updateUI(this.state); }
     
+    get key_pressed() { return this.keyboard.key_pressed; }
+    
     get game_mode() { return this.state["game_mode"]; }
     get game_type() { return this.state["game_type"]; }
     get match_size() { return this.state["game_size"]; }
 
     get game_config() 
         { return game_config_map[this.game_mode][this.game_type][this.match_size]["configuration"][this.configuration]; }
-        
 
     get grid_size() { return this.game_config["grid_size"]; }
     get square_size() { return map_config.square_size; }
