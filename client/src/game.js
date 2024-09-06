@@ -64,18 +64,14 @@ export default class Game extends Engine {
 
         if (state.fixed_camera) 
             {
-                console.log(this.character.target);
+                //console.log(this.character.target);
                 this.character?.update(elapsed);
                 this.camera.updateFreeCamera(this.character.target);
                 this.camera.update(this.character.target, elapsed);
             }
         else 
-            {
-                state.keyboard.disable();
-                if (!this.camera.moving)
-                    { this.camera.update(this.camera.free_target, elapsed); }
-                else { console.log("Camera is moving"); }
-            }
+            { this.camera.update(this.camera.free_target, elapsed); }
+            
         this.sky.update(elapsed);
     }
 }

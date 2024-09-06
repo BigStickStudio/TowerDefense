@@ -10,8 +10,6 @@ let p_xy = new THREE.Vector2();
 
 export default class CameraController {
     d_mouse = new THREE.Vector2();
-    mouse_down_id = -1;
-    rotator = false;
 
     constructor() {
         this.free_target = new THREE.Object3D(0, 0, 0);
@@ -58,20 +56,13 @@ export default class CameraController {
     get middle_click() { return this._mouse_button === 1; }
     get right_click() { return this._mouse_button === 2; }
 
-    get moving_camera()
-        { return this._mouse_down && !state.fixed_camera && state.top_down; }
-
     mouseUp = (event) =>
-        {
-            this.rotator = false;
-            this._mouse_down = false;
-        }
+        { this._mouse_down = false; }
 
     moveMouse = (event) => 
         {
-            mouse.x = (p_xy.x / window.innerWidth) * 2 - 1;
-            mouse.y = -(p_xy.y / window.innerHeight) * 2 + 1;
-
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             this.d_mouse.x = +(mouse.x - prev_mouse.x).toFixed(3);
             this.d_mouse.y = +(mouse.y - prev_mouse.y).toFixed(3);
             prev_mouse.x = mouse.x;
@@ -93,8 +84,7 @@ export default class CameraController {
     updateFreeCamera = (target) =>
         {
             if (!target) { return; }
-            
-            this.free_target.copy(target);
+            this.free_target.position.copy(new THREE.Vector3(target.position.x, target.position.y, target.position.z));
         }
 
     zoom = (event) => 
@@ -161,7 +151,7 @@ export default class CameraController {
                             state.camera_position = "first-person";
                             zoom = -0.6;
                         } 
-                    else if (state.fixed_camera)
+                    else
                         {
                             zoom = config.min_zoom;
                             zoom_height = config.standard_zoom_height;
@@ -177,7 +167,7 @@ export default class CameraController {
 
             if (state.top_down) 
                 {
-                    this._target_offset.y = 0;
+                    this._target_offset.x = 0;
                     this._target_offset.y = this._zoom_level;
                     this._target_offset.z = 0;
                 }

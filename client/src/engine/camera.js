@@ -7,7 +7,6 @@ const state = StateManager.instance;
 
 export default class Camera extends CameraController {
     instance = null;
-    moving = false;
 
     _zoom_level = config.default_zoom;
     _zoom_height = config.default_zoom_height;
@@ -36,7 +35,6 @@ export default class Camera extends CameraController {
 
     moveCamera = () => 
         {
-            console.log("Hit Move Camera");
             if (this.middle_click)
                 {
                     if (state.key_pressed.shift)
@@ -63,7 +61,7 @@ export default class Camera extends CameraController {
                     else
                         {
                             let scalar = config.max_top_down_height / this._zoom_level / 2;
-
+                            console.log(this.d_mouse);
                             let dx = this.d_mouse.x * (this._zoom_level / 10) * scalar;
                             let dy = this.d_mouse.y / (10 / this._zoom_level) * scalar / 2;
         
@@ -91,10 +89,10 @@ export default class Camera extends CameraController {
         
                             if (this.free_target.position.y > 0) 
                                 { 
-                                    let new_target_position = this.instance.position.clone().add(y_offset);
+                                    let new_target_position = new THREE.Vector3().addVectors(this.instance.position, y_offset);
                                     this.free_target.position.lerp(new_target_position, 0.06);
         
-                                    let new_camera_position = this.free_target.position.clone().add(x_offset);
+                                    let new_camera_position = new THREE.Vector3().addVectors(this.free_target.position, x_offset);
                                     this.instance.position.lerp(new_camera_position, 0.1);
                                 }
         
@@ -111,21 +109,23 @@ export default class Camera extends CameraController {
 
             let idealOffset;
             let idealLookat;
-            let _target_clone = new THREE.Object3D();
+            let _target_clone = new THREE.Object3D(); // TODO: Move to state machine
             const t = 1.0 - Math.pow(0.00000001, elapsed);
-            
-            // This is triggered from Game when we are in 'Free' mode
-            if (state.fixed_camera)
-                {
-                    _target_clone.position.set(this.free_target.position.clone());
-                    
-                    // This is used to handle the rotation of the camera when the mouse is down
-                    let idealOffset = new THREE.Vector3(this.instance.position.x, this._zoom_level, this.instance.position.z);
-                    let current_position = this.instance.position.clone();
-                    current_position.copy(idealOffset);
+            console.log("[Camera]::update::t:", t);
 
-                    let idealLookat = _target_clone.position.clone();
-                    let current_lookat = new THREE.Vector3(this.free_target.position.x, this.free_target.position.y, this.free_target.position.z);
+            // This is triggered from Game when we are in 'Free' mode
+            if (!state.fixed_camera)
+                {
+                    _target_clone.position.setFromMatrixPosition(target.matrixWorld);
+                    //console.log(_target_clone.position);
+
+                    // This is used to handle the rotation of the camera when the mouse is down
+                    idealOffset = new THREE.Vector3(this.instance.position.x, this._zoom_level, this.instance.position.z);
+                    let current_position = this.instance.position.clone();
+                    current_position.lerp(idealOffset, t);
+
+                    idealLookat = _target_clone.position.clone();
+                    let current_lookat = this.free_target.position.clone();
                     current_lookat.lerp(idealLookat, t);
 
                     this.instance.position.copy(idealOffset);
@@ -133,29 +133,24 @@ export default class Camera extends CameraController {
                 }
             else if (state.top_down) 
                 {
-                    console.log("Hit Top Down");
-                    let _target_clone = new THREE.Object3D();
                     _target_clone.position.set(target.position.x, -1, target.position.z);
-                    console.log("Target Clone:", _target_clone.position);
-                    console.log(this._zoom_level);
-
-                    let current_position = this.instance.position.clone();
-                    current_position.lerp(
-                        new THREE.Vector3(
-                                target.position.x, 
-                                this._zoom_level, 
-                                target.position.z
-                            ), 
-                            t
-                        );
                     
+                    let current_position = this.instance.position.clone();
+                    idealOffset = new THREE.Vector3(
+                            target.position.x, 
+                            this._zoom_level, 
+                            target.position.z
+                        );
+                    current_position.lerp(idealOffset, t);
 
+
+                    idealLookat = _target_clone.position.clone();
                     let current_lookat = new THREE.Vector3(
                             this.instance.position.x, 
                             this.instance.position.y, 
                             this.instance.position.z
                         );
-                    current_lookat.lerp(_target_clone.position.clone(), t);
+                    current_lookat.lerp(idealLookat, t);
 
                     this.instance.position.copy(current_position);
                     this.instance.lookAt(current_lookat);
@@ -164,29 +159,28 @@ export default class Camera extends CameraController {
                 {
                     _target_clone = target.clone();
 
-                    const mouseRotation = this._CalculateMouseRotation();
-
                     if (this._mouse_down && this._zoom_level > config.min_zoom) 
-                        { _target_clone.quaternion.multiply(mouseRotation); }
+                        {
+                            let mouseRotation = this._CalculateMouseRotation();
+                            _target_clone.quaternion.multiply(mouseRotation); 
+                        }
                     else 
                         { 
                             this._mouse_rotation.y = 0; 
                             this._additional_zoom_height = 0;
                         }
 
+                    idealLookat = this._CalculateIdealLookat(_target_clone);
                     idealOffset = this._CalculateIdealOffset(_target_clone);
 
                     if (this._mouse_down) 
                         { idealOffset.y += this._additional_zoom_height; }   
-
-                    idealLookat = this._CalculateIdealLookat(_target_clone);
 
                     // Creates a 'lagging' camera that follows the target
                     if (this._zoom_level < config.min_zoom) 
                         {
                             this.instance.position.copy(idealOffset);
                             this.instance.lookAt(idealLookat);
-                            this.free_target.copy(target);
                         } 
                     else 
                         {

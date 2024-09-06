@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import camera_config from "../configs/camera_config.js";
 import game_config_map from "../configs/game_config_map.js";
 import map_config from "../configs/map_config.js";
@@ -26,13 +27,13 @@ export default class StateManager {
                 "game_size": '2v2',
                 "night_cycle": 0.0, // 255 is full night, 0 is full day
                 "day_cycle": 0.0, // 255 is full day, 0 is full night
-                "camera_target": 'none', // Must be a player object or null (free fly)
+                "camera_target": new THREE.Vector3(0, 0, 0),
                 "selection_mode": 'none', // This will be used for 'building' or 'selecting' objects
                 "selected_target": 'none',
                 "cursor_target": 'none',
                 "moving_state": "Resting",
                 "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
-                "fixed_camera": true, // (Fixed vs Free Fly)
+                "fixed_camera": false, // (Fixed vs Free Fly)
             };
             this.configuration_count = game_config_map[this.game_mode][this.game_type][this.match_size].config_count;
             this.configuration = Math.floor(Math.random() * this.configuration_count);
