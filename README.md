@@ -17,7 +17,7 @@ Our Server uses Golang
          - Remove Crossover Sections that allow bots to skip areas
       [ ] Single vs Multiplayer Map Generation
          [X] Map ConfigMap
-               [ ] (PvP) Battle Royal - 1v1, 2v2, 3v3, 5v5, 7v7
+               [ ] (PvP) Battle Royal - 1v1, 2v2, 3v3, 4v4, 5v5, 7v7
                - (PvP) Invasion - 1v2, 2v3, 3v5, 5v7
                - (PvC) Defense - 1v1, 1v2, 2v2, 2v4, 3v3, 3v5, 5v5, 5v7 
    - Select Spawnable (Floor)
@@ -25,6 +25,7 @@ Our Server uses Golang
    [ ] Ability to Toggle between Free Form Camera and Player Mounted Camera 
       - Switch to Fixed Mode
          - Locks to a Character if we Double Click the Character
+         - Unlocks if the Character is already selected
          - Locks to a Spawn Area if we Double Click a Region from Free Form
       [X] Free Fly Camera Mode has Different Controls
          [X] Shift + Middle Click moves the Map
@@ -36,3 +37,14 @@ Our Server uses Golang
       - Add Fast Navigation when Free
    - Add Bases
    - Add Spawners
+   - Add Menu
+      - Add Lobby
+   - Add Multiplayer 
+      - Add User Database Integrations
+      - Add Match Making
+      - Add Reward / Ranking
+      - Add 'Guilds' and 'Factions'
+         - Guilds are like Clans of People all sharing rewards and resources
+            - Guilds can be a part of a Bracket where they have to face off
+         - Factions are formed naturally as players form alliances by playing on the same team
+            - Factions allow for 'preferred build-outs'
