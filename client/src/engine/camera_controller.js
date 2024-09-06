@@ -13,7 +13,8 @@ export default class CameraController {
 
     constructor() {
         this.free_target = new THREE.Object3D(0, 0, 0);
-        
+        this.free_target.name = "Free Fly";
+
         this.enable();
     }
 

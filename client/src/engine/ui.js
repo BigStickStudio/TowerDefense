@@ -11,6 +11,11 @@ const button_map = {
     },
 }
 
+const unwrap = (t) => {
+    let v = t?.name;
+    return v ? v : t;
+}
+
 export default class UI {
     ui = document.getElementById("ui")
     expanded = false;
@@ -61,7 +66,7 @@ export default class UI {
                             <div class="col">
                             </div>
                             <div class="col-6 border-bottom border-primary text-center">
-                                <span>${state[key]}</span>
+                                <span>${unwrap(state[key])}</span>
                             </div>
                         </div>
                     `);

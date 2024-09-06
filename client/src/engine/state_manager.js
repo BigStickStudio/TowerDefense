@@ -27,7 +27,7 @@ export default class StateManager {
                 "game_size": '2v2',
                 "night_cycle": 0.0, // 255 is full night, 0 is full day
                 "day_cycle": 0.0, // 255 is full day, 0 is full night
-                "camera_target": new THREE.Vector3(0, 0, 0),
+                "camera_target": new THREE.Object3D(),
                 "selection_mode": 'none', // This will be used for 'building' or 'selecting' objects
                 "selected_target": 'none',
                 "cursor_target": 'none',
@@ -76,8 +76,13 @@ export default class StateManager {
     toggleCameraMode = () =>
         { this.fixed_camera = !this.fixed_camera; }
 
+    get camera_target() { return this.state["camera_target"]; }
+
     set camera_target(value)
         { this.state["camera_target"] = value; this.redrawUI(); }
+    
+    set camera_target_name(value)
+        { this.state["camera_target"].name = value; this.redrawUI(); }
 
     // set selection_mode(value) {}
 
