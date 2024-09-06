@@ -3,6 +3,12 @@ Our Client uses Python + ThreeJS
 Our Server uses Golang
 
 ## TODO:
+
+### Legend:
+ - [X] - Completed
+ - [ ] - In Progress
+ - Not Yet
+
    - [X] Ability to Toggle between 3rd Person and Top Down 
       - [X] Scrolling Out Zooms to Top Down
    - [X] Map SkyBox to Sphere (SkySphere)
