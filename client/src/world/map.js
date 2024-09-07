@@ -155,45 +155,75 @@ export default class Map {
             // Here we iterate over all the things and create our terrain
             
             const geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
-            const field_material = new THREE.MeshBasicMaterial({ color: 0x603010, wireframe: true });
+            const field_material = new THREE.MeshStandardMaterial( {
+                color: 0x7c4e29,
+                roughness: 0.7,
+                metalness: 0.4,
+                flatShading: true,
+            } )
             const underpinning = new THREE.Mesh(geometry, field_material);
             underpinning.rotation.x = -Math.PI / 2;
-            let center = state.map_center;
             underpinning.position.set(0, -1, 0);
             underpinning.name = "underpinning";
+            underpinning.receiveShadow = true;
+            underpinning.castShadow = true;
 
             let vertex = new THREE.Vector3();
 
             let hill = true;
+            let first_step = false;
+            let last_step = false;
 
             const lookahead = (y, x) =>
-                {
-                    console.log(y, x); 
-                    return !!this.square_table[y][x]; 
-                }
+                { return !!this.square_table[y][x]; }
 
             for (let i = 0; i < geometry.attributes.position.count; i++)
                 {
                     // This is a hack to handle the fact that 1 square has 2 lines
                     // or rather that 5 squares have 6 lines. So we will treat it like the last line
                     let y_position = Math.min(Math.floor(i / (grid_size.x)), grid_size.y - 1)
+                    let x_position = i % (grid_size.x + 1);
 
                     // We calculate this either way, but have to + 1 to account for the last line
-                    let toggle_hill = lookahead(y_position, i % (grid_size.x + 1));
+                    let toggle_hill = lookahead(y_position, x_position);
+                    let toggle_step = lookahead(y_position, Math.min(x_position + 1, grid_size.x));
+                 
+                    if (toggle_hill && toggle_step)
+                        { continue; }
 
-                    // This toggles the hill on if we're at the end of the row
-                    if (!hill)
-                        { 
-                            if (toggle_hill) { hill = !hill; }
-                            continue; 
+                    if (x_position === 0)
+                        { hill = true; }
+                        
+
+                    if (hill && toggle_step && !last_step) 
+                        { last_step = true; }
+                    else if (!hill && toggle_hill && first_step)
+                        {
+                            first_step = false;
+                            hill = true; 
                         }
+                    // Handle the first step (start of a hill)
+                    else if (!hill && toggle_step && !first_step) 
+                        { first_step = true; }
+                    else if (!hill)
+                        { continue; }
 
+                    // Modify the z-position of the vertex
                     vertex.fromBufferAttribute(geometry.attributes.position, i);
-                    vertex.z = Math.random() * 3 + 15;
+                    
+                    // Adjust z based on first or last step, or if in the middle of a hill
+                    vertex.z = (first_step || last_step) 
+                        ? Math.random() * 6 + 5 // Half-height calculation
+                        : Math.random() * 3 + 15; // Full hill height
+                    
                     geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
 
-                    // This toggles the hill back off
-                    if (toggle_hill) { hill = !hill; }
+                    // Toggle the hill off after reaching the end of a step
+                    if (toggle_hill && last_step) 
+                        { 
+                            hill = false; // End of hill
+                            last_step = false; // Reset last step
+                        }
                 }
 
 
@@ -280,6 +310,18 @@ export default class Map {
     // TODO: Use this to draw frame 
     constructPlayerBounds = (position) =>
         {
+            let light_x = position.x * square_size + config.square_offset - map_center.x;
+            let light_y = position.y * square_size + config.square_offset - map_center.y;
+            let player_lighting = new THREE.HemisphereLight(0xcc9933, 0x00cc99, 0.3);
+            player_lighting.position.set(light_x, 4, light_y);
+            player_lighting.color.setHSL(0.6, 1, 0.6);
+            player_lighting.groundColor.setHSL(0.095, 1, 0.75);
+            state.scene.add(player_lighting);
+    
+            // Hemisphere Helper
+            const hemisphere_helper = new THREE.HemisphereLightHelper(player_lighting, 5);
+            state.scene.add(hemisphere_helper);
+
             // TODO: Use these to block the corners
             //       to give a rounded box effect
             let min_x = position.x - spawn_buffer; 

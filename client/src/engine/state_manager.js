@@ -18,6 +18,7 @@ export default class StateManager {
             
             this.clock = new THREE.Clock();
             this.scene = new THREE.Scene();
+            this.scene.fog = new THREE.Fog(0xffffff, 1200, 3000); // TODO: set this based on offset
             this.initRenderer();
             this.keyboard = new KeyBoardWarrior();
             this.init(); 
@@ -28,7 +29,7 @@ export default class StateManager {
             this.state = {
                 "game_mode": 'pvp',
                 "game_type": 'battle',
-                "game_size": '1v1',
+                "game_size": '5v5',
                 "camera_target": new THREE.Object3D(),
                 "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
                 "cursor_target": 'none',

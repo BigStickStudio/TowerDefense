@@ -116,14 +116,49 @@ export default class Sky {
         state.scene.add(this.sky);
 
         /// Create Sky LIGHTS aka SUN and MOON
-        this.initLights
+        this.initLights();
     }
 
-    initAmbientLight = () => {
-        this.sun = new THREE.DirectionalLight(0xffffff, 1); 
-        this.sun.position.set(100, 100, 100);
+    initLights = () => {
+        this.sun = new THREE.DirectionalLight(0x968b6f, 1); 
+        this.sun.position.set(3000, 3000, 100);
+        this.sun.target.position.set(-1000, -100, 1000);
+        this.sun.castShadow = true;
+        this.sun.shadow.mapSize.width = 2048;
+        this.sun.shadow.mapSize.height = 2048;
+        this.sun.shadow.camera.top = 3500;
+        this.sun.shadow.camera.bottom = -3500;
+        this.sun.shadow.camera.left = -3500;
+        this.sun.shadow.camera.right = 3500;
+        this.sun.shadow.camera.near = 0.5;
+        this.sun.shadow.camera.far = 3000;
 
         state.scene.add(this.sun);
+
+        // For the Debugs
+        const sun_helper = new THREE.DirectionalLightHelper(this.sun)
+        state.scene.add(sun_helper)
+
+        this.moon = new THREE.DirectionalLight(0x778285, 0.5);
+        this.moon.position.set(-1000, 1000, -100);
+        this.moon.target.position.set(1000, -100, -1000);
+        this.moon.castShadow = true;
+        this.moon.shadow.mapSize.width = 2048;
+        this.moon.shadow.mapSize.height = 2048;
+        this.moon.shadow.camera.top = 2000;
+        this.moon.shadow.camera.bottom = -2000;
+        this.moon.shadow.camera.left = -2000;
+        this.moon.shadow.camera.right = 2000;
+        this.moon.shadow.camera.near = 0.5;
+        this.moon.shadow.camera.far = 3000;
+
+        state.scene.add(this.moon);
+
+        // For the Debugs
+        const moon_helper = new THREE.DirectionalLightHelper(this.moon)
+        state.scene.add(moon_helper)
+
+
     }
 
     fade = () =>
