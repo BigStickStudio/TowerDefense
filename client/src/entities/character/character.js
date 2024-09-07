@@ -6,10 +6,9 @@ import CharacterController from './character_controller.js';
 const state = StateManager.instance;
 
 export default class Character extends CharacterController {
-    constructor(scene) 
+    constructor() 
         {
             super(self);
-            this._scene = scene;
             this._animations = {};
             this.target = null;
             this._manager = null;
@@ -48,13 +47,12 @@ export default class Character extends CharacterController {
             const loader = new GLTFLoader();
             loader.load('assets/models/MrMan.glb', (gltf) => {
                 let model = gltf.scene;
-                let center = state.map_center;
-                model.position.set(center.x, 1, center.y); // TODO: Blender: Move model back 3
+                model.position.set(0, 1, 0); // TODO: Blender: Move model back 3
                 model.traverse(child => { child.castShadow = true; });
         
                 this.target = model;
                 this.target.name = "MrMan";
-                this._scene.add(this.target);
+                state.scene.add(this.target);
                 this._mixer = new THREE.AnimationMixer(model);
 
                 const animations = gltf.animations;

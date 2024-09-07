@@ -15,6 +15,9 @@ export default class StateManager {
 
     constructor() 
         { 
+            this.clock = new THREE.Clock();
+            this.scene = new THREE.Scene();
+            this.initRenderer();
             this.keyboard = new KeyBoardWarrior();
             this.init(); 
         }
@@ -22,22 +25,38 @@ export default class StateManager {
     init = () => 
         { 
             this.state = {
+                "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
                 "game_mode": 'pvp',
                 "game_type": 'battle',
                 "game_size": '5v5',
                 "night_cycle": 0.0, // 255 is full night, 0 is full day
                 "day_cycle": 0.0, // 255 is full day, 0 is full night
-                "camera_target": new THREE.Object3D(),
                 "selection_mode": 'none', // This will be used for 'building' or 'selecting' objects
                 "selected_target": 'none',
                 "cursor_target": 'none',
+                "camera_target": new THREE.Object3D(),
                 "moving_state": "Resting",
-                "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
                 "fixed_camera": false, // (Fixed vs Free Fly)
             };
+            
             this.configuration_count = game_config_map[this.game_mode][this.game_type][this.match_size].config_count;
             this.configuration = Math.floor(Math.random() * this.configuration_count);
             console.log("[StateManager]::configuration:", this.configuration);
+        }
+
+
+    initRenderer = () => 
+        {
+            this.renderer = new THREE.WebGLRenderer({ antialias: true });
+            this.renderer.setClearColor(0x000000);
+            this.renderer.gammaFactor = 2.2;
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            this.renderer.setPixelRatio(window.devicePixelRatio);
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+            let canvas = document.getElementById('canvas');
+            canvas.appendChild(this.renderer.domElement);
         }
 
     static get instance()
@@ -49,7 +68,7 @@ export default class StateManager {
         }
 
     redrawUI = (from) => { 
-        console.debug(`[StateManager]::redrawUI(${from})`);
+        //console.debug(`[StateManager]::redrawUI(${from})`);
         this.updateUI(this.state); 
     }
     
@@ -66,7 +85,7 @@ export default class StateManager {
         let grid_size = this.grid_size;
         return {
             x: grid_size.x / 2,
-            y: grid_size.y / 2,
+            y: grid_size.y / 2, 
         }; 
     }
 
@@ -103,8 +122,6 @@ export default class StateManager {
     
     set camera_target_name(value)
         { this.state["camera_target"].name = value; this.redrawUI(`Camera Target Name(${value})`); }
-
-    // set selection_mode(value) {}
 
     set camera_position(value)
         { this.state["camera_position"] = value; this.redrawUI(`Camera Position(${value})`); }

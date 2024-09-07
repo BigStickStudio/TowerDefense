@@ -8,7 +8,7 @@ const config = {
     path_buffer: path_buffer,
     square_size: square_size,
     frame_size: frame_size,
-    map_offset: (square_size / 2),
+    square_offset: Math.floor(square_size / 2),
 }
 
 export default config;

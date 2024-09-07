@@ -50,7 +50,7 @@ export default class Sky {
     prev_night_value = 0;
     prev_day_value = 0;
 
-    constructor(scene) {
+    constructor() {
         const day_loader = new THREE.CubeTextureLoader();
         const sky_loader = new THREE.CubeTextureLoader();
         const night_loader = new THREE.CubeTextureLoader();
@@ -113,7 +113,7 @@ export default class Sky {
             })
         );
 
-        scene.add(this.sky);
+        state.scene.add(this.sky);
     }
 
     fade = () =>

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import config from '../configs/camera_config.js';
+import config from '../../configs/camera_config.js';
+import StateManager from "../../engine/state_manager.js";
 import CameraController from './camera_controller.js';
-import StateManager from "./state_manager.js";
 
 const state = StateManager.instance;
 
@@ -12,8 +12,8 @@ export default class Camera extends CameraController {
 
     _zoom_level = config.default_zoom;
     _zoom_height = config.default_zoom_height;
-    _target_offset = new THREE.Vector3(map_center.x, config.default_zoom_height, map_center.y); // This won't work in 3rd person
-    _target_lookat = new THREE.Vector3(0, 8, 5);
+    _target_offset = new THREE.Vector3(0, config.default_zoom_height, 0); // This won't work in 3rd person
+    _target_lookat = new THREE.Vector3(0, 1, 0);
     _additional_zoom_height = 0;
     _mouse_down = false;
     _mouse_rotation = new THREE.Euler(0, 0, 0); 
@@ -31,7 +31,7 @@ export default class Camera extends CameraController {
     init = () => 
         {
             this.instance = new THREE.PerspectiveCamera(config.fov, window.innerWidth / window.innerHeight, config.near, config.far);
-            this.instance.position.set(map_center.x, config.default_zoom_height, map_center.y);
+            this.instance.position.set(0, config.default_zoom_height, 0);
         }
 
     moveCamera = () => 
@@ -40,7 +40,7 @@ export default class Camera extends CameraController {
                 {
                     if (state.key_pressed.shift)
                         {
-                            let scalar = config.max_top_down_height / this._zoom_level / 2;
+                            let scalar = (config.max_top_down_height / this._zoom_level) * 2;
 
                             let dx = this.d_mouse.x * scalar * this._zoom_level;
                             let dy = -this.d_mouse.y * scalar * this._zoom_level / 2;
@@ -56,12 +56,17 @@ export default class Camera extends CameraController {
                             let forward = direction.multiplyScalar(dy);
                             let strafe = right.multiplyScalar(dx);
 
-                            this.instance.position.add(forward).add(strafe);
-                            this.free_target.position.add(forward).add(strafe);
+                            let instance_position = this.instance.position.clone();
+                            instance_position.add(forward).add(strafe);
+                            this.instance.position.lerp(instance_position, 0.1);
+
+                            let free_target_position = this.free_target.position.clone();
+                            free_target_position.add(forward).add(strafe);
+                            this.free_target.position.lerp(free_target_position, 0.1);
                         }
                     else
                         {
-                            let scalar = config.max_top_down_height / this._zoom_level / 2;
+                            let scalar = config.max_top_down_height / this._zoom_level / 50;
                             console.log(this.d_mouse);
                             let dx = this.d_mouse.x * (this._zoom_level / 10) * scalar;
                             let dy = this.d_mouse.y / (10 / this._zoom_level) * scalar / 2;
@@ -71,10 +76,9 @@ export default class Camera extends CameraController {
                             y_offset.subVectors(this.free_target.position, this.instance.position);
         
                             let camera_spherical = new THREE.Spherical().setFromVector3(y_offset);
-                            camera_spherical.theta -= dx;
-                            camera_spherical.phi -= dy;
-                            let phi = 1 / this._zoom_level;
-                            camera_spherical.phi = Math.max(phi, Math.min(Math.PI - phi, camera_spherical.phi)); // Stops Flipping
+                            camera_spherical.theta += dx;
+                            camera_spherical.phi += dy;
+                            camera_spherical.phi = Math.max(0.01, Math.min(Math.PI - 0.001, camera_spherical.phi)); // Stops Flipping
                             
                             y_offset.setFromSpherical(camera_spherical);
                             
@@ -83,7 +87,7 @@ export default class Camera extends CameraController {
                             x_offset.subVectors(this.instance.position, this.free_target.position);
         
                             let target_spherical = new THREE.Spherical().setFromVector3(x_offset);
-                            target_spherical.theta -= dx / 2;
+                            target_spherical.theta += dx / 2;
                             target_spherical.theta = target_spherical.theta % (Math.PI * 2);
         
                             x_offset.setFromSpherical(target_spherical);
@@ -91,10 +95,10 @@ export default class Camera extends CameraController {
                             if (this.free_target.position.y > 0) 
                                 { 
                                     let new_target_position = new THREE.Vector3().addVectors(this.instance.position, y_offset);
-                                    this.free_target.position.lerp(new_target_position, 0.06);
+                                    this.free_target.position.copy(new_target_position, 0.008);
         
                                     let new_camera_position = new THREE.Vector3().addVectors(this.free_target.position, x_offset);
-                                    this.instance.position.lerp(new_camera_position, 0.1);
+                                    this.instance.position.lerp(new_camera_position, 0.012);
                                 }
         
                             this.free_target.position.y = 1;

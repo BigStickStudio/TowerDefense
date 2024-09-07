@@ -2,24 +2,15 @@ import * as THREE from 'three';
 import config from '../configs/map_config.js';
 import StateManager from '../engine/state_manager.js';
 
+
 const state = StateManager.instance;
 
+let map_center = state.map_center;
 const spawn_buffer = config.spawn_buffer;
 const square_size = config.square_size;
 const path_buffer = config.path_buffer;
 
-// TODO: Move to Map Config
-const half_grid_x = state.grid_size.x / 2;
-const half_grid_y = (state.grid_size.y / 2);
 const square_inset = square_size - config.frame_size;
-const min_x_buffer = -half_grid_x + spawn_buffer;
-const max_x_buffer = half_grid_x - spawn_buffer - 1;
-const min_y_buffer = -half_grid_y + spawn_buffer;
-const max_y_buffer = half_grid_y - spawn_buffer - 1;
-const min_x_path = -half_grid_x + path_buffer;
-const max_x_path = half_grid_x - path_buffer - 1;
-const min_y_path = -half_grid_y + path_buffer;
-const max_y_path = half_grid_y - path_buffer - 1;
 
 const plane_geometry = new THREE.PlaneGeometry(square_inset, square_inset, 1, 1);
 
@@ -37,6 +28,8 @@ const validStep = (y, x, bounds) =>
 const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
     {
         let path = [];
+        let left_limit = [];
+        let right_limit = [];
 
         let slope = (end_y - start_y) / (end_x - start_x);
 
@@ -66,9 +59,6 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
         const beyondLimits = (condition, x, min_x, max_x) => 
             { return condition && x > max_x || !condition && x < min_x; }
 
-        const filterPositions = (p1, p2) =>
-            { return !(p1.x === p2.x && p1.y === p2.y); }
-
         for (let i = 0; i < steps; i++)
             {
                 x += dx;
@@ -84,13 +74,28 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
                         let _x = Math.round(left_start_x + j);
                         let _y = ascending ? Math.floor(left_start_y + dy) : Math.ceil(left_start_y + dy);
                         
+                        // We store the left and right limits for the path if we are
+                        // at our bounds
+                        if (j === 0) 
+                            { 
+                                let lx = _x - 1;
+                                if (validStep(_y, lx, bounds))
+                                    { left_limit.push({ x: lx, y: _y }); }
+
+                                let rx = Math.round(left_start_x + j + cross_walk);
+                                if (validStep(_y, rx, bounds))
+                                    { right_limit.push({ x: rx, y: _y }); }
+                            }
+
                         if (shallow && 
                                 (beyondLimits(ascending, _x, bounds.start.x.min, bounds.start.x.max) || 
                                 beyondLimits(!ascending, _x, bounds.end.x.min, bounds.end.x.max))) 
                             { continue; }
                             
+                        // We store the step for the path if it's valid
                         if (validStep(_y, _x, bounds))
                             { path.push({ x: _x, y: _y }); }
+
                     }
                 
                 left_start_x += dx;
@@ -101,18 +106,67 @@ const lerpPath = (start_x, start_y, end_x, end_y, bounds) =>
                     
             }
 
-        return path;
+        return {
+            path: path,
+            left_limit: left_limit,
+            right_limit: right_limit
+        };
     }
 
 export default class MapConstructor {
-    
-    constructor() {} // TODO Instantiate entire Map Here
+    // We're going to use this as a 2D array of objects to represent the map
+    // Where undefined is a mountain, and the object is a square that is
+    // numbered team spawn or a path
+    squares = [[]]; 
+
+    constructor() {
+        this.init();
+    } 
+
+    addSquare = (id_x, id_y, sq_obj) =>
+        {
+            if (!this.squares[id_y][id_x])
+                { this.squares[id_y][id_x] = sq_obj; }
+            else
+                { 
+                    console.warn("Square already exists at location"); 
+                    console.debug(this.squares[id_y][id_x]);
+                    console.debug(sq_obj);
+                }
+
+        }
+
+    init = () =>
+        {
+            let red_team = state.game_config["red"];
+            let blue_team = state.game_config["blue"];
+            
+            let [red_squares, red_regions] = this.createPlayerAreas(red_team, "red");
+            let [blue_squares, blue_regions] = this.createPlayerAreas(blue_team, "blue");
+            let paths = this.createPathways(state.game_config["paths"], {"red": red_regions, "blue": blue_regions});
+
+            this.grid = [...red_squares, ...blue_squares, ...paths.paths];
+            this.grid.forEach((square) => 
+                { state.scene.add(square); });
+
+            let grid_size = state.game_config["grid_size"];
+            const field_geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
+            const geometry = new THREE.WireframeGeometry(field_geometry);
+            const field_material = new THREE.LineBasicMaterial({  });
+            const line_material = new THREE.LineDashedMaterial ( { color: 0x603010, scale: 4, dashSize: 8, gapSize: 5 } );
+            const underpinning = new THREE.LineSegments(geometry, line_material);
+            underpinning.rotation.x = -Math.PI / 2;
+            let center = state.map_center;
+            underpinning.position.set(0, -1, 0);
+            underpinning.name = "underpinning";
+            state.scene.add(underpinning);
+        }
 
     /////////////////////////
     // Create Player Areas //
     /////////////////////////
 
-    static createPlayerAreas = (team, color) => 
+    createPlayerAreas = (team, color) => 
         {
             let player_positions = [];
             let squares = [];
@@ -131,7 +185,7 @@ export default class MapConstructor {
             return [squares, player_positions];
         }
 
-    static constructPlayerBounds = (position) =>
+    constructPlayerBounds = (position) =>
         {
             let min_x = position.x - spawn_buffer;
             let max_x = position.x + spawn_buffer;
@@ -151,7 +205,7 @@ export default class MapConstructor {
             }
         }
 
-    static pickRandomXY = (node) => 
+    pickRandomXY = (node) => 
         {
             let grid_size = state.grid_size;
             let min_x = node.min_x * grid_size.x;
@@ -168,7 +222,7 @@ export default class MapConstructor {
             }
         }
 
-    static createSpawnArea = (position, red_team, player) => 
+    createSpawnArea = (position, red_team, player) => 
         {
             let squares = [];
 
@@ -189,8 +243,8 @@ export default class MapConstructor {
                             let square = plane.clone();
 
                             square.rotation.x = Math.PI / 2;
-                            let scaled_x = (x * square_size) + config.map_offset;
-                            let scaled_z = (y * square_size) + config.map_offset;
+                            let scaled_x = (x * square_size) + config.square_offset - map_center.x;
+                            let scaled_z = (y * square_size) + config.square_offset - map_center.y;
                             square.position.set(scaled_x, 0, scaled_z);
                             square.name = "grid";
                             square.team = red_team ? "red" : "blue"; // TODO: Add Number of Players for Unique Access
@@ -208,9 +262,13 @@ export default class MapConstructor {
     // Create Pathways //
     /////////////////////
 
-    static createPathways = (paths, regions) => 
+    createPathways = (paths, regions) => 
         {
             let pathways = [];
+            let bounds = {
+                    "left": [],
+                    "right": []
+                };
 
             console.log(paths);
             paths.forEach((path) =>
@@ -247,19 +305,42 @@ export default class MapConstructor {
                     let pathway = lerpPath(start_x, start_y, end_x, end_y, region);
                     let patharea = this.createPathArea(pathway);
                     pathways = [...pathways, ...patharea];
+                    bounds.left = [...bounds.left, ...pathway.left_limit];
+                    bounds.right = [...bounds.right, ...pathway.right_limit];
                 }
             );
 
-            return pathways;
+            return {
+                    paths: pathways,
+                    borders: bounds
+                };
         }
 
-    static createPathArea = (pathway) =>
+    createPathArea = (pathway) =>
         {
             let squares = [];
+            let path = pathway.path;
+            let limits = [...pathway.left_limit, ...pathway.right_limit];
 
-            pathway.forEach((position) =>
+            path.forEach((position) =>
                 {
                     let square = new THREE.Mesh(plane_geometry, new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.BackSide }));
+                    square.rotation.x = Math.PI / 2;
+                    let scaled_x = (position.x * square_size) + config.square_offset - map_center.x;
+                    let scaled_z = (position.y * square_size) + config.square_offset - map_center.y;
+                    square.position.set(scaled_x, 0, scaled_z);
+                    square.name = "grid";
+                    square.team = "none";
+                    square.player = -1;
+                    square.location = { x: position.x, y: position.y };
+
+                    squares.push(square);
+                }
+            );
+
+            limits.forEach((position) =>
+                {
+                    let square = new THREE.Mesh(plane_geometry, new THREE.MeshBasicMaterial({ color: 0xac9c3c, side: THREE.BackSide }));
                     square.rotation.x = Math.PI / 2;
                     let scaled_x = (position.x * square_size) + config.map_offset;
                     let scaled_z = (position.y * square_size) + config.map_offset;
@@ -280,7 +361,7 @@ export default class MapConstructor {
     // Create Terrain //
     ////////////////////
 
-    static createTerrain = () => 
+    createTerrain = () => 
         {
 
         }

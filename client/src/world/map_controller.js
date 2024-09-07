@@ -11,14 +11,8 @@ export default class MapInterface {
     cursor = false;
     scene = undefined;
 
-    constructor (scene) 
+    constructor () 
         { 
-            this.scene = scene;
-            this.init(); 
-        }
-
-    init = () => 
-        {
             this.raycaster = new THREE.Raycaster();
             this.mouse2D = new THREE.Vector2();
             
@@ -77,8 +71,8 @@ export default class MapInterface {
                         }
                 }
 
-            if (this.scene.getObjectByName("cursor") === undefined) 
-                { this.scene.add(this.highlighter); }
+            if (state.scene.getObjectByName("cursor") === undefined) 
+                { state.scene.add(this.highlighter); }
         }
 
     trackMouse = (e) => 
@@ -92,7 +86,7 @@ export default class MapInterface {
     cleanUp = () => 
         { 
             this.mouse2D = new THREE.Vector2();
-            this.scene.remove(this.highlighter);
+            state.scene.remove(this.highlighter);
             this.cursor = false; 
             state.cursor_target = undefined;
         }

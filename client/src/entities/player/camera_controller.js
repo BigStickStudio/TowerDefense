@@ -1,29 +1,30 @@
 import * as THREE from "three";
-import config from '../configs/camera_config.js';
-import StateManager from "./state_manager.js";
+import config from '../../configs/camera_config.js';
+import StateManager from "../../engine/state_manager.js";
 
 const state = StateManager.instance;
 
-let map_center = state.map_center;
 let mouse = new THREE.Vector2();
 let prev_mouse = new THREE.Vector2();
-let p_xy = new THREE.Vector2();
 
 export default class CameraController {
     d_mouse = new THREE.Vector2();
 
     constructor() {
         this.free_target = new THREE.Object3D(0, 0, 0);
-        this.free_target.position.set(map_center.x, 0, map_center.y);
+        let box = new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100), new THREE.MeshBasicMaterial({ color: 0x0066ff, transparent: true, opacity: 0.5 }));
+        this.free_target.add(box);
+        this.free_target.position.set(0, 0, 0);
         this.free_target.rotation.y = Math.PI;
         this.free_target.name = "Free Fly";
+        state.scene.add(this.free_target);
 
         this.enable();
     }
 
     enable = () => 
         {
-            console.log("Enabling Camera");
+            //console.log("Enabling Camera");
             if (this.camera_enabled) { return; }
             
             document.addEventListener('wheel', this.zoom, false);
