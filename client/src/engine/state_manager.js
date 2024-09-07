@@ -79,6 +79,16 @@ export default class StateManager {
     get game_mode() { return this.state["game_mode"]; }
     get game_type() { return this.state["game_type"]; }
     get match_size() { return this.state["game_size"]; }
+    get path_mappings() { return this.game_config["paths"]; }
+    
+    get teams() { 
+        let game_config = this.game_config;
+
+        return {
+            'red': game_config["red"],
+            'blue': game_config["blue"],
+        }
+    }
 
     get game_config() 
         { return game_config_map[this.game_mode][this.game_type][this.match_size]["configuration"][this.configuration]; }
