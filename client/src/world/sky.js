@@ -114,6 +114,16 @@ export default class Sky {
         );
 
         state.scene.add(this.sky);
+
+        /// Create Sky LIGHTS aka SUN and MOON
+        this.initLights
+    }
+
+    initAmbientLight = () => {
+        this.sun = new THREE.DirectionalLight(0xffffff, 1); 
+        this.sun.position.set(100, 100, 100);
+
+        state.scene.add(this.sun);
     }
 
     fade = () =>

@@ -14,14 +14,16 @@ export default class CameraController {
     constructor() {
         this.free_target = new THREE.Object3D(0, 0, 0);
 
-        let box = new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100), 
-            new THREE.MeshBasicMaterial({ 
-                color: 0x00ff66, 
-                transparent: true, 
-                opacity: 0.1,
-                side: THREE.DoubleSide}));
+        // Leave for debugging purposes
+        // let box = new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100), 
+        //     new THREE.MeshBasicMaterial({ 
+        //         color: 0x00ff66, 
+        //         transparent: true, 
+        //         opacity: 0.1,
+        //         side: THREE.DoubleSide}));
         
-        this.free_target.add(box);
+        // this.free_target.add(box);
+
         this.free_target.position.set(0, 0, 0);
         this.free_target.rotation.y = Math.PI;
         this.free_target.name = "Free Fly";
@@ -85,7 +87,7 @@ export default class CameraController {
             // If the cursor has left the window we want to skip the intersection check
 
             this.raycaster.setFromCamera(this.mouse, this.instance);
-            let objects = state.scene.children;
+            let objects = state.scene.children.filter((child) => child.name !== 'underpinning');
             let intersects = this.raycaster.intersectObjects(objects, true);
 
             if (intersects.length <= 0) 

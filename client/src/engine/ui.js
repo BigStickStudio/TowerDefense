@@ -27,7 +27,6 @@ export default class UI {
         this.ui.onmouseenter = disableListeners;
         this.ui.onmouseleave = enableListeners;
         state.updateUI = this.updateUI; 
-        console.log("[UI]::init()");
         state.updateUI();
     }
 

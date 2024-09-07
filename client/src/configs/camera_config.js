@@ -17,7 +17,7 @@ const config = {
     // default_zoom: 1,
     // default_zoom_height: 4.5,
     default_camera_position: "top-down",
-    default_zoom: 1000,
+    default_zoom: 900,
     default_zoom_height: 0,
 }
 

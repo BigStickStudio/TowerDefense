@@ -25,11 +25,10 @@ export default class StateManager {
         
     init = () => 
         { 
-            console.log("[StateManager]::init()");
             this.state = {
                 "game_mode": 'pvp',
                 "game_type": 'battle',
-                "game_size": '5v5',
+                "game_size": '1v1',
                 "camera_target": new THREE.Object3D(),
                 "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
                 "cursor_target": 'none',
@@ -38,7 +37,7 @@ export default class StateManager {
                 "moving_state": "Resting",
                 "night_cycle": 0.0, // 255 is full night, 0 is full day
                 "day_cycle": 0.0, // 255 is full day, 0 is full night
-                "fixed_camera": false, // (Fixed vs Free Fly)
+                "fixed_camera": camera_config.default_camera_position === "third-person", // (Fixed vs Free Fly)
             };
             
             this.configuration_count = game_config_map[this.game_mode][this.game_type][this.match_size].config_count;

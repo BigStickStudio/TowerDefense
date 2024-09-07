@@ -1,8 +1,10 @@
+import Stats from 'three/addons/libs/stats.module.js';
 import StateManager from './engine/state_manager.js';
 import UI from './engine/ui.js';
 import World from './world/world.js';
 
 const state = StateManager.instance;
+let stats = new Stats();
 
 export default class Game {
     constructor() { 
@@ -17,6 +19,7 @@ export default class Game {
             this.world = new World();
             this.enableCamera = this.world.camera.enable;
             this.disableCamera = this.world.camera.disable;
+            document.body.appendChild(stats.dom);
         }
 
     // These have to exist in order to be passed to the UI before the World exists
@@ -34,6 +37,7 @@ export default class Game {
     // TODO: This should be moved to the engine and called as a run() with a closure
     render = (t) => 
         {
+            stats.update();
             this.requestFrame();
             state.renderer.render(state.scene, this.world.camera.instance);
             this.world.update();

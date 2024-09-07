@@ -76,7 +76,7 @@ export default class Camera extends CameraController {
         
                             let camera_spherical = new THREE.Spherical().setFromVector3(y_offset);
                             camera_spherical.theta += dx;
-                            camera_spherical.phi += dy;
+                            camera_spherical.phi -= dy;
                             camera_spherical.phi = Math.max(0.01, Math.min(Math.PI - 0.001, camera_spherical.phi)); // Stops Flipping
                             
                             y_offset.setFromSpherical(camera_spherical);

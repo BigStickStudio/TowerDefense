@@ -5,7 +5,9 @@ import StateManager from '/src/engine/state_manager.js';
 
 const state = StateManager.instance;
 
-let map_center = state.map_center;
+const map_center = state.map_center;
+const grid_size = state.grid_size;
+const half_grid = state.half_grid;
 const spawn_buffer = config.spawn_buffer;
 const square_size = config.square_size;
 const path_buffer = config.path_buffer;
@@ -117,26 +119,125 @@ export default class Map {
     // We're going to use this as a 2D array of objects to represent the map
     // Where undefined is a mountain, and the object is a square that is
     // numbered team spawn or a path
-    squares = [[]]; 
+    square_table = [[]]; 
 
     constructor() {
+        // This will be brought back into init once old_init is trashed
+        this.initEmptyMap();
+        
+        this.old_init();
+
         this.init();
     } 
 
-    addSquare = (id_x, id_y, sq_obj) =>
+    // a square object should have a 'name', 'id' and 'location'
+    // { name: "red", id: 3, location: { x: 25, y: 48 } }
+    addSquare = (id_y, id_x, sq_obj) =>
         {
-            if (!this.squares[id_y][id_x])
-                { this.squares[id_y][id_x] = sq_obj; }
+            console.log("grid_size", grid_size);
+            console.log("Table Length:", this.square_table.length);
+            console.log("idx", id_x, "", id_y);
+            if (!this.square_table[id_y][id_x])
+                { 
+                    // console.log("Adding Square");
+                    // console.log(sq_obj);
+                    this.square_table[id_y][id_x] = sq_obj; }
             else
                 { 
                     console.warn("Square already exists at location"); 
-                    console.debug(this.squares[id_y][id_x]);
+                    console.debug(this.square_table[id_y][id_x]);
                     console.debug(sq_obj);
                 }
-
         }
 
     init = () =>
+        {
+            // Here we iterate over all the things and create our terrain
+            
+            const geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
+            const field_material = new THREE.MeshBasicMaterial({ color: 0x603010, wireframe: true });
+            const underpinning = new THREE.Mesh(geometry, field_material);
+            underpinning.rotation.x = -Math.PI / 2;
+            let center = state.map_center;
+            underpinning.position.set(0, -1, 0);
+            underpinning.name = "underpinning";
+
+            let vertex = new THREE.Vector3();
+
+            let hill = true;
+
+            const lookahead = (y, x) =>
+                {
+                    console.log(y, x); 
+                    return !!this.square_table[y][x]; 
+                }
+
+            for (let i = 0; i < geometry.attributes.position.count; i++)
+                {
+                    // This is a hack to handle the fact that 1 square has 2 lines
+                    // or rather that 5 squares have 6 lines. So we will treat it like the last line
+                    let y_position = Math.min(Math.floor(i / (grid_size.x)), grid_size.y - 1)
+
+                    // We calculate this either way, but have to + 1 to account for the last line
+                    let toggle_hill = lookahead(y_position, i % (grid_size.x + 1));
+
+                    // This toggles the hill on if we're at the end of the row
+                    if (!hill)
+                        { 
+                            if (toggle_hill) { hill = !hill; }
+                            continue; 
+                        }
+
+                    vertex.fromBufferAttribute(geometry.attributes.position, i);
+                    vertex.z = Math.random() * 3 + 15;
+                    geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
+
+                    // This toggles the hill back off
+                    if (toggle_hill) { hill = !hill; }
+                }
+
+
+            // for (let i = 0; i < grid_size.y; i++)
+            //     {
+            //         let hill = true;
+
+            //         for (let j = 0; j < grid_size.x; j++)
+            //             {
+            //                 //let idx = j * grid_size.y + i;
+            //                 let idx = i * grid_size.x + j;
+
+            //                 if (!hill)
+            //                     { continue; }
+
+            //                 vertex.fromBufferAttribute(geometry.attributes.position, idx);
+            //                 vertex.z = Math.random() * 3 + 15;
+            //                 geometry.attributes.position.setXYZ(idx, vertex.x, vertex.y, vertex.z);
+
+            //                 if (this.square_table[i][j + 1] !== undefined)
+            //                     { hill = !hill; }
+            //             }
+            //     }
+
+            state.scene.add(underpinning);
+
+        }
+
+    initEmptyMap = () =>
+        {
+            for (let i = 0; i < grid_size.y; i++)
+            {
+                this.square_table[i] = [];
+
+                for (let j = 0; j < grid_size.x; j++)
+                    {
+                        this.square_table[i][j] = undefined;
+                    }
+            }
+    }
+
+    get squares() { return this.square_table.flat().filter((square) => square !== undefined); }
+
+    old_init = () =>
         {
             let red_team = state.game_config["red"];
             let blue_team = state.game_config["blue"];
@@ -150,16 +251,7 @@ export default class Map {
                 { state.scene.add(square); });
 
             let grid_size = state.game_config["grid_size"];
-            const field_geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
-            const geometry = new THREE.WireframeGeometry(field_geometry);
-            const field_material = new THREE.LineBasicMaterial({  });
-            const line_material = new THREE.LineDashedMaterial ( { color: 0x603010, scale: 4, dashSize: 8, gapSize: 5 } );
-            const underpinning = new THREE.LineSegments(geometry, line_material);
-            underpinning.rotation.x = -Math.PI / 2;
-            let center = state.map_center;
-            underpinning.position.set(0, -1, 0);
-            underpinning.name = "underpinning";
-            state.scene.add(underpinning);
+
         }
 
     /////////////////////////
@@ -185,9 +277,12 @@ export default class Map {
             return [squares, player_positions];
         }
 
+    // TODO: Use this to draw frame 
     constructPlayerBounds = (position) =>
         {
-            let min_x = position.x - spawn_buffer;
+            // TODO: Use these to block the corners
+            //       to give a rounded box effect
+            let min_x = position.x - spawn_buffer; 
             let max_x = position.x + spawn_buffer;
             let min_y = position.y - spawn_buffer;
             let max_y = position.y + spawn_buffer;
@@ -217,8 +312,8 @@ export default class Map {
             let y = (Math.floor(Math.random() * (max_y - min_y)) + min_y);
 
             return {
-                x: clamp(x, spawn_buffer, grid_size.x - 1 - spawn_buffer),
-                y: clamp(y, spawn_buffer, grid_size.y - 1 - spawn_buffer)
+                x: Math.round(clamp(x, spawn_buffer, grid_size.x - 1 - spawn_buffer)),
+                y: Math.round(clamp(y, spawn_buffer, grid_size.y - 1 - spawn_buffer))
             }
         }
 
@@ -228,30 +323,40 @@ export default class Map {
 
             let x_dim = position.x.max - position.x.min;
             let y_dim = position.y.max - position.y.min;
+            let square = new THREE.Mesh(plane_geometry, new THREE.MeshBasicMaterial({ color: 0xac9c3c, side: THREE.FrontSide }));
+            square.rotation.x = -Math.PI / 2;
+
+            // const material = new THREE.MeshBasicMaterial({ 
+            //     color: red_team ? 0xfc3c11 : 0x113c9c, 
+            //     side: THREE.BackSide });
+            // const plane = new THREE.Mesh(plane_geometry, material);
+
+            let team = red_team ? "red" : "blue";
 
             for (let i = 0; i <= y_dim; i++)
                 {
                     let y = position.y.min + i;
-                    const material = new THREE.MeshBasicMaterial({ 
-                    color: red_team ? 0xfc3c11 : 0x113c9c, 
-                    side: THREE.BackSide });
-                    const plane = new THREE.Mesh(plane_geometry, material);
 
                     for (let j = 0; j <= x_dim; j++)
                         {
-                            let x = position.x.min + j;
-                            let square = plane.clone();
 
-                            square.rotation.x = Math.PI / 2;
-                            let scaled_x = (x * square_size) + config.square_offset - map_center.x;
-                            let scaled_z = (y * square_size) + config.square_offset - map_center.y;
-                            square.position.set(scaled_x, 0, scaled_z);
-                            square.name = "grid";
-                            square.team = red_team ? "red" : "blue"; // TODO: Add Number of Players for Unique Access
-                            square.player = player;
-                            square.location = { x: j, y: i };
+                            if (i === 0 || i === y_dim || j === 0 || j === x_dim)
+                                {
+                                    this.addSquare(position.y.min + i, position.x.min + j, { name: team, id: player, location: { x: j, y: i }});
 
-                            squares.push(square);
+                                    let x = position.x.min + j;
+                                    let outline = square.clone();
+
+                                    let scaled_x = (x * square_size) + config.square_offset - map_center.x;
+                                    let scaled_z = (y * square_size) + config.square_offset - map_center.y;
+                                    outline.position.set(scaled_x, 0, scaled_z);
+                                    outline.name = "grid";
+                                    outline.team = red_team ? "red" : "blue"; // TODO: Add Number of Players for Unique Access
+                                    outline.player = player;
+                                    outline.location = { x: j, y: i };
+
+                                    squares.push(outline);
+                                }
                         }
                 }
             
@@ -270,7 +375,6 @@ export default class Map {
                     "right": []
                 };
 
-            console.log(paths);
             paths.forEach((path) =>
                 {
                     let start_x = 0;
@@ -322,28 +426,31 @@ export default class Map {
             let path = pathway.path;
             let limits = [...pathway.left_limit, ...pathway.right_limit];
 
-            path.forEach((position) =>
-                {
-                    let square = new THREE.Mesh(plane_geometry, new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.BackSide }));
-                    square.rotation.x = Math.PI / 2;
-                    let scaled_x = (position.x * square_size) + config.square_offset - map_center.x;
-                    let scaled_z = (position.y * square_size) + config.square_offset - map_center.y;
-                    square.position.set(scaled_x, 0, scaled_z);
-                    square.name = "grid";
-                    square.team = "none";
-                    square.player = -1;
-                    square.location = { x: position.x, y: position.y };
+            // path.forEach((position) =>
+            //     {
+            //         let square = new THREE.Mesh(plane_geometry, new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.BackSide }));
+            //         square.rotation.x = Math.PI / 2;
+            //         let scaled_x = (position.x * square_size) + config.square_offset - map_center.x;
+            //         let scaled_z = (position.y * square_size) + config.square_offset - map_center.y;
+            //         square.position.set(scaled_x, 0, scaled_z);
+            //         square.name = "grid";
+            //         square.team = "none";
+            //         square.player = -1;
+            //         square.location = { x: position.x, y: position.y };
 
-                    squares.push(square);
-                }
-            );
+            //         squares.push(square);
+            //     }
+            // );
 
             limits.forEach((position) =>
                 {
-                    let square = new THREE.Mesh(plane_geometry, new THREE.MeshBasicMaterial({ color: 0xac9c3c, side: THREE.BackSide }));
-                    square.rotation.x = Math.PI / 2;
-                    let scaled_x = (position.x * square_size) + config.map_offset;
-                    let scaled_z = (position.y * square_size) + config.map_offset;
+                    this.addSquare(position.y, position.x, { name: "path", id: -1, location: { x: position.x, y: position.y } });
+
+                    let square = new THREE.Mesh(plane_geometry, new THREE.MeshBasicMaterial({ color: 0xac9c3c, side: THREE.FrontSide }));
+                    square.rotation.x = -Math.PI / 2;
+                    let map_center = state.map_center;
+                    let scaled_x = (position.x * square_size) + config.square_offset - map_center.x;
+                    let scaled_z = (position.y * square_size) + config.square_offset - map_center.y;
                     square.position.set(scaled_x, 0, scaled_z);
                     square.name = "grid";
                     square.team = "none";
