@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import config from '../../configs/camera_config.js';
-import StateManager from "../../engine/state_manager.js";
 import CameraController from './camera_controller.js';
+import config from '/src/configs/camera_config.js';
+import StateManager from "/src/engine/state_manager.js";
 
 const state = StateManager.instance;
 
@@ -67,7 +67,6 @@ export default class Camera extends CameraController {
                     else
                         {
                             let scalar = config.max_top_down_height / this._zoom_level / 50;
-                            console.log(this.d_mouse);
                             let dx = this.d_mouse.x * (this._zoom_level / 10) * scalar;
                             let dy = this.d_mouse.y / (10 / this._zoom_level) * scalar / 2;
         

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import StateManager from '../../engine/state_manager.js';
+import StateManager from '/src/engine/state_manager.js';
 
 const state = StateManager.instance;
 

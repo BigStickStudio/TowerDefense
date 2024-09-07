@@ -11,10 +11,11 @@ const unwrap = (t) => { return t ? t : 'none'; }
 const clamp = (v) => { return v < 0 ? 0 : v > 255 ? 255 : v; }
 
 export default class StateManager {
-    updateUI = () => { console.error("[StateManager]::error : UI redraw fn() not defined."); }
-
     constructor() 
         { 
+            this.updateUI = () => 
+                { console.error("[StateManager]::error : UI redraw fn() not defined."); }
+            
             this.clock = new THREE.Clock();
             this.scene = new THREE.Scene();
             this.initRenderer();
@@ -24,18 +25,19 @@ export default class StateManager {
         
     init = () => 
         { 
+            console.log("[StateManager]::init()");
             this.state = {
-                "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
                 "game_mode": 'pvp',
                 "game_type": 'battle',
                 "game_size": '5v5',
+                "camera_target": new THREE.Object3D(),
+                "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
+                "cursor_target": 'none',
+                "selected_target": 'none',
+                "selection_mode": 'none', // This will be used for 'building', 'upgrading', or 'observing' objects
+                "moving_state": "Resting",
                 "night_cycle": 0.0, // 255 is full night, 0 is full day
                 "day_cycle": 0.0, // 255 is full day, 0 is full night
-                "selection_mode": 'none', // This will be used for 'building' or 'selecting' objects
-                "selected_target": 'none',
-                "cursor_target": 'none',
-                "camera_target": new THREE.Object3D(),
-                "moving_state": "Resting",
                 "fixed_camera": false, // (Fixed vs Free Fly)
             };
             
@@ -68,7 +70,7 @@ export default class StateManager {
         }
 
     redrawUI = (from) => { 
-        //console.debug(`[StateManager]::redrawUI(${from})`);
+        //console.error(`[StateManager]::redrawUI(${from})`);
         this.updateUI(this.state); 
     }
     

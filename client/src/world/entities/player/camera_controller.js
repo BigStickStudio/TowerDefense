@@ -1,28 +1,50 @@
 import * as THREE from "three";
-import config from '../../configs/camera_config.js';
-import StateManager from "../../engine/state_manager.js";
+import config from '/src/configs/camera_config.js';
+import map_config from '/src/configs/map_config.js';
+import StateManager from "/src/engine/state_manager.js";
 
 const state = StateManager.instance;
 
-let mouse = new THREE.Vector2();
 let prev_mouse = new THREE.Vector2();
 
 export default class CameraController {
     d_mouse = new THREE.Vector2();
+    mouse = new THREE.Vector2();
 
     constructor() {
         this.free_target = new THREE.Object3D(0, 0, 0);
+
         let box = new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100), 
             new THREE.MeshBasicMaterial({ 
                 color: 0x00ff66, 
                 transparent: true, 
                 opacity: 0.1,
                 side: THREE.DoubleSide}));
+        
         this.free_target.add(box);
         this.free_target.position.set(0, 0, 0);
         this.free_target.rotation.y = Math.PI;
         this.free_target.name = "Free Fly";
         state.scene.add(this.free_target);
+        
+        this.raycaster = new THREE.Raycaster();
+        this.highlighter = new THREE.Mesh(
+                new THREE.PlaneGeometry(
+                        map_config.square_size, 
+                        map_config.square_size, 
+                        1, 1
+                    ), 
+                new THREE.MeshBasicMaterial(
+                        { 
+                            color: 0x8a53f4, 
+                            side: THREE.FrontSide , 
+                            opacity: 0.5, 
+                            transparent: true 
+                        }
+                    )
+            );
+        this.highlighter.rotation.x = -Math.PI / 2;
+        this.highlighter.name = "cursor";
 
         this.enable();
     }
@@ -49,7 +71,49 @@ export default class CameraController {
             document.removeEventListener('mousemove', this.moveMouse, false);
             document.removeEventListener('mousedown', this.mouseDown, false);
             document.removeEventListener('mouseup', this.mouseUp, false);
+
+
+            if (state.scene.getObjectByName("cursor") !== undefined) 
+                { state.scene.remove(this.highlighter); }
+
+            state.cursor_target = undefined;
             this.camera_enabled = false;
+        }
+
+    getIntersection = () => 
+        {
+            // If the cursor has left the window we want to skip the intersection check
+
+            this.raycaster.setFromCamera(this.mouse, this.instance);
+            let objects = state.scene.children;
+            let intersects = this.raycaster.intersectObjects(objects, true);
+
+            if (intersects.length <= 0) 
+                { 
+                    state.scene.remove(this.highlighter);
+                    state.cursor_target = 'none';
+                    return; 
+                }
+
+            for (let i = 0; i < intersects.length; i++) 
+                { 
+                    // TODO: Intergrate logic for Selection Player Areas versus Navigation
+                    if (intersects[i].object.name === "grid") 
+                        {
+                            let intersect = intersects[i].object;
+                            let object_position = new THREE.Vector3();
+                            intersect.getWorldPosition(object_position);
+                            object_position.y += 0.01;
+
+                            if (this.highlighter.position.equals(object_position)) { return; }
+
+                            this.highlighter.position.copy(object_position);
+                            state.cursor_target = `${intersect.team}_${intersect.player}: (${intersect.location.x},${intersect.location.y})`;
+                        }
+                }
+
+            if (state.scene.getObjectByName("cursor") === undefined) 
+                { state.scene.add(this.highlighter); }
         }
 
     mouseDown = (e) => 
@@ -71,12 +135,12 @@ export default class CameraController {
 
     moveMouse = (event) => 
         {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            this.d_mouse.x = +(mouse.x - prev_mouse.x).toFixed(3);
-            this.d_mouse.y = +(mouse.y - prev_mouse.y).toFixed(3);
-            prev_mouse.x = mouse.x;
-            prev_mouse.y = mouse.y;
+            this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            this.d_mouse.x = +(this.mouse.x - prev_mouse.x).toFixed(3);
+            this.d_mouse.y = +(this.mouse.y - prev_mouse.y).toFixed(3);
+            prev_mouse.x = this.mouse.x;
+            prev_mouse.y = this.mouse.y;
 
             if (this._mouse_down && !state.fixed_camera) 
                 { this.moveCamera(); }

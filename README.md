@@ -53,7 +53,10 @@ Our Server uses Golang
    - Add Spawners
    - Add Menu
       - Add Lobby
-   - Gameplay Features
+
+   - Marketplace
+      - Mint Towers and Troop Sets
+      - 
 
    - Gameplay Features
       - Select Area

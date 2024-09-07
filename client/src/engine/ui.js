@@ -19,14 +19,16 @@ const unwrap = (t) => {
 export default class UI {
     ui = document.getElementById("ui")
     expanded = false;
-    local_state = {};
+    local_state = { "error": "updateUI() failed" };
     button_fns = [];
 
     constructor(enableListeners, disableListeners) {
         this.ui.style = "display: flex; position: relative; top: 0; width: 100%;";
         this.ui.onmouseenter = disableListeners;
         this.ui.onmouseleave = enableListeners;
-        this.updateUI();
+        state.updateUI = this.updateUI; 
+        console.log("[UI]::init()");
+        state.updateUI();
     }
 
     display = () => {

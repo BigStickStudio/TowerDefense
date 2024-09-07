@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import StateManager from '../../engine/state_manager.js';
 import CharacterController from './character_controller.js';
+import StateManager from '/src/engine/state_manager.js';
 
 const state = StateManager.instance;
 
