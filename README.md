@@ -39,16 +39,39 @@ Our Server uses Golang
                - (PvP) Invasion - 1v2, 2v3, 3v5, 5v7
                - (PvC) Defense - 1v1, 1v2, 2v2, 2v4, 3v3, 3v5, 5v5, 5v7 
    - Select Spawnable (Floor)
+   - Add Selection Area
    - Fix GTLF Animation
    - Add Right Click Menu
    - Create Spawnable Zones
    - NPC Spawn Areas
+   - NPC Pathfinding Logic
+      - Individuals
+      - Horde
    - Add MiniMap
       - Add Fast Navigation when Free
    - Add Bases
    - Add Spawners
    - Add Menu
       - Add Lobby
+   - Gameplay Features
+
+   - Gameplay Features
+      - Select Area
+      - Build and Destroy Towers
+         - Towers can Take Damage
+         - Upgrade Towers
+      - Deploy Troops
+         - Upgrade Offensive Troops
+         - Direct Troops
+      - Gain Levels
+         - Skill Tree
+            - Tower/Troop Sets
+            - Periodic Power Ups
+            - Persistent Stacks
+      - Mint, Trade and Lease Towers
+         - Tower Sets can Accrue actuation for usage
+         - Exchange Player Cards, Towers and Troops
+
    - Add Multiplayer 
       - Add User Database Integrations
       - Add Match Making

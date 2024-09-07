@@ -12,7 +12,12 @@ export default class CameraController {
 
     constructor() {
         this.free_target = new THREE.Object3D(0, 0, 0);
-        let box = new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100), new THREE.MeshBasicMaterial({ color: 0x0066ff, transparent: true, opacity: 0.5 }));
+        let box = new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100), 
+            new THREE.MeshBasicMaterial({ 
+                color: 0x00ff66, 
+                transparent: true, 
+                opacity: 0.1,
+                side: THREE.DoubleSide}));
         this.free_target.add(box);
         this.free_target.position.set(0, 0, 0);
         this.free_target.rotation.y = Math.PI;
@@ -90,6 +95,7 @@ export default class CameraController {
         {
             if (!target) { return; }
             this.free_target.position.copy(new THREE.Vector3(target.position.x, target.position.y, target.position.z));
+            this.free_target.rotation.copy(new THREE.Euler(target.rotation.x, target.rotation.y, target.rotation.z));
         }
 
     zoom = (event) => 
