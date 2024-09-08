@@ -20,8 +20,8 @@ const createSquareMaterial = (color) =>
         // return new THREE.MeshLambertMaterial({
         return new THREE.MeshPhongMaterial({
             color: color,
-            roughness: 0.7,
-            metalness: 0.4,
+        //    roughness: 0.7,
+        //    metalness: 0.4,
             flatShading: true,
         });
     }
@@ -40,22 +40,25 @@ export default class Map {
     // numbered team spawn or a path
     square_table = [[]]; 
     player_positions = { red: [], blue: [] };
-    red_team = undefined;
-    blue_team = undefined;
+    spawn_areas = {
+        red: [],
+        blue: []
+    }
+    path_positions = [];
 
 
     constructor() {
         // This will be brought back into init once old_init is trashed
         this.initEmptyMap();
-        let regions = this.defineSpawnAreas();
-        this.definePathways(regions);
+        this.defineSpawnAreas();
+        this.definePathways();
         this.constructMap();
         this.constructSpawnAreas();
         this.constructPathways();
     } 
 
     // a square object should have a 'name', 'id' and 'location'
-    // name: spawn, team_info{ team, id }, location: { x, y }
+    // name: spawn, info{ team, id }, location: { x, y }
     addSquare = (id_y, id_x, sq_obj) =>
         {
             if (!this.square_table[id_y][id_x])
@@ -67,21 +70,68 @@ export default class Map {
             if (square === undefined)
                 { return; }
             
-            console.log("Creating Playable Area");
-            console.log(square);
+            //console.log(square)
+
+            if (square.name === "player") 
+                {
+                    //console.log("Creating Spawn Area");
+                    if (!this.spawn_areas[square.info.team][square.info.id])
+                        {
+                            this.spawn_areas[square.info.team][square.info.id] = [];
+                            // console.log(`Creating Playable Area for ${square.info.team} ${square.info.id}`);
+                            // console.log(this.spawn_areas[square.info.team][square.info.id]);
+                        }
+                    
+                    this.spawn_areas[square.info.team][square.info.id].push(square.location);
+                }
+
         }
 
     constructSpawnAreas = () =>
         {
-            let player_squares = this.player_squares;
+            console.log("Constructing Spawn Areas");
+            console.log(this.spawn_areas);
 
-            this.red_squares
-
-            for (let i = 0; i < player_squares.length; i++)
+            // We iterate over the teams
+            Object.entries(this.spawn_areas).forEach(([team, players]) => 
                 {
-                   
+                    let material = team === "red" ? red_square_material : blue_square_material;
+                    let map_center = state.map_center;
+
+                    console.log("Creating Team", team);
+                    console.log(players);
+
+                    // We iterate over the players array
+                    for (let player in players) 
+                        {
+                            console.log("Creating Player", team, player);
+                            let square_count = players[player].length;
+                            let mesh = new THREE.InstancedMesh(plane_geometry, material, square_count);
+
+                            // We iterate over all of the squares of a given player area
+                            for (let i = 0; i < square_count; i++)
+                                {
+                                    let location = players[player][i];
+                                    let x = location.x * square_size + config.square_offset - map_center.x;
+                                    let y = location.y * square_size + config.square_offset - map_center.y;
+
+                                    let matrix = new THREE.Matrix4();
+                                    matrix.makeTranslation(x, 0, y);
+                                    // rotate the square to be flat
+                                    matrix.multiply(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
+                                    mesh.setMatrixAt(i, matrix);
+                                }
+
+                            state.scene.add(mesh);
+                        }
                 }
-            }
+            );
+        }
+    
+    constructPathways = () =>
+        {
+            console.log("Constructing Pathways");
+        }
 
     constructMap = () =>
         {
@@ -138,9 +188,12 @@ export default class Map {
                     // or rather that 5 squares have 6 lines. So we will treat it like the last line
                     let y_position = Math.min(Math.floor(i / (grid_size.x)), grid_size.y - 1)
                     let x_position = i % (grid_size.x + 1);
+                    let x_look_ahead = Math.min(x_position + 1, grid_size.x);
+
 
                     // We calculate this either way, but have to + 1 to account for the last line
-                    let look_ahead = lookahead(y_position, Math.min(x_position + 1, grid_size.x));
+                    let look_ahead = lookahead(y_position, x_look_ahead);
+                    let look_ahead_x = lookahead(y_position, x_look_ahead);
 
                     // !H & V -> Valley
                     if (!hill && valley)
@@ -341,11 +394,11 @@ export default class Map {
                                             this.addSquare(
                                                 i, j, 
                                                 { 
-                                                    name: spawn,
-                                                    team_info: { team: team, id: player },
+                                                    name: "player",
+                                                    info: { team: team, id: player },
                                                     location: { 
-                                                        x: bounds.x.min - j, 
-                                                        y: bounds.y.min - i 
+                                                        x: j, 
+                                                        y: i 
                                                     }
                                                 }
                                             );
@@ -456,14 +509,5 @@ export default class Map {
                     right_start_x += dx;
                     right_start_y += 1;
                 }
-        }
-
-    ////////////////////
-    // Create Terrain //
-    ////////////////////
-
-    createTerrain = () => 
-        {
-
         }
 }
