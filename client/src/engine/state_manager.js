@@ -29,7 +29,7 @@ export default class StateManager {
             this.state = {
                 "game_mode": 'pvp',
                 "game_type": 'battle',
-                "game_size": '5v5',
+                "game_size": '3v3',
                 "camera_target": new THREE.Object3D(),
                 "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
                 "cursor_target": 'none',
@@ -80,7 +80,7 @@ export default class StateManager {
     get game_type() { return this.state["game_type"]; }
     get match_size() { return this.state["game_size"]; }
     get path_mappings() { return this.game_config["paths"]; }
-    
+
     get teams() { 
         let game_config = this.game_config;
 

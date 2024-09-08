@@ -76,7 +76,7 @@ export default class Map {
                 roughness: 0.7,
                 metalness: 0.4,
                 flatShading: true,
-                wireframe: true
+                //wireframe: true
             } )
             const underpinning = new THREE.Mesh(geometry, field_material);
             underpinning.rotation.x = -Math.PI / 2;
@@ -87,8 +87,11 @@ export default class Map {
 
             let vertex = new THREE.Vector3();
 
+            // We're using 2 states because we can be inbetween states managed 
+            // over a period of 2 squares, where the lookahead will be different
             let hill = true;
-            let half_step = false;
+            let valley = false; 
+            let store = false;
 
             const lookahead = (y, x) =>
                 { return this.square_table[y][x]; }
@@ -102,33 +105,45 @@ export default class Map {
 
                     // We calculate this either way, but have to + 1 to account for the last line
                     let look_ahead = lookahead(y_position, Math.min(x_position + 1, grid_size.x));
-                    console.log("Half Step:", half_step, "Hill:", hill);
 
-                    // If we are in a valley, we need to create a playable area
-                    if (!!look_ahead)
-                        { 
-                            console.log(look_ahead)
-                            half_step = true; }
-
-                    if (!hill && !half_step)
+                    // !H & V -> Valley
+                    if (!hill && valley)
                         {
-                            this.createPlayableArea(this.square_table[y_position][x_position]);
-                            continue;
+                            this.createPlayableArea(store);
+
+                            // If there is no next square we transition to a hill on the next pass
+                            if (!look_ahead)
+                                { hill = !hill; }
                         }
-                    
-                    // We will only get to this point if we are in a hill or a half-step
+
+                    // If we have a lookahead, we store it nomatter what
+                    if (look_ahead)
+                        { 
+                            store = look_ahead;
+                        }
+
                     vertex.fromBufferAttribute(geometry.attributes.position, i);
-                    vertex.z = (half_step) ? 
-                                    Math.random() * 6 + 5 // Half-height calculation
-                                        :
-                                    Math.random() * 3 + 15; // Full hill height
+
+                    // H & !V -> Hill
+                    if (hill && !valley)
+                        { 
+                            vertex.z = Math.random() * 3 + 15; 
+
+                            // If we have a lookahead, we transition to a valley on the next pass
+                            if (look_ahead)
+                                { hill = !hill; }
+                        }
+                    // H & V -> Transition to Hill     // !H & !V -> Transition to Valley
+                    else if ((hill && valley) || (!hill && !valley))
+                        { 
+                            // If we are in a valley, we are transitioning to a hill
+                            // and if we are in a hill, we are transitioning to a valley
+                            valley = !valley; 
+                            vertex.z = Math.random() * 6 + 5; // and we want a midpoint transition
+                        }
+
                     geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
 
-                    if (half_step)
-                        { 
-                            hill = !hill;
-                            half_step = false;
-                        }
                 }
 
 
@@ -177,12 +192,15 @@ export default class Map {
     addHemisphereLight = (position) =>
         {
             console.log("Adding Hemisphere Light");
+            console.log(position);
             let light_x = position.x * square_size + config.square_offset - map_center.x;
             let light_y = position.y * square_size + config.square_offset - map_center.y;
-            let player_lighting = new THREE.HemisphereLight(0x996611, 0x00cc99, 0.3);
+            console.log("Light Position", light_x, light_y);
+            // TODO: Add Interpolation for day and night cycle
+            let player_lighting = new THREE.HemisphereLight(0x996611, 0x00cc99, 0.1); // This is the perfect night color
             player_lighting.position.set(light_x, 4, light_y);
-            player_lighting.color.setHSL(0.6, 1, 0.6);
-            player_lighting.groundColor.setHSL(0.095, 1, 0.75);
+            // player_lighting.color.setHSL(0.6, 1, 0.6); // This is the perfect Day Color 
+            // player_lighting.groundColor.setHSL(0.095, 1, 0.75);
             state.scene.add(player_lighting);
     
             // Hemisphere Helper
@@ -199,12 +217,12 @@ export default class Map {
                     // We iterate through all the positions
                     for (let i = 0; i < positions.length; i++) 
                         {
-                            //this.addHemisphereLight(positions[i]);
 
                             let node = positions[i];
 
                             // We pick a random x, y position within the node bounds
                             let position = this.pickRandomXY(node);
+                            this.addHemisphereLight(position);
                             
                             // We simply calculate the min and max bounds for the player area
                             // and construct an object of {position, x{min, max}, y{min, max}}
