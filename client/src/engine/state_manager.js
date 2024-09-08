@@ -81,6 +81,11 @@ export default class StateManager {
     get match_size() { return this.state["game_size"]; }
     get path_mappings() { return this.game_config["paths"]; }
 
+    get grid_size() { return this.game_config["grid_size"]; }
+    get square_size() { return map_config.square_size; }
+    get field_size_x() { return this.grid_size.x * map_config.square_size; }
+    get field_size_y() { return this.grid_size.y * map_config.square_size; }
+    
     get teams() { 
         let game_config = this.game_config;
 
@@ -110,11 +115,12 @@ export default class StateManager {
         };
     }
 
-    get grid_size() { return this.game_config["grid_size"]; }
-    get square_size() { return map_config.square_size; }
-    get field_size_x() { return this.grid_size.x * map_config.square_size; }
-    get field_size_y() { return this.grid_size.y * map_config.square_size; }
-    
+    get field_size() 
+        { 
+            let grid_size = this.grid_size;
+            return { x: grid_size.x * map_config.square_size, y: grid_size.y * map_config.square_size }; 
+        }
+
     set fixed_camera(value)
         { this.state["fixed_camera"] = value; this.redrawUI(`Fixed Camera(${value})`); }
     

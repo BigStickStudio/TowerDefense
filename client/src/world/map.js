@@ -10,11 +10,25 @@ const grid_size = state.grid_size;
 const half_grid = state.half_grid;
 const spawn_buffer = config.spawn_buffer;
 const square_size = config.square_size;
+const spawn_area = (spawn_buffer * 2)  * square_size - square_size;
 const path_buffer = config.path_buffer;
-
 const square_inset = square_size - config.frame_size;
 
 const plane_geometry = new THREE.PlaneGeometry(square_inset, square_inset, 1, 1);
+const createSquareMaterial = (color) =>
+    {
+        // return new THREE.MeshLambertMaterial({
+        return new THREE.MeshPhongMaterial({
+            color: color,
+            roughness: 0.7,
+            metalness: 0.4,
+            flatShading: true,
+        });
+    }
+
+let red_square_material = createSquareMaterial(0xff0000);
+let blue_square_material = createSquareMaterial(0x0000ff);
+let path_square_material = createSquareMaterial(0x00ff00);
 
 // TODO : Move to Utility Fuction
 const clamp = (value, min, max) => { return Math.min(Math.max(value, min), max); }
@@ -26,6 +40,8 @@ export default class Map {
     // numbered team spawn or a path
     square_table = [[]]; 
     player_positions = { red: [], blue: [] };
+    red_team = undefined;
+    blue_team = undefined;
 
 
     constructor() {
@@ -34,27 +50,16 @@ export default class Map {
         let regions = this.defineSpawnAreas();
         this.definePathways(regions);
         this.constructMap();
+        this.constructSpawnAreas();
+        this.constructPathways();
     } 
 
     // a square object should have a 'name', 'id' and 'location'
-    // { name: "red", id: 3, location: { x: 25, y: 48 } }
+    // name: spawn, team_info{ team, id }, location: { x, y }
     addSquare = (id_y, id_x, sq_obj) =>
         {
-            // console.warn("Adding Square")
-            // console.log("idx", id_x, "", id_y);
-            // console.debug(sq_obj);
-            // console.log("grid_size", grid_size);
-            // console.log("Table Length:", this.square_table.length);
             if (!this.square_table[id_y][id_x])
-                { 
-                    // console.log("Adding Square");
-                    // console.log(sq_obj);
-                    this.square_table[id_y][id_x] = sq_obj; }
-            // else
-            //     { 
-            //         console.error("Square already exists at location"); 
-            //         console.debug(this.square_table[id_y][id_x]);
-            //     }
+                { this.square_table[id_y][id_x] = sq_obj; }
         }
 
     createPlayableArea = (square) =>
@@ -62,17 +67,48 @@ export default class Map {
             if (square === undefined)
                 { return; }
             
-            // console.log("Creating Playable Area");
-            // console.log(square);
+            console.log("Creating Playable Area");
+            console.log(square);
         }
+
+    constructSpawnAreas = () =>
+        {
+            let player_squares = this.player_squares;
+
+            this.red_squares
+
+            for (let i = 0; i < player_squares.length; i++)
+                {
+                   
+                }
+            }
 
     constructMap = () =>
         {
-            // Here we iterate over all the things and create our terrain
-            
+            // This texture mapping doesn't work
+            // let map_size = state.field_size;
+
+            // const textureLoader = (path, scale) => {
+            //     const texture = new THREE.TextureLoader().load(path);
+            //     //texture.wrapS = THREE.MirroredRepeatWrapping;
+            //     //texture.wrapT = THREE.MirroredRepeatWrapping;
+            //     texture.repeat.set((map_size.x / scale), (map_size.y / scale));
+            //     return texture;
+            // } 
+
+            // let texture_scale = 1000;
+
+            // const diffuse = textureLoader('assets/textures/map/diffuse.jpg', texture_scale);
+            // const normal_map = textureLoader('assets/textures/map/normal.jpg', texture_scale);
+            // const bump_map = textureLoader('assets/textures/map/bump.jpg', texture_scale);
+
             const geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
             const field_material = new THREE.MeshStandardMaterial( {
-                color: 0x7c4e29,
+                // map: diffuse,
+                // normalMap: normal_map,
+                // bumpMap: bump_map,
+                // bumpScale: 0.5,
+                color: 0xbc7e49,
                 roughness: 0.7,
                 metalness: 0.4,
                 flatShading: true,
@@ -114,24 +150,25 @@ export default class Map {
                             // If there is no next square we transition to a hill on the next pass
                             if (!look_ahead)
                                 { hill = !hill; }
+                            // We should be able to say hill = !look_ahead
                         }
 
                     // If we have a lookahead, we store it nomatter what
                     if (look_ahead)
-                        { 
-                            store = look_ahead;
-                        }
+                        { store = look_ahead; }
 
-                    vertex.fromBufferAttribute(geometry.attributes.position, i);
 
                     // H & !V -> Hill
                     if (hill && !valley)
                         { 
+                            vertex.fromBufferAttribute(geometry.attributes.position, i);
                             vertex.z = Math.random() * 3 + 15; 
+                            geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
 
                             // If we have a lookahead, we transition to a valley on the next pass
                             if (look_ahead)
                                 { hill = !hill; }
+                            // We should be able to say hill = !look_ahead
                         }
                     // H & V -> Transition to Hill     // !H & !V -> Transition to Valley
                     else if ((hill && valley) || (!hill && !valley))
@@ -139,11 +176,10 @@ export default class Map {
                             // If we are in a valley, we are transitioning to a hill
                             // and if we are in a hill, we are transitioning to a valley
                             valley = !valley; 
+                            vertex.fromBufferAttribute(geometry.attributes.position, i);
                             vertex.z = Math.random() * 6 + 5; // and we want a midpoint transition
+                            geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
                         }
-
-                    geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
-
                 }
 
 
@@ -174,6 +210,7 @@ export default class Map {
 
     initEmptyMap = () =>
         {
+            // Create Empty Square_Table
             for (let i = 0; i < grid_size.y; i++)
             {
                 this.square_table[i] = [];
@@ -181,9 +218,11 @@ export default class Map {
                 for (let j = 0; j < grid_size.x; j++)
                     { this.square_table[i][j] = false; }
             }
-    }
+        }
 
     get squares() { return this.square_table.flat().filter((square) => square !== undefined); }
+    get player_squares() { return this.squares.filter((square) => square.name === "spawn"); }
+    get path_squares() { return this.squares.filter((square) => square.name === "path"); }
 
     /////////////////////////
     // Create Player Areas //
@@ -191,16 +230,14 @@ export default class Map {
 
     addHemisphereLight = (position) =>
         {
-            console.log("Adding Hemisphere Light");
-            console.log(position);
             let light_x = position.x * square_size + config.square_offset - map_center.x;
             let light_y = position.y * square_size + config.square_offset - map_center.y;
-            console.log("Light Position", light_x, light_y);
+
             // TODO: Add Interpolation for day and night cycle
             let player_lighting = new THREE.HemisphereLight(0x996611, 0x00cc99, 0.1); // This is the perfect night color
             player_lighting.position.set(light_x, 4, light_y);
-            // player_lighting.color.setHSL(0.6, 1, 0.6); // This is the perfect Day Color 
-            // player_lighting.groundColor.setHSL(0.095, 1, 0.75);
+            player_lighting.color.setHSL(1, 1, 1); // This is the perfect Day Color 
+            player_lighting.groundColor.setHSL(0.25, .5, .7);
             state.scene.add(player_lighting);
     
             // Hemisphere Helper
@@ -210,7 +247,6 @@ export default class Map {
 
     defineSpawnAreas = () => 
         {
-
             // We iterate over the teams and their positions
             Object.entries(state.teams).forEach(([team, positions]) => 
                 {
@@ -222,6 +258,7 @@ export default class Map {
 
                             // We pick a random x, y position within the node bounds
                             let position = this.pickRandomXY(node);
+
                             this.addHemisphereLight(position);
                             
                             // We simply calculate the min and max bounds for the player area
@@ -304,8 +341,8 @@ export default class Map {
                                             this.addSquare(
                                                 i, j, 
                                                 { 
-                                                    name: team, 
-                                                    id: player, 
+                                                    name: spawn,
+                                                    team_info: { team: team, id: player },
                                                     location: { 
                                                         x: bounds.x.min - j, 
                                                         y: bounds.y.min - i 
@@ -418,9 +455,7 @@ export default class Map {
 
                     right_start_x += dx;
                     right_start_y += 1;
-                        
                 }
-
         }
 
     ////////////////////
