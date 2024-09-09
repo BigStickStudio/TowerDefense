@@ -18,10 +18,17 @@ let x_rotation_matrix = new THREE.Matrix4().makeRotationX(-Math.PI / 2);
 const plane_geometry = new THREE.PlaneGeometry(square_inset, square_inset, 1, 1);
 const createSquareMaterial = (color) =>
     {
-        return new THREE.MeshStandardMaterial({
+        return new THREE.MeshPhysicalMaterial({
             color: color,
             transparent: true,
-            opacity: 0.7,
+            roughness: 0,
+            metalness: 0.4,
+            opacity: 0.5,
+            reflectivity: 1,
+            iridescence: true,
+            iridescenceIOR: 1.3,
+            clearcoat: 0.1,
+            specularIntensity: 0.5,
         //    roughness: 0.7,
         //    metalness: 0.4,
         //    flatShading: true,
@@ -31,11 +38,8 @@ const createSquareMaterial = (color) =>
 let red = 0xc12d10;
 let blue = 0x7a94e0;
 
-let red_color = new THREE.Color(red);
-let blue_color = new THREE.Color(blue);
-
-let red_square_material = createSquareMaterial(red_color);
-let blue_square_material = createSquareMaterial(blue_color);
+let red_square_material = createSquareMaterial(red);
+let blue_square_material = createSquareMaterial(blue);
 let path_square_material = createSquareMaterial(0xecefec);
 
 
@@ -162,7 +166,6 @@ export default class Map {
                                     // rotate the square to be flat
                                     matrix.multiply(x_rotation_matrix);
                                     mesh.setMatrixAt(i, matrix);
-                                    mesh.setColorAt(i, team === "red" ? red_color : blue_color);
                                 }
 
                             state.scene.add(mesh);
@@ -236,7 +239,7 @@ export default class Map {
             // const bump_map = textureLoader('assets/textures/map/bump.jpg', texture_scale);
 
             const geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
-            const field_material = new THREE.MeshStandardMaterial( {
+            const field_material = new THREE.MeshLambertMaterial( {
                 // map: diffuse,
                 // normalMap: normal_map,
                 // bumpMap: bump_map,

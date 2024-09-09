@@ -9,6 +9,8 @@ let prev_mouse = new THREE.Vector2();
 let instance_matrix = new THREE.Matrix4();
 let last_x = 0;
 let last_z = 0;
+let this_x = 0;
+let this_z = 0;
 
 export default class CameraController {
     d_mouse = new THREE.Vector2();
@@ -19,7 +21,7 @@ export default class CameraController {
 
         // Leave for debugging purposes
         // let box = new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100), 
-        //     new THREE.MeshBasicMaterial({ 
+        //     new THREE.MeshStandardMaterial({ 
         //         color: 0x00ff66, 
         //         transparent: true, 
         //         opacity: 0.1,
@@ -39,14 +41,19 @@ export default class CameraController {
                         map_config.square_size, 
                         1, 1
                     ), 
-                new THREE.MeshStandardMaterial(
+                new THREE.MeshPhongMaterial(
                         { 
-                            color: 0x33f5d9, 
-                            side: THREE.DoubleSide, 
+                            color: 0xc01c28, 
+                            side: THREE.DoubleSide,
+                            specular: 0x33f5d9,
+                            emissive: 0x2d8c20,
+                            shininess: 5,
+                            transparent: true,
+                            opacity: 0.3,
                         }
                     )
             );
-        this.cursor.position.set(0, 0.75, 0);
+        this.cursor.position.set(0, 0.35, 0);
         this.cursor.rotation.x = -Math.PI / 2;
         this.cursor.name = "cursor";
 
@@ -85,6 +92,7 @@ export default class CameraController {
         }
 
     // This gets called EVERY frame
+        // TODO: Move to the entity controller or state or something?
     getIntersection = (objects) => 
         {
             // Todo: Move this OUT of this because we call this every frame
@@ -98,28 +106,24 @@ export default class CameraController {
                     return; 
                 }
 
-            // TODO: Move to the entity controller or state or something?
-            // We find the intersection object matrix from the player area map
-            // and apply the transform to the cursor
-            for (let i = 0; i < intersects.length; i++) 
-                { 
-                    let intersect = intersects[i];
-                    if (intersect?.object?.info === undefined) { return; }
 
-                    // let team = ;
-                    // let player = ;
+            for (const intersect of intersects) 
+                { 
+                    if (intersect?.object?.info === undefined) { continue; }
 
                     state.player_areas[intersect.object.info.team][intersect.object.info.id]
                             .getMatrixAt(intersect.instanceId, instance_matrix)
 
-                    if (instance_matrix.elements[12] === last_x && 
-                        instance_matrix.elements[14] === last_z)
-                        { return; }
+                    this_x = instance_matrix.elements[12];
+                    this_z = instance_matrix.elements[14];
 
-                    last_x = instance_matrix.elements[12];
-                    last_z = instance_matrix.elements[14];
-                    this.cursor.position.setX(last_x);
-                    this.cursor.position.setZ(last_z);
+                    if (this_x === last_x && this_z === last_z)
+                        { continue; }
+
+                    last_x = this_x;
+                    last_z = this_z;
+                    this.cursor.position.setX(this_x);
+                    this.cursor.position.setZ(this_z);
                 }
 
             if (state.scene.getObjectByName("cursor") === undefined)
