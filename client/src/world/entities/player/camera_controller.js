@@ -6,6 +6,18 @@ import StateManager from "/src/engine/state_manager.js";
 const state = StateManager.instance;
 
 let prev_mouse = new THREE.Vector2();
+let instance_matrix = new THREE.Matrix4();
+let instance_position = new THREE.Vector3();
+let highlight = 0x33f5d9;
+let highlighter_color = new THREE.Color().setHex(highlight);
+let highlighted = null;
+let prev_highlighted = null;
+
+let red = 0xc12d10;
+let blue = 0x7a94e0;
+
+let red_color = new THREE.Color(red);
+let blue_color = new THREE.Color(blue);
 
 export default class CameraController {
     d_mouse = new THREE.Vector2();
@@ -26,27 +38,26 @@ export default class CameraController {
 
         this.free_target.position.set(0, 0, 0);
         this.free_target.rotation.y = Math.PI;
-        this.free_target.name = "Free Fly";
+        this.free_target.name = "camera_target";
         state.scene.add(this.free_target);
         
         this.raycaster = new THREE.Raycaster();
-        this.highlighter = new THREE.Mesh(
+        this.cursor = new THREE.Mesh(
                 new THREE.PlaneGeometry(
                         map_config.square_size, 
                         map_config.square_size, 
                         1, 1
                     ), 
-                new THREE.MeshBasicMaterial(
+                new THREE.MeshStandardMaterial(
                         { 
-                            color: 0x8a53f4, 
-                            side: THREE.FrontSide , 
-                            opacity: 0.5, 
-                            transparent: true 
+                            color: 0x33f5d9, 
+                            side: THREE.DoubleSide, 
                         }
                     )
             );
-        this.highlighter.rotation.x = -Math.PI / 2;
-        this.highlighter.name = "cursor";
+        this.cursor.position.set(0, 0.75, 0);
+        this.cursor.rotation.x = -Math.PI / 2;
+        this.cursor.name = "cursor";
 
         this.enable();
     }
@@ -76,46 +87,61 @@ export default class CameraController {
 
 
             if (state.scene.getObjectByName("cursor") !== undefined) 
-                { state.scene.remove(this.highlighter); }
+                { state.scene.remove(this.cursor); }
 
             state.cursor_target = undefined;
             this.camera_enabled = false;
         }
 
-    getIntersection = () => 
+    // This gets called EVERY frame
+    getIntersection = (objects) => 
         {
-            // If the cursor has left the window we want to skip the intersection check
-
+            // Todo: Move this OUT of this because we call this every frame
             this.raycaster.setFromCamera(this.mouse, this.instance);
-            let objects = state.scene.children.filter((child) => child.name !== 'underpinning');
             let intersects = this.raycaster.intersectObjects(objects, true);
 
             if (intersects.length <= 0) 
                 { 
-                    state.scene.remove(this.highlighter);
+                    state.scene.remove(this.cursor);
                     state.cursor_target = 'none';
                     return; 
                 }
 
+            // TODO: Move to the entity controller or state or something?
+            // We find the intersection object matrix from the player area map
+            // and apply the transform to the cursor
             for (let i = 0; i < intersects.length; i++) 
                 { 
-                    // TODO: Intergrate logic for Selection Player Areas versus Navigation
-                    if (intersects[i].object.name === "grid") 
-                        {
-                            let intersect = intersects[i].object;
-                            let object_position = new THREE.Vector3();
-                            intersect.getWorldPosition(object_position);
-                            object_position.y += 0.01;
+                    let intersect = intersects[i];
+                    if (intersect?.object?.info === undefined) { return; }
 
-                            if (this.highlighter.position.equals(object_position)) { return; }
+                    let team = intersect.object.info.team;
+                    let player = intersect.object.info.id;
+                    let instance_id = intersect.instanceId;
 
-                            this.highlighter.position.copy(object_position);
-                            state.cursor_target = `${intersect.team}_${intersect.player}: (${intersect.location.x},${intersect.location.y})`;
-                        }
+                    state.player_areas[team][player].getMatrixAt(instance_id, instance_matrix)
+                    instance_matrix.decompose(instance_position, new THREE.Quaternion(), new THREE.Vector3());
+
+                    if (instance_position.x === this.cursor.position.x && instance_position.z === this.cursor.position.z)
+                        { return; }
+
+                    // if (highlighted !== prev_highlighted)
+                    //     {
+                    //         console.log("infinite")
+                    //         state.player_areas[highlighted.team][highlighted.player].setColorAt(
+                    //             highlighted.id, highlighted.team === "red" ? red_color : blue_color);
+                    //         prev_highlighted = highlighted;
+                    //     }
+
+                    // highlighted = { team: team, player: player, id: instance_id };
+                    // state.player_areas[team][player].setColorAt(instance_id, highlighter_color);
+                    this.cursor.position.setX(instance_position.x);
+                    this.cursor.position.setZ(instance_position.z);
+                    //state.cursor_target = `${team}_${player}: (${position.x},${position.y})`;
                 }
 
-            if (state.scene.getObjectByName("cursor") === undefined) 
-                { state.scene.add(this.highlighter); }
+            if (state.scene.getObjectByName("cursor") === undefined)
+                { state.scene.add(this.cursor); }
         }
 
     mouseDown = (e) => 

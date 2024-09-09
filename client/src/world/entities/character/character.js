@@ -51,7 +51,7 @@ export default class Character extends CharacterController {
                 model.traverse(child => { child.castShadow = true; });
         
                 this.target = model;
-                this.target.name = "MrMan";
+                this.target.name = "MrMann";
                 state.scene.add(this.target);
                 this._mixer = new THREE.AnimationMixer(model);
 

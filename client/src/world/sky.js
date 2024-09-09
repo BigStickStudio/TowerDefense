@@ -112,6 +112,7 @@ export default class Sky {
 
             })
         );
+        this.sky.name = "sky";
 
         state.scene.add(this.sky);
 
@@ -121,6 +122,7 @@ export default class Sky {
 
     initLights = () => {
         this.sun = new THREE.DirectionalLight(0x968b6f, 1); 
+        this.sun.name = "light";
         this.sun.position.set(3000, 3000, 100);
         this.sun.target.position.set(-1000, -100, 1000);
         this.sun.castShadow = true;
@@ -136,10 +138,11 @@ export default class Sky {
         state.scene.add(this.sun);
 
         // For the Debugs
-        const sun_helper = new THREE.DirectionalLightHelper(this.sun)
-        state.scene.add(sun_helper)
+        // const sun_helper = new THREE.DirectionalLightHelper(this.sun)
+        // state.scene.add(sun_helper)
 
         this.moon = new THREE.DirectionalLight(0x778285, 0.5);
+        this.moon.name = "light";
         this.moon.position.set(-1000, 1000, -100);
         this.moon.target.position.set(1000, -100, -1000);
         this.moon.castShadow = true;
@@ -154,9 +157,9 @@ export default class Sky {
 
         state.scene.add(this.moon);
 
-        // For the Debugs
-        const moon_helper = new THREE.DirectionalLightHelper(this.moon)
-        state.scene.add(moon_helper)
+        // // For the Debugs
+        // const moon_helper = new THREE.DirectionalLightHelper(this.moon)
+        // state.scene.add(moon_helper)
 
 
     }

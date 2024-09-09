@@ -13,22 +13,31 @@ const square_size = config.square_size;
 const spawn_area = (spawn_buffer * 2)  * square_size - square_size;
 const path_buffer = config.path_buffer;
 const square_inset = square_size - config.frame_size;
+let x_rotation_matrix = new THREE.Matrix4().makeRotationX(-Math.PI / 2);
 
 const plane_geometry = new THREE.PlaneGeometry(square_inset, square_inset, 1, 1);
 const createSquareMaterial = (color) =>
     {
-        // return new THREE.MeshLambertMaterial({
-        return new THREE.MeshPhongMaterial({
+        return new THREE.MeshStandardMaterial({
             color: color,
+            transparent: true,
+            opacity: 0.7,
         //    roughness: 0.7,
         //    metalness: 0.4,
-            flatShading: true,
+        //    flatShading: true,
         });
     }
 
-let red_square_material = createSquareMaterial(0xff0000);
-let blue_square_material = createSquareMaterial(0x0000ff);
-let path_square_material = createSquareMaterial(0x00ff00);
+let red = 0xc12d10;
+let blue = 0x7a94e0;
+
+let red_color = new THREE.Color(red);
+let blue_color = new THREE.Color(blue);
+
+let red_square_material = createSquareMaterial(red_color);
+let blue_square_material = createSquareMaterial(blue_color);
+let path_square_material = createSquareMaterial(0xeeff99);
+
 
 // TODO : Move to Utility Fuction
 const clamp = (value, min, max) => { return Math.min(Math.max(value, min), max); }
@@ -44,7 +53,7 @@ export default class Map {
         red: [],
         blue: []
     }
-    path_positions = [];
+    path_areas = [];
 
 
     constructor() {
@@ -61,8 +70,34 @@ export default class Map {
     // name: spawn, info{ team, id }, location: { x, y }
     addSquare = (id_y, id_x, sq_obj) =>
         {
-            if (!this.square_table[id_y][id_x])
-                { this.square_table[id_y][id_x] = sq_obj; }
+            const hazardSquare = (id_y, id_x) =>
+                {
+                    let square = this.square_table[id_y][id_x];
+                    let safety = (id_y > 0) ? this.square_table[id_y - 1][id_x] : false;
+
+                    let conflict = square && square.name === "path" && sq_obj.name === "path" && 
+                                    (square.start_id === sq_obj.end_id || square.end_id === sq_obj.start_id)
+                    
+                    let hazard = safety && safety.name === "path" && sq_obj.name === "path" && 
+                                (safety.start_id === sq_obj.end_id || safety.end_id === sq_obj.start_id)
+
+                    return conflict && hazard;
+                }
+            
+                // TODO: Refactor please
+                // NOTE: This is HIGHLY Inefficient and NEEDS Refactor
+            // If we have a path conflicting paths, we want to remove the square
+            // But we have to allow for complimentary paths
+            if (hazardSquare(id_y, id_x))
+                {
+                    this.square_table[id_y][id_x] = false;
+                    return;
+                }
+
+            if (this.square_table[id_y][id_x])
+                { return; }
+
+            this.square_table[id_y][id_x] = sq_obj; 
         }
 
     createPlayableArea = (square) =>
@@ -85,12 +120,17 @@ export default class Map {
                     this.spawn_areas[square.info.team][square.info.id].push(square.location);
                 }
 
+            if (square.name === "path")
+                {
+                    //console.log("Creating Path Area");
+                    this.path_areas.push(square.location);
+                }
         }
 
     constructSpawnAreas = () =>
         {
-            console.log("Constructing Spawn Areas");
-            console.log(this.spawn_areas);
+            // console.log("Constructing Spawn Areas");
+            // console.log(this.spawn_areas);
 
             // We iterate over the teams
             Object.entries(this.spawn_areas).forEach(([team, players]) => 
@@ -98,15 +138,17 @@ export default class Map {
                     let material = team === "red" ? red_square_material : blue_square_material;
                     let map_center = state.map_center;
 
-                    console.log("Creating Team", team);
-                    console.log(players);
+                    // console.log("Creating Team", team);
+                    // console.log(players);
 
                     // We iterate over the players array
                     for (let player in players) 
                         {
-                            console.log("Creating Player", team, player);
+                            //console.log("Creating Player", team, player);
                             let square_count = players[player].length;
                             let mesh = new THREE.InstancedMesh(plane_geometry, material, square_count);
+                            mesh.name = `${team}_${player}`;
+                            mesh.info = { team: team, id: player };
 
                             // We iterate over all of the squares of a given player area
                             for (let i = 0; i < square_count; i++)
@@ -118,11 +160,13 @@ export default class Map {
                                     let matrix = new THREE.Matrix4();
                                     matrix.makeTranslation(x, 0, y);
                                     // rotate the square to be flat
-                                    matrix.multiply(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
+                                    matrix.multiply(x_rotation_matrix);
                                     mesh.setMatrixAt(i, matrix);
+                                    mesh.setColorAt(i, team === "red" ? red_color : blue_color);
                                 }
 
                             state.scene.add(mesh);
+                            state.player_areas[team].push(mesh);
                         }
                 }
             );
@@ -130,9 +174,48 @@ export default class Map {
     
     constructPathways = () =>
         {
-            console.log("Constructing Pathways");
+            let path_count = this.path_areas.length;
+            // console.log("Creating Pathways", path_count);
+            // console.log(this.path_areas);
+            let material = path_square_material;
+            let map_center = state.map_center;
+            let mesh = new THREE.InstancedMesh(plane_geometry, material, path_count);
+            mesh.name = "pathways";
+
+            for (let i = 0; i < path_count; i++)
+                {
+                    let location = this.path_areas[i];
+                    let x = location.x * square_size + config.square_offset - map_center.x;
+                    let y = location.y * square_size + config.square_offset - map_center.y;
+
+                    let matrix = new THREE.Matrix4();
+                    matrix.makeTranslation(x, 0, y);
+                    matrix.multiply(x_rotation_matrix);
+                    
+                    mesh.setMatrixAt(i, matrix);
+                }
+
+            state.scene.add(mesh);
         }
 
+
+
+        /////////////////
+        // Create Map //
+        /////////////////
+
+    initEmptyMap = () =>
+        {
+            // Create Empty Square_Table
+            for (let i = 0; i < grid_size.y; i++)
+            {
+                this.square_table[i] = [];
+
+                for (let j = 0; j < grid_size.x; j++)
+                    { this.square_table[i][j] = false; }
+            }
+        }
+        
     constructMap = () =>
         {
             // This texture mapping doesn't work
@@ -164,123 +247,82 @@ export default class Map {
                 flatShading: true,
                 //wireframe: true
             } )
-            const underpinning = new THREE.Mesh(geometry, field_material);
-            underpinning.rotation.x = -Math.PI / 2;
-            underpinning.position.set(0, -1, 0);
-            underpinning.name = "underpinning";
-            underpinning.receiveShadow = true;
-            underpinning.castShadow = true;
+            const terrain = new THREE.Mesh(geometry, field_material);
+            terrain.rotation.x = -Math.PI / 2;
+            terrain.position.set(0, -1, 0);
+            terrain.name = "terrain";
+            terrain.receiveShadow = true;
+            terrain.castShadow = true;
 
             let vertex = new THREE.Vector3();
 
-            // We're using 2 states because we can be inbetween states managed 
-            // over a period of 2 squares, where the lookahead will be different
-            let hill = true;
-            let valley = false; 
-            let store = false;
+            const findSquare = (y, x) =>
+                { 
+                    if (y < 0 || y >= grid_size.y || x < 0 || x >= grid_size.x)
+                        { return false; }
 
-            const lookahead = (y, x) =>
-                { return this.square_table[y][x]; }
+                    return this.square_table[y][x]; 
+                }
+
+            let half_set = false;
 
             for (let i = 0; i < geometry.attributes.position.count; i++)
                 {
-                    // This is a hack to handle the fact that 1 square has 2 lines
-                    // or rather that 5 squares have 6 lines. So we will treat it like the last line
-                    let y_position = Math.min(Math.floor(i / (grid_size.x)), grid_size.y - 1)
-                    let x_position = i % (grid_size.x + 1);
-                    let x_look_ahead = Math.min(x_position + 1, grid_size.x);
+                    // We have to add 1 for the x and y
+                    // to account for the extra vertices
+                    let x = i % (grid_size.x + 1);
+                    let y = Math.floor(i / (grid_size.x + 1));
 
+                    let current_square = findSquare(y, x);
 
-                    // We calculate this either way, but have to + 1 to account for the last line
-                    let look_ahead = lookahead(y_position, x_look_ahead);
-                    let look_ahead_x = lookahead(y_position, x_look_ahead);
+                    // If we are in a square then we want to draw it
+                    if (current_square)
+                        { 
+                            this.createPlayableArea(current_square); 
+                            continue;
+                        }
 
-                    // !H & V -> Valley
-                    if (!hill && valley)
+                    let look_above = findSquare(y - 1, x);
+                    let look_down = findSquare(y + 1, x);
+                    let look_ahead = findSquare(y, x + 1);
+                    let look_behind = findSquare(y, x - 1);
+                    let look_adjascent = findSquare(y - 1, x - 1)
+                    let look_up_two = findSquare(y - 2, x);
+
+                    if (look_adjascent)
                         {
-                            this.createPlayableArea(store);
-
-                            // If there is no next square we transition to a hill on the next pass
-                            if (!look_ahead)
-                                { hill = !hill; }
-                            // We should be able to say hill = !look_ahead
+                            half_set = true;
+                            continue;
                         }
 
-                    // If we have a lookahead, we store it nomatter what
-                    if (look_ahead)
-                        { store = look_ahead; }
+                    // If we have squares above or below, we want to skip
+                    if (look_above || look_behind)
+                        {   continue; }
 
 
-                    // H & !V -> Hill
-                    if (hill && !valley)
-                        { 
-                            vertex.fromBufferAttribute(geometry.attributes.position, i);
-                            vertex.z = Math.random() * 3 + 15; 
-                            geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
+                    vertex.fromBufferAttribute(geometry.attributes.position, i);
 
-                            // If we have a lookahead, we transition to a valley on the next pass
-                            if (look_ahead)
-                                { hill = !hill; }
-                            // We should be able to say hill = !look_ahead
-                        }
-                    // H & V -> Transition to Hill     // !H & !V -> Transition to Valley
-                    else if ((hill && valley) || (!hill && !valley))
-                        { 
-                            // If we are in a valley, we are transitioning to a hill
-                            // and if we are in a hill, we are transitioning to a valley
-                            valley = !valley; 
-                            vertex.fromBufferAttribute(geometry.attributes.position, i);
-                            vertex.z = Math.random() * 6 + 5; // and we want a midpoint transition
-                            geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
-                        }
+                    // if we are adjacent to a square, we want to raise the vertex partially
+                    if (look_ahead || (look_above && !look_ahead) || (look_down && !look_behind) || half_set || look_up_two)
+                        { vertex.z =  5 + Math.random() * 12 - 3; half_set = false; }
+                    else // Otherwise we want to raise the vertex to top level
+                        { vertex.z = Math.random() * 5 + 15; }
+                    
+                    geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
                 }
 
 
-            // for (let i = 0; i < grid_size.y; i++)
-            //     {
-            //         let hill = true;
 
-            //         for (let j = 0; j < grid_size.x; j++)
-            //             {
-            //                 //let idx = j * grid_size.y + i;
-            //                 let idx = i * grid_size.x + j;
-
-            //                 if (!hill)
-            //                     { continue; }
-
-            //                 vertex.fromBufferAttribute(geometry.attributes.position, idx);
-            //                 vertex.z = Math.random() * 3 + 15;
-            //                 geometry.attributes.position.setXYZ(idx, vertex.x, vertex.y, vertex.z);
-
-            //                 if (this.square_table[i][j + 1] !== undefined)
-            //                     { hill = !hill; }
-            //             }
-            //     }
-
-            state.scene.add(underpinning);
+            state.scene.add(terrain);
 
         }
 
-    initEmptyMap = () =>
-        {
-            // Create Empty Square_Table
-            for (let i = 0; i < grid_size.y; i++)
-            {
-                this.square_table[i] = [];
-
-                for (let j = 0; j < grid_size.x; j++)
-                    { this.square_table[i][j] = false; }
-            }
-        }
-
-    get squares() { return this.square_table.flat().filter((square) => square !== undefined); }
-    get player_squares() { return this.squares.filter((square) => square.name === "spawn"); }
-    get path_squares() { return this.squares.filter((square) => square.name === "path"); }
 
     /////////////////////////
     // Create Player Areas //
     /////////////////////////
 
+    // TODO: Swap this for instanced mesh
     addHemisphereLight = (position) =>
         {
             let light_x = position.x * square_size + config.square_offset - map_center.x;
@@ -288,14 +330,15 @@ export default class Map {
 
             // TODO: Add Interpolation for day and night cycle
             let player_lighting = new THREE.HemisphereLight(0x996611, 0x00cc99, 0.1); // This is the perfect night color
+            player_lighting.name = "light";
             player_lighting.position.set(light_x, 4, light_y);
             player_lighting.color.setHSL(1, 1, 1); // This is the perfect Day Color 
             player_lighting.groundColor.setHSL(0.25, .5, .7);
             state.scene.add(player_lighting);
     
             // Hemisphere Helper
-            const hemisphere_helper = new THREE.HemisphereLightHelper(player_lighting, 5);
-            state.scene.add(hemisphere_helper);
+            // const hemisphere_helper = new THREE.HemisphereLightHelper(player_lighting, 5);
+            // state.scene.add(hemisphere_helper);
         }
 
     defineSpawnAreas = () => 
@@ -392,7 +435,7 @@ export default class Map {
 
                                             // This adds the square to our square_table
                                             this.addSquare(
-                                                i, j, 
+                                                i, j, // This is redundant
                                                 { 
                                                     name: "player",
                                                     info: { team: team, id: player },
@@ -427,12 +470,12 @@ export default class Map {
                         const start_area = this.player_positions[start_team][start_index];
                         const end_area = this.player_positions[end_team][end_index];
 
-                        this.definePathArea(start_area, end_area);
+                        this.definePathArea(start_index, start_area, end_index, end_area);
                     }
             );
         }
 
-    definePathArea = (start_area, end_area) =>
+    definePathArea = (start_id, start_area, end_id, end_area) =>
         {
             // Deconstruct the player_positions object to get the positions and bounds
             let start_position = start_area.position;
@@ -500,7 +543,16 @@ export default class Map {
                                      beyondLimits(!ascending, _x, bounds.end.x.min, bounds.end.x.max))) 
                                 { continue; }
                                 
-                            this.addSquare(_y, _x, { name: "path", id: 0, location: { x: j, y: i } });
+                            this.addSquare(
+                                    _y, 
+                                    _x, 
+                                    { 
+                                        name: "path", 
+                                        start_id: start_id, 
+                                        end_id: end_id,
+                                        location: { x: _x, y: _y } 
+                                    }
+                                );
                         }
                     
                     left_start_x += dx;
