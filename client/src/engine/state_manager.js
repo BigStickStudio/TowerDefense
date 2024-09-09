@@ -150,9 +150,9 @@ export default class StateManager {
             return +(clamp(sky_cycle) / 255).toFixed(3);
         }
 
-    set sun_rotation(value) { this.state["sun_rotation"] = value % 512; }
+    set sun_rotation(value) { this.state["sun_rotation"] = value % 1024; }
     get sun_rotation() { return this.state["sun_rotation"]; }
-    get sky_rotation() { return this.state["sun_rotation"] * Math.PI / 256; }
+    get sky_rotation() { return this.state["sun_rotation"] / 2048; }
 
     set day_cycle(value) { this.state["day_cycle"] = value; }
     get day_cycle() { return this.state["day_cycle"]; }

@@ -125,48 +125,24 @@ export default class Sky {
     }
 
     initLights = () => {
-        let sun = new THREE.DirectionalLight(0x968b6f, 0); 
-        sun.name = "light";
-        sun.body = "sun";
-        sun.position.set(-1000, -300, 0);
-        sun.target.position.set(0, 0, 0);
-        sun.visible = true;
-        sun.castShadow = true;
-        sun.shadow.mapSize.width = 2048;
-        sun.shadow.mapSize.height = 2048;
-        sun.shadow.camera.top = 3500;
-        sun.shadow.camera.bottom = -3500;
-        sun.shadow.camera.left = -3500;
-        sun.shadow.camera.right = 3500;
-        sun.shadow.camera.near = 0.5;
-        sun.shadow.camera.far = 3000;
+        let sun = new THREE.DirectionalLight(0xFFE87C, 0); 
+        sun.name = "sun";
+        sun.position.set(2500, -300, 0);
+        sun.add(
+            new THREE.Mesh(new THREE.SphereGeometry(100, 15, 15), 
+            new THREE.MeshBasicMaterial({ color: 0xFFF4C0 }))
+        );
 
-        // For the Debugs
-        const sun_helper = new THREE.DirectionalLightHelper(sun)
-
-        let moon = new THREE.DirectionalLight(0xB8CBD0, 0.2);
-        moon.name = "light";
-        moon.body = "moon";
-        moon.position.set(3000, 500, 0);
-        moon.target.position.set(0, 0, 0);
-        moon.visible = true;
-        moon.castShadow = true;
-        moon.shadow.mapSize.width = 2048;
-        moon.shadow.mapSize.height = 2048;
-        moon.shadow.camera.top = 2000;
-        moon.shadow.camera.bottom = -2000;
-        moon.shadow.camera.left = -2000;
-        moon.shadow.camera.right = 2000;
-        moon.shadow.camera.near = 0.5;
-        moon.shadow.camera.far = 3000;
-
-        // // For the Debugs
-        const moon_helper = new THREE.DirectionalLightHelper(moon)
+        let moon = new THREE.DirectionalLight(0x92ADAE, 0.2);
+        moon.name = "moon";
+        moon.position.set(-2500, 300, 0);
+        moon.add(
+            new THREE.Mesh(new THREE.SphereGeometry(30, 15, 15),
+            new THREE.MeshBasicMaterial({ color: 0xB8CBD0 }))
+        );
 
         this.sky_group.add(sun);
         this.sky_group.add(moon);
-        this.sky_group.add(sun_helper);
-        this.sky_group.add(moon_helper);
         state.scene.add(this.sky_group);
     }
 
@@ -204,34 +180,40 @@ export default class Sky {
             let day_cycle = state.day_cycle;
             let night_elapsed = elapsed * 90;
             let day_elapsed = elapsed * 30;
-
-            state.sun_rotation = state.sun_rotation + day_elapsed
+            let sun_rotation = state.sun_rotation;
 
             if (this.morning)
                 { 
                     // We only want to incriment the night cycle until we reach the peak
                     if (!this.noon)
                         {
+                            sun_rotation = sun_rotation + night_elapsed;
                             night_cycle = night_cycle + night_elapsed;
                             this.noon = (night_cycle >= 255);
                         }
 
+                    sun_rotation = sun_rotation + day_elapsed;
                     day_cycle = day_cycle + day_elapsed;
                     this.morning = (day_cycle <= 255);
                 }
             else 
                 {
+                    sun_rotation = sun_rotation + day_elapsed;
                     day_cycle = day_cycle - day_elapsed;
 
                     // Noon Ends when the day cycle is a third over
                     this.noon = this.noon ? (day_cycle >= 170) : true;
 
                     if (!this.noon)
-                        { night_cycle = night_cycle - night_elapsed; }
+                        { 
+                            sun_rotation = sun_rotation + night_elapsed;
+                            night_cycle = night_cycle - night_elapsed; 
+                        }
 
                     this.morning = (night_cycle <= 0);
                 }
 
+            state.sun_rotation = sun_rotation;
             state.night_cycle = night_cycle;
             state.day_cycle = day_cycle;
         }
@@ -240,17 +222,15 @@ export default class Sky {
         {
             this.calculateDayTime(elapsed);
 
-            // This is a hack job to aling the day and night cycles
-            let night_cycle = state.normalized_night_cycle;
-            let day_cycle = state.normalized_day_cycle;
 
-            let day_rotation = day_cycle * Math.PI;
-            let night_rotation = night_cycle * Math.PI;
+            this.sky_group.rotation.z = state.sky_rotation * Math.PI;
+            this.sky_group.rotation.y = state.sky_rotation * Math.PI;
+            this.sky_group.updateMatrix();
+            this.sky_group.updateMatrixWorld();
 
-            console.log("Day:", day_rotation, "Night:", night_rotation);
-            
-            this.sky_group.rotation.z -= (day_rotation + night_rotation) / Math.PI * elapsed / Math.PI / 2;
-            state.scene.getObjectByProperty("body", "sun").intensity = (day_cycle / 2) + (night_cycle / 2);
-            state.scene.getObjectByProperty("body", "moon").intensity = (1 - night_cycle) / 3;
+            state.scene.getObjectByName("sun").intensity = Math.min(state.normalized_day_cycle * 2, 1);
+            state.scene.getObjectByName("moon").intensity = (1 - state.normalized_night_cycle) / 2;
+            console.log("Normalized Day:", state.normalized_day_cycle, "Normalized Night:", state.normalized_night_cycle);
+            console.log("Sun:", state.scene.getObjectByName("sun").intensity, "Moon Intensity:", state.scene.getObjectByName("moon").intensity);
         }
 }

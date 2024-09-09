@@ -1,7 +1,7 @@
 import StateManager from "./state_manager.js";
 
 const state = StateManager.instance;
-const blocked_keys = ["night_cycle", "day_cycle"];
+const blocked_keys = ["night_cycle", "day_cycle", "sun_rotation"];
 const buttons = ["fixed_camera"];
 
 const button_map = {

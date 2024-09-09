@@ -4,8 +4,11 @@ Our Server uses Golang
 
 ## Known Bugs:
  - Camera Flips Upside Down when switching from Fixed to Free Camera
- - Low FPS when moving targets quickly (or when using multiple instance meshes) - Need to resolve
- [X] Paths Overlap (Resolved)
+ - Day and Night Cycles just Jump when they hit 0
+
+## Fixed Bugs:
+ - Low FPS when moving targets quickly (or when using multiple instance meshes)
+ - Paths Overlap
 
 
 ## TODO:
