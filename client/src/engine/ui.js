@@ -23,11 +23,12 @@ export default class UI {
     button_fns = [];
 
     constructor(enableListeners, disableListeners) {
+        console.log("UI initialized");
         this.ui.style = "display: flex; position: relative; top: 0; width: 100%;";
         this.ui.onmouseenter = disableListeners;
         this.ui.onmouseleave = enableListeners;
         state.updateUI = this.updateUI; 
-        state.updateUI();
+        //state.updateUI();
     }
 
     display = () => {
@@ -79,6 +80,7 @@ export default class UI {
 
 
     updateUI = (val) => {
+        console.log("Updating UI");
         this.local_state = val ? val : this.local_state;
 
         ui.innerHTML = this.expanded ? 
@@ -117,6 +119,7 @@ export default class UI {
     }
 
     toggleUI = () => {
+        console.log(this.expanded);
         this.expanded = !this.expanded;
         this.updateUI();
     }

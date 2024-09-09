@@ -102,7 +102,10 @@ export default class CameraController {
             if (intersects.length <= 0) 
                 { 
                     state.scene.remove(this.cursor);
-                    state.cursor_target = 'none';
+                    
+                    if (state.cursor_target !== 'none')
+                        { state.cursor_target = 'none'; }
+                    
                     return; 
                 }
 

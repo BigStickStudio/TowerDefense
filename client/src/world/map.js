@@ -23,20 +23,17 @@ const createSquareMaterial = (color) =>
             transparent: true,
             roughness: 0,
             metalness: 0.4,
-            opacity: 0.5,
+            opacity: 0.6,
             reflectivity: 1,
             iridescence: true,
             iridescenceIOR: 1.3,
             clearcoat: 0.1,
             specularIntensity: 0.5,
-        //    roughness: 0.7,
-        //    metalness: 0.4,
-        //    flatShading: true,
         });
     }
 
-let red = 0xc12d10;
-let blue = 0x7a94e0;
+let red = 0xE23513;
+let blue = 0x0A44EF;
 
 let red_square_material = createSquareMaterial(red);
 let blue_square_material = createSquareMaterial(blue);
@@ -245,8 +242,6 @@ export default class Map {
                 // bumpMap: bump_map,
                 // bumpScale: 0.5,
                 color: 0xbc7e49,
-                roughness: 0.7,
-                metalness: 0.4,
                 flatShading: true,
                 //wireframe: true
             } )
@@ -332,7 +327,7 @@ export default class Map {
             let light_y = position.y * square_size + config.square_offset - map_center.y;
 
             // TODO: Add Interpolation for day and night cycle
-            let player_lighting = new THREE.HemisphereLight(0x996611, 0x00cc99, 0.1); // This is the perfect night color
+            let player_lighting = new THREE.HemisphereLight(0x996611, 0x00cc99, 0.03); // This is the perfect night color
             player_lighting.name = "light";
             player_lighting.position.set(light_x, 4, light_y);
             player_lighting.color.setHSL(1, 1, 1); // This is the perfect Day Color 

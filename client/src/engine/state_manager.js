@@ -18,7 +18,7 @@ export default class StateManager {
             
             this.clock = new THREE.Clock();
             this.scene = new THREE.Scene();
-            this.scene.fog = new THREE.Fog(0xffffff, 1200, 3000); // TODO: set this based on offset
+            this.scene.fog = new THREE.Fog(0xffffff, 300, 3000); // TODO: set this based on offset
             this.initRenderer();
             this.keyboard = new KeyBoardWarrior();
             this.init();
@@ -39,6 +39,7 @@ export default class StateManager {
                 "moving_state": "Resting",
                 "night_cycle": 0.0, // 255 is full night, 0 is full day
                 "day_cycle": 0.0, // 255 is full day, 0 is full night
+                "sun_rotation": 0.0, // % 512 is full rotation
                 "fixed_camera": camera_config.default_camera_position === "third-person", // (Fixed vs Free Fly)
             };
             
@@ -122,11 +123,6 @@ export default class StateManager {
             return { x: grid_size.x * map_config.square_size, y: grid_size.y * map_config.square_size }; 
         }
 
-    set fixed_camera(value)
-        { this.state["fixed_camera"] = value; this.redrawUI(`Fixed Camera(${value})`); }
-    
-    get fixed_camera()
-        { return this.state["fixed_camera"]; }
 
     // Called when we drag the mouse from top-down OR when we double click a character
     // - When Enabled the camera should switch to a target
@@ -135,58 +131,42 @@ export default class StateManager {
         { this.fixed_camera = !this.fixed_camera; }
 
     get camera_target() { return this.state["camera_target"]; }
+    set camera_target(value) { this.state["camera_target"] = value; this.redrawUI(`Camera Target(${value})`); }
+    set camera_target_name(value) { this.state["camera_target"].name = value; this.redrawUI(`Camera Target Name(${value})`); }
+    set camera_position(value) { this.state["camera_position"] = value; this.redrawUI(`Camera Position(${value})`); }
+    get camera_position() { return this.state["camera_position"]; }
+    set fixed_camera(value) { this.state["fixed_camera"] = value; this.redrawUI(`Fixed Camera(${value})`); }
+    get fixed_camera() { return this.state["fixed_camera"]; }
+    get top_down() { return this.state["camera_position"] === "top-down"; }
 
-    set camera_target(value)
-        { this.state["camera_target"] = value; this.redrawUI(`Camera Target(${value})`); }
-    
-    set camera_target_name(value)
-        { this.state["camera_target"].name = value; this.redrawUI(`Camera Target Name(${value})`); }
+    set moving_state(value) { this.state["moving_state"] = value; this.redrawUI(`Moving State(${value})`); }
+    get moving_state() { return this.state["moving_state"]; }
 
-    set camera_position(value)
-        { this.state["camera_position"] = value; this.redrawUI(`Camera Position(${value})`); }
-    
-    get camera_position()
-        { return this.state["camera_position"]; }
-
-    get top_down()
-        { return this.state["camera_position"] === "top-down"; }
-
-    set moving_state(value)
-        { this.state["moving_state"] = value; this.redrawUI(`Moving State(${value})`); }
-
-    get moving_state()
-        { return this.state["moving_state"]; }
-
-    set night_cycle(value)
-        { this.state["night_cycle"] = value; }
-    
-    get night_cycle()
-        { return this.state["night_cycle"]; }
-
+    set night_cycle(value) { this.state["night_cycle"] = value; }
+    get night_cycle() { return this.state["night_cycle"]; }
     get normalized_night_cycle()
         { 
             let sky_cycle = this.state["night_cycle"];
             return +(clamp(sky_cycle) / 255).toFixed(3);
         }
 
-    set day_cycle(value)
-        { this.state["day_cycle"] = value; }
+    set sun_rotation(value) { this.state["sun_rotation"] = value % 512; }
+    get sun_rotation() { return this.state["sun_rotation"]; }
+    get sky_rotation() { return this.state["sun_rotation"] * Math.PI / 256; }
 
-    get day_cycle()
-        { return this.state["day_cycle"]; }
-
+    set day_cycle(value) { this.state["day_cycle"] = value; }
+    get day_cycle() { return this.state["day_cycle"]; }
     get normalized_day_cycle()
         { 
             let sky_cycle = this.state["day_cycle"];
             return +(clamp(sky_cycle) / 255).toFixed(3); 
         }
 
+    get cursor_target() { return this.state["cursor_target"]; }
     set cursor_target(value)
         { 
             this.state["cursor_target"] = value; 
             this.redrawUI(`Cursor Target(${value})`);
         }
 
-    get cursor_target()
-        { return this.state["cursor_target"]; }
 }

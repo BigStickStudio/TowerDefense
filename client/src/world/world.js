@@ -16,7 +16,6 @@ export default class World extends Map {
             this.character = new Character(); // Create as Entity
             this.camera = new Camera();
             this.objects = state.scene.children.filter((child) => !filtered_items.includes(child.name));
-            //console.log(this.objects);
         }
 
     step = () => 
