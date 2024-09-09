@@ -128,18 +128,53 @@ export default class Sky {
         let sun = new THREE.DirectionalLight(0xFFE87C, 0); 
         sun.name = "sun";
         sun.position.set(700, -2000, 0);
+        sun.castShadow = true;
+        sun.shadow.camera.near = 1500;
+        sun.shadow.camera.far = 4000;
+        sun.shadow.camera.left = -1000;
+        sun.shadow.camera.right = 1000;
+        sun.shadow.camera.top = 1000;
+        sun.shadow.camera.bottom = -1000;
+        sun.shadow.mapSize.width = 1024;
+        sun.shadow.mapSize.height = 1024;
+        sun.shadow.bias = -0.0001;
+        sun.shadow.radius = 3;
+        sun.shadow.sampleSize = 9;
         sun.add(
             new THREE.Mesh(new THREE.SphereGeometry(150, 15, 15), 
             new THREE.MeshBasicMaterial({ color: 0xFFF4C0 }))
         );
 
+
         let moon = new THREE.DirectionalLight(0x92ADAE, 0.2);
         moon.name = "moon";
         moon.position.set(-700, 2000, 0);
+        moon.castShadow = true;
+        moon.shadow.camera.near = 1500;
+        moon.shadow.camera.far = 4000;
+        moon.shadow.camera.left = -1000;
+        moon.shadow.camera.right = 1000;
+        moon.shadow.camera.top = 1000;
+        moon.shadow.camera.bottom = -1000;
+        moon.shadow.bias = -0.0001;
+        moon.shadow.mapSize.width = 2048;
+        moon.shadow.mapSize.height = 2048;
+        moon.shadow.radius = 8;
+        moon.shadow.sampleSize = 12;
         moon.add(
             new THREE.Mesh(new THREE.SphereGeometry(50, 15, 15),
             new THREE.MeshBasicMaterial({ color: 0x788B90 }))
         );
+
+        // Debugging Purposes
+        sun.showCameraVisible = true;
+        moon.showCameraVisible = true;
+
+        let sun_helper = new THREE.DirectionalLightHelper(sun, 100);
+        let moon_helper = new THREE.DirectionalLightHelper(moon, 100);
+
+        state.scene.add(sun_helper);
+        state.scene.add(moon_helper);
 
         this.sky_group.add(sun);
         this.sky_group.add(moon);
@@ -180,8 +215,8 @@ export default class Sky {
         {
             let night_cycle = state.night_cycle;
             let day_cycle = state.day_cycle;
-            let night_elapsed = elapsed * 90;
-            let day_elapsed = elapsed * 30;
+            let night_elapsed = elapsed * 30;
+            let day_elapsed = elapsed * 10;
             let sun_rotation = state.sun_rotation;
 
             if (this.morning)

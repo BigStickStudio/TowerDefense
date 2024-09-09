@@ -23,6 +23,7 @@ export default class StateManager {
             this.keyboard = new KeyBoardWarrior();
             this.init();
             this.player_areas = { "red": [], "blue": [] };
+            this.hemisphere_lights = [];
         }
         
     init = () => 
@@ -55,7 +56,8 @@ export default class StateManager {
             this.renderer.setClearColor(0x000000);
             this.renderer.gammaFactor = 2.2;
             this.renderer.shadowMap.enabled = true;
-            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            this.renderer.shadowMap.type = THREE.VSMShadowMap;
+            //this.renderer.physicallyCorrectLights=true
             this.renderer.setPixelRatio(window.devicePixelRatio);
             this.renderer.setSize(window.innerWidth, window.innerHeight);
 

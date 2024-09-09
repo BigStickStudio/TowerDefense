@@ -40,6 +40,7 @@ export default class World extends Map {
             this.step();
             this.sky.rotate();
             this.sky.fade(state.night_cycle, state.day_cycle);
+            this.updateLighting();
             if (!state.fixed_camera)
                 { this.camera.getIntersection(this.objects); }
         }
