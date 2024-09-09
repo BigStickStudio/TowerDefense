@@ -127,22 +127,24 @@ export default class Sky {
     initLights = () => {
         let sun = new THREE.DirectionalLight(0xFFE87C, 0); 
         sun.name = "sun";
-        sun.position.set(2500, -300, 0);
+        sun.position.set(700, -2000, 0);
         sun.add(
-            new THREE.Mesh(new THREE.SphereGeometry(100, 15, 15), 
+            new THREE.Mesh(new THREE.SphereGeometry(150, 15, 15), 
             new THREE.MeshBasicMaterial({ color: 0xFFF4C0 }))
         );
 
         let moon = new THREE.DirectionalLight(0x92ADAE, 0.2);
         moon.name = "moon";
-        moon.position.set(-2500, 300, 0);
+        moon.position.set(-700, 2000, 0);
         moon.add(
-            new THREE.Mesh(new THREE.SphereGeometry(30, 15, 15),
-            new THREE.MeshBasicMaterial({ color: 0xB8CBD0 }))
+            new THREE.Mesh(new THREE.SphereGeometry(50, 15, 15),
+            new THREE.MeshBasicMaterial({ color: 0x788B90 }))
         );
 
         this.sky_group.add(sun);
         this.sky_group.add(moon);
+        //this.sky_group.rotation.z = -(7 * Math.PI) / 6;
+        this.sky_group.rotation.x = Math.PI / 6;
         state.scene.add(this.sky_group);
     }
 
@@ -222,15 +224,8 @@ export default class Sky {
         {
             this.calculateDayTime(elapsed);
 
-
             this.sky_group.rotation.z = state.sky_rotation * Math.PI;
-            this.sky_group.rotation.y = state.sky_rotation * Math.PI;
-            this.sky_group.updateMatrix();
-            this.sky_group.updateMatrixWorld();
-
             state.scene.getObjectByName("sun").intensity = Math.min(state.normalized_day_cycle * 2, 1);
             state.scene.getObjectByName("moon").intensity = (1 - state.normalized_night_cycle) / 2;
-            console.log("Normalized Day:", state.normalized_day_cycle, "Normalized Night:", state.normalized_night_cycle);
-            console.log("Sun:", state.scene.getObjectByName("sun").intensity, "Moon Intensity:", state.scene.getObjectByName("moon").intensity);
         }
 }

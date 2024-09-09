@@ -4,9 +4,9 @@ Our Server uses Golang
 
 ## Known Bugs:
  - Camera Flips Upside Down when switching from Fixed to Free Camera
- - Day and Night Cycles just Jump when they hit 0
 
 ## Fixed Bugs:
+ - Day and Night Cycles just Jump when they hit 0
  - Low FPS when moving targets quickly (or when using multiple instance meshes)
  - Paths Overlap
 
@@ -32,7 +32,7 @@ Our Server uses Golang
          - [X] Middle Click Rotates the Camera
    - [ ] Dynamic Map Generation
       - [X] Generate Spawnable Areas
-      - [ ] 'Floor'
+      - [#] 'Floor'
          - [X] Fix XY Offset to 0 and translate by 1/2 map
          - [X] Connect Spawnable Areas using Configs
          - [X] Generate Paths
