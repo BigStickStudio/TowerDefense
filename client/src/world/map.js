@@ -36,7 +36,7 @@ let blue_color = new THREE.Color(blue);
 
 let red_square_material = createSquareMaterial(red_color);
 let blue_square_material = createSquareMaterial(blue_color);
-let path_square_material = createSquareMaterial(0xeeff99);
+let path_square_material = createSquareMaterial(0xecefec);
 
 
 // TODO : Move to Utility Fuction

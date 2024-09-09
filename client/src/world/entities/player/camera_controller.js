@@ -7,17 +7,8 @@ const state = StateManager.instance;
 
 let prev_mouse = new THREE.Vector2();
 let instance_matrix = new THREE.Matrix4();
-let instance_position = new THREE.Vector3();
-let highlight = 0x33f5d9;
-let highlighter_color = new THREE.Color().setHex(highlight);
-let highlighted = null;
-let prev_highlighted = null;
-
-let red = 0xc12d10;
-let blue = 0x7a94e0;
-
-let red_color = new THREE.Color(red);
-let blue_color = new THREE.Color(blue);
+let last_x = 0;
+let last_z = 0;
 
 export default class CameraController {
     d_mouse = new THREE.Vector2();
@@ -115,29 +106,20 @@ export default class CameraController {
                     let intersect = intersects[i];
                     if (intersect?.object?.info === undefined) { return; }
 
-                    let team = intersect.object.info.team;
-                    let player = intersect.object.info.id;
-                    let instance_id = intersect.instanceId;
+                    // let team = ;
+                    // let player = ;
 
-                    state.player_areas[team][player].getMatrixAt(instance_id, instance_matrix)
-                    instance_matrix.decompose(instance_position, new THREE.Quaternion(), new THREE.Vector3());
+                    state.player_areas[intersect.object.info.team][intersect.object.info.id]
+                            .getMatrixAt(intersect.instanceId, instance_matrix)
 
-                    if (instance_position.x === this.cursor.position.x && instance_position.z === this.cursor.position.z)
+                    if (instance_matrix.elements[12] === last_x && 
+                        instance_matrix.elements[14] === last_z)
                         { return; }
 
-                    // if (highlighted !== prev_highlighted)
-                    //     {
-                    //         console.log("infinite")
-                    //         state.player_areas[highlighted.team][highlighted.player].setColorAt(
-                    //             highlighted.id, highlighted.team === "red" ? red_color : blue_color);
-                    //         prev_highlighted = highlighted;
-                    //     }
-
-                    // highlighted = { team: team, player: player, id: instance_id };
-                    // state.player_areas[team][player].setColorAt(instance_id, highlighter_color);
-                    this.cursor.position.setX(instance_position.x);
-                    this.cursor.position.setZ(instance_position.z);
-                    //state.cursor_target = `${team}_${player}: (${position.x},${position.y})`;
+                    last_x = instance_matrix.elements[12];
+                    last_z = instance_matrix.elements[14];
+                    this.cursor.position.setX(last_x);
+                    this.cursor.position.setZ(last_z);
                 }
 
             if (state.scene.getObjectByName("cursor") === undefined)

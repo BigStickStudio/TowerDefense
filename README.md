@@ -2,6 +2,12 @@
 Our Client uses Python + ThreeJS
 Our Server uses Golang
 
+## Known Bugs:
+ - Camera Flips Upside Down when switching from Fixed to Free Camera
+ - Low FPS when moving targets quickly (or when using multiple instance meshes) - Need to resolve
+ [X] Paths Overlap (Resolved)
+
+
 ## TODO:
 
 #### Legend:
@@ -24,14 +30,15 @@ Our Server uses Golang
    - [ ] Dynamic Map Generation
       - [X] Generate Spawnable Areas
       - [ ] 'Floor'
-         - [ ] Fix XY Offset to 0 and translate by 1/2 map
+         - [X] Fix XY Offset to 0 and translate by 1/2 map
          - [X] Connect Spawnable Areas using Configs
-         - [ ] Generate Paths
+         - [X] Generate Paths
             - [X] Path and Node Generation Working
             - Remove Crossover Sections that allow bots to skip areas
          - Add 'Weight Map' for NPC Path Finding
-         - [ ] Generate EdgeMap
+         - [X] Generate Square_Table Grid for Optimized Map Generation and Inline Deduplication
       - [ ] Create Walls and Top-Level Terrain
+         - [X] Generate Mesh for Map based on Square_Table
          - [ ] Interpolate between heightmap for coloring
       - [ ] Single vs Multiplayer Map Generation
          - [X] Map ConfigMap
@@ -84,3 +91,8 @@ Our Server uses Golang
             - Guilds can be a part of a Bracket where they have to face off
          - Factions are formed naturally as players form alliances by playing on the same team
             - Factions allow for 'preferred build-outs'
+      - Various spawn modes
+         - Automatic Waves i.e. Both teams defend against timed spawns
+         - Manual Waves
+            - Individuals can send hordes when they are ready
+            - Entire Teams have to send together
