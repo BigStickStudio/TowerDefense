@@ -77,19 +77,6 @@ export default class Map {
 
 
 
-    updateLighting = () => 
-        {
-            let day_cycle = state.normalized_day_cycle;
-            for (const lights of state.hemisphere_lights)
-                {
-                    // TODO: Move these to a local static function
-                    lights.color.copy(config.lerpTopColor(day_cycle));
-                    lights.groundColor.copy(config.lerpBottomColor(day_cycle));
-                }
-        }
-
-
-
     // a square object should have a 'name', 'id' and 'location'
     // name: spawn, info{ team, id }, location: { x, y }
     addSquare = (id_y, id_x, sq_obj) =>
@@ -287,10 +274,7 @@ export default class Map {
             } )
 
             const terrain = new THREE.Mesh(terrain_geometry, field_material);
-
-            const terrain = new THREE.Mesh(terrain_geometry, field_material);
             terrain.rotation.x = -Math.PI / 2;
-            terrain.position.set(0, -0.5, 0);
             terrain.position.set(0, -0.5, 0);
             terrain.name = "terrain";
             terrain.receiveShadow = true;
@@ -309,28 +293,11 @@ export default class Map {
             let half_set = false;
 
             for (let i = 0; i < terrain_geometry.attributes.position.count; i++)
-            for (let i = 0; i < terrain_geometry.attributes.position.count; i++)
                 {
                     // We have to add 1 for the x and y
                     // to account for the extra vertices
                     let x = i % (grid_size.x + 1);
                     let y = Math.floor(i / (grid_size.x + 1));
-
-                    if (x < 2 || x >= grid_size.x - 3)
-                        { 
-                            if (x === 0 || x === grid_size.x + 1)
-                                {
-                                    vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
-                                    terrain_geometry.attributes.position.setXYZ(i, 0, vertex.y, -10);
-                                }
-                            else
-                                {
-                                    vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
-                                    terrain_geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, -10);
-                                }
-                            
-                            
-                            continue; }
 
                     if (x < 2 || x >= grid_size.x - 3)
                         { 
@@ -376,17 +343,13 @@ export default class Map {
 
 
                     vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
-                    vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
 
                     // if we are adjacent to a square, we want to raise the vertex partially
                     if (look_ahead || (look_above && !look_ahead) || (look_down && !look_behind) || half_set || look_up_two)
                         { vertex.z =  8 + Math.random() * 15 - 3; half_set = false; }
-                        { vertex.z =  8 + Math.random() * 15 - 3; half_set = false; }
                     else // Otherwise we want to raise the vertex to top level
                         { vertex.z = Math.random() * 7 + 17; }
-                        { vertex.z = Math.random() * 7 + 17; }
                     
-                    terrain_geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
                     terrain_geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
                 }
 
@@ -402,7 +365,6 @@ export default class Map {
     /////////////////////////
 
     // TODO: Move to Entity Manager
-    // TODO: Move to Entity Manager
     addHemisphereLight = (position) =>
         {
             let light_x = position.x * square_size + config.square_offset - map_center.x;
@@ -410,12 +372,9 @@ export default class Map {
 
             // TODO: Add Interpolation for day and night cycle
             let player_lighting = new THREE.HemisphereLight(config.night_top_color, config.night_bottom_color, 0.03); // This is the perfect night color
-            let player_lighting = new THREE.HemisphereLight(config.night_top_color, config.night_bottom_color, 0.03); // This is the perfect night color
             player_lighting.name = "light";
             player_lighting.groundColor.setHSL(0.25, .5, .7);
             state.scene.add(player_lighting);
-            state.hemisphere_lights.push(player_lighting);
-
             state.hemisphere_lights.push(player_lighting);
 
             // Hemisphere Helper
