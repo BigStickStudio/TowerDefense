@@ -49,10 +49,10 @@ Additional Notes:
       - [X] Scrolling Out Zooms to Top Down
    - [X] Map SkyBox to Sphere (SkySphere)
    - [ ] Ability to Toggle between Free Form Camera and Player Mounted Camera 
-      - Switch to Fixed Mode
-         - Locks to a Character if we Double Click the Character
-         - Unlocks if the Character is already selected
-         - Locks to a Spawn Area if we Double Click a Region from Free Form
+      - [ ] Improved Switch to Fixed Mode
+         - [ ] Locks to a Character if we Double Click the Character
+         - [ ] Unlocks if the Character is already selected
+         - [ ] Locks to a Spawn Area if we Double Click a Region from Free Form
       - [X] Free Fly Camera Mode has Different Controls
          - [X] Shift + Middle Click moves the Map
          - [X] Middle Click Rotates the Camera
@@ -63,7 +63,7 @@ Additional Notes:
          - [X] Connect Spawnable Areas using Configs
          - [X] Generate Paths
             - [X] Path and Node Generation Working
-            - Remove Crossover Sections that allow bots to skip areas
+            - [?] Remove Crossover Sections that allow bots to skip areas
          - Add 'Weight Map' for NPC Path Finding
          - [X] Generate Square_Table Grid for Optimized Map Generation and Inline Deduplication
       - [ ] Create Walls and Top-Level Terrain
@@ -74,54 +74,62 @@ Additional Notes:
                - [ ] (PvP) Battle Royal - 1v1, 2v2, 3v3, 4v4, 5v5, 7v7
                - (PvP) Invasion - 1v2, 2v3, 3v5, 5v7
                - (PvC) Defense - 1v1, 1v2, 2v2, 2v4, 3v3, 3v5, 5v5, 5v7 
-   - Select Spawnable (Floor)
-   - Add Selection Area
-   - Fix GTLF Animation
-   - Add Right Click Menu
-   - Create Spawnable Zones
-   - NPC Spawn Areas
-   - NPC Pathfinding Logic
-      - Individuals
-      - Horde
-   - Add MiniMap
-      - Add Fast Navigation when Free
-   - Add Bases
-   - Add Spawners
-   - Add Menu
-      - Add Lobby
-
-   - Marketplace
-      - Mint Towers and Troop Sets
-      - 
-
-   - Gameplay Features
-      - Select Area
-      - Build and Destroy Towers
-         - Towers can Take Damage
-         - Upgrade Towers
-      - Deploy Troops
-         - Upgrade Offensive Troops
-         - Direct Troops
-      - Gain Levels
-         - Skill Tree
-            - Tower/Troop Sets
-            - Periodic Power Ups
-            - Persistent Stacks
-      - Mint, Trade and Lease Towers
-         - Tower Sets can Accrue actuation for usage
-         - Exchange Player Cards, Towers and Troops
-
-   - Add Multiplayer 
-      - Add User Database Integrations
-      - Add Match Making
-      - Add Reward / Ranking
-      - Add 'Guilds' and 'Factions'
-         - Guilds are like Clans of People all sharing rewards and resources
-            - Guilds can be a part of a Bracket where they have to face off
-         - Factions are formed naturally as players form alliances by playing on the same team
-            - Factions allow for 'preferred build-outs'
-      - Various spawn modes
-         - Automatic Waves i.e. Both teams defend against timed spawns
-         - Manual Waves
-            - Individuals can send hordes when they are ready
-            - Entire Teams have to send together
+   - [ ] Player Areas
+      - [X] Add Bases
+      - [ ] Spawn Towers
+         - [X] Select Spawnable (Floor)
+         - [ ] Use InstancedMesh
+         - [ ] Create Tower Spawn/Control Menu
+         - [ ] Destroy Towers
+         - [ ] Upgrade Towers
+      - [ ] Create Horders
+         - [ ] NPC Spawner
+         - [ ] NPC Pathfinding Logic
+            - [ ] Individuals
+            - [ ] Horde
+   - [ ] Add Selection Area
+   - [ ] Fix GTLF Animation
+   - [ ] Add Right Click Menu ? 
+      - [ ] Figure out what Right Click should do?
+   - [ ] Add MiniMap
+      - [ ] Add Fast Navigation when Free
+   - [ ] Add Menus
+      - [ ] Landing Page
+         - [ ] Add Lobby
+         - [ ] Player Profile
+         - [ ] Marketplace
+         - [ ] Settings
+      - [ ] Pause/Escape
+   - [ ] Marketplace
+      - [ ] Mint Towers and Troop Sets
+      - [ ] Buy New Towers
+   - [ ] Gameplay Features
+      - [ ] Select Area
+      - [ ] Build and Destroy Towers
+         - [ ] Towers can Take Damage
+         - [ ] Upgrade Towers
+      - [ ] Deploy Troops
+         - [ ] Upgrade Offensive Troops
+         - [ ] Direct Troops
+      - [ ] Gain Levels
+         - [ ] Skill Tree
+            - [ ] Tower/Troop Sets
+            - [ ] Periodic Power Ups
+            - [ ] Persistent Stacks
+      - [ ] Mint, Trade and Lease Towers
+         - [ ] Tower Sets can Accrue actuation (skill boosts) for usage
+         - [ ] Exchange Player Cards, Towers and Troops
+   - [ ] Add Multiplayer 
+      - [ ] Add User Database Integrations
+      - [ ] Add Match Making
+      - [ ] Add Reward / Ranking
+      - [ ] Add 'Guilds' and 'Factions'
+         - [ ] Guilds are like Clans of People all sharing rewards and resources
+            - [ ] Guilds can be a part of a Bracket where they have to face off
+         - [ ] Factions are formed naturally as players form alliances by playing on the same team
+            - [ ] Factions allow for 'preferred build-outs'
+      - [ ] Various spawn modes
+         - [ ] Automatic Waves i.e. Both teams defend against timed spawns
+         - [ ] Manual Waves
+            - [ ] Individuals can send hordes when they are ready
+            - [ ] Entire Teams have to send together
