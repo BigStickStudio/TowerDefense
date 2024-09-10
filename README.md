@@ -4,6 +4,7 @@ Our Server uses Golang
 
 ## Known Bugs:
  - Camera Flips Upside Down when switching from Fixed to Free Camera
+ - Shadow comes through the back of the map
 
 ## Fixed Bugs:
  - Day and Night Cycles just Jump when they hit 0

@@ -15,6 +15,7 @@ let this_z = 0;
 export default class CameraController {
     d_mouse = new THREE.Vector2();
     mouse = new THREE.Vector2();
+    double_click = false;
 
     constructor() {
         this.free_target = new THREE.Object3D(0, 0, 0);
@@ -65,6 +66,8 @@ export default class CameraController {
             //console.log("Enabling Camera");
             if (this.camera_enabled) { return; }
             
+            document.addEventListener('dblclick', this.doubleClick, false);
+            document.addEventListener('click', this.mouseClick, false);
             document.addEventListener('wheel', this.zoom, false);
             document.addEventListener('mousemove', this.moveMouse, false);
             document.addEventListener('mousedown', this.mouseDown, false);
@@ -78,6 +81,8 @@ export default class CameraController {
             //console.log("Disabling Camera");
             if (!this.camera_enabled) { return; }
 
+            document.addEventListener('dblclick', this.doubleClick, false);
+            document.removeEventListener('click', this.mouseClick, false);
             document.removeEventListener('wheel', this.zoom, false);
             document.removeEventListener('mousemove', this.moveMouse, false);
             document.removeEventListener('mousedown', this.mouseDown, false);
@@ -93,8 +98,10 @@ export default class CameraController {
 
     // This gets called EVERY frame
         // TODO: Move to the entity controller or state or something?
+        // TODO: Have this wait ~100ms before calling again
     getIntersection = (objects) => 
         {
+            // console.log(objects);
             // Todo: Move this OUT of this because we call this every frame
             this.raycaster.setFromCamera(this.mouse, this.instance);
             let intersects = this.raycaster.intersectObjects(objects, true);
@@ -119,9 +126,40 @@ export default class CameraController {
 
                     this_x = instance_matrix.elements[12];
                     this_z = instance_matrix.elements[14];
+                    
+                    // This never hits so we need to check OUTSIDE of this loop
+                    if (this.double_click) 
+                        {
+                            // Check if this is a entity and set it as the target
+                            console.log("Double Clicked on: ", intersect.object.info);
+                            this.double_click = false;
+                            this._mouse_button = -1;
+                            continue;
+                        }
+
+                    // Add a tower
+                    if (this.left_click)
+                        {
+                            // This is where we have to create a menu
+                            console.log("Left Clicked on: ", intersect.object.info);
+                            let cannon = state.getEntity("tier1cannon").clone();
+                            cannon.position.setX(this_x);
+                            cannon.position.setZ(this_z);
+                            cannon.position.setY(0.5);
+                            state.scene.add(cannon);
+                            this._mouse_button = -1;
+                        }
+
+                    // Don't know what this is for yet
+                    if (this.right_click)
+                        {
+                            console.log("Right Cicked on: ", intersect.object.info);
+                            this._mouse_button = -1;
+                        }
 
                     if (this_x === last_x && this_z === last_z)
                         { continue; }
+
 
                     last_x = this_x;
                     last_z = this_z;
@@ -147,8 +185,28 @@ export default class CameraController {
     get middle_click() { return this._mouse_button === 1; }
     get right_click() { return this._mouse_button === 2; }
 
+    mouseClick = (e) =>
+        {
+            // console.log("Mouse Clicked: ", e);
+            // TODO: Toggle Menu for Spawn Options
+            this._mouse_button = e.button;
+            this._mouse_down = true
+        }
+
+    doubleClick = (e) =>
+        {
+            // console.log("Double Clicked: ", e);
+            this._mouse_button = e.button; // These don't unset on their own
+            this._mouse_down = true;
+            this.double_click = true;
+        }
+
     mouseUp = (event) =>
-        { this._mouse_down = false; }
+        { 
+            // console.log("Mouse Up: ", event);
+            this._mouse_down = false; 
+            this._mouse_button = -1;
+        }
 
     moveMouse = (event) => 
         {

@@ -28,6 +28,7 @@ export default class Character extends CharacterController {
 
     loadAnimation = (name, animation) => 
         {
+            console.log("Loading animation: ", name);
             if (!this._mixer) 
                 {
                     console.error("Mixer not initialized");
@@ -45,14 +46,20 @@ export default class Character extends CharacterController {
     createModel = () => 
         {
             const loader = new GLTFLoader();
-            loader.load('assets/models/MrMan.glb', (gltf) => {
+            loader.load('assets/models/heavy_cannon_tower.glb', (gltf) => {
                 let model = gltf.scene;
                 model.position.set(0, 1, 0); // TODO: Blender: Move model back 3
-                model.traverse(child => { child.castShadow = true; });
+                model.traverse(child => { 
+                    if (child.isObject3D && child?.name?.includes("cannon")) 
+                        { 
+                            child.scale.set(0.3, 0.3, 0.3);
+                            let object = new THREE.Object3D();
+                            object.copy(child.clone());
+                            console.log("Adding model to state: ", object);
+                            state.addModel(object); 
+                        }
+                 });
         
-                this.target = model;
-                this.target.name = "MrMann";
-                state.scene.add(this.target);
                 this._mixer = new THREE.AnimationMixer(model);
 
                 const animations = gltf.animations;

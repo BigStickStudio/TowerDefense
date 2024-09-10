@@ -18,6 +18,8 @@ export default class World extends Map {
             this.objects = state.scene.children.filter((child) => !filtered_items.includes(child.name));
         }
 
+    t_wait = (ms) => { return new Promise(resolve => setTimeout(resolve, ms)); }
+
     step = () => 
         {
             const elapsed = state.clock.getDelta() * 0.2;
@@ -31,7 +33,11 @@ export default class World extends Map {
                 }
             else 
                 { this.camera.update(this.camera.free_target, elapsed); }
-                
+            
+            // This doesn't work as expected
+            if (this.t_wait(1000))
+                { this.camera.getIntersection(this.objects); }
+            
             this.sky.update(elapsed);
         }
 
@@ -40,7 +46,6 @@ export default class World extends Map {
             this.step();
             this.sky.rotate();
             this.sky.fade(state.night_cycle, state.day_cycle);
-            if (!state.fixed_camera)
-                { this.camera.getIntersection(this.objects); }
+            this.updateLighting();
         }
 }

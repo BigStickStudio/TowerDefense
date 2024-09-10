@@ -2,6 +2,7 @@ import * as THREE from "three";
 import camera_config from "../configs/camera_config.js";
 import game_config_map from "../configs/game_config_map.js";
 import map_config from "../configs/map_config.js";
+import EntityManager from "../world/entities/entity_manager.js";
 import KeyBoardWarrior from "./keyboard_controller.js";
 
 let instance = null;
@@ -17,12 +18,14 @@ export default class StateManager {
                 { console.error("[StateManager]::error : UI redraw fn() not defined."); }
             
             this.clock = new THREE.Clock();
+            this.entity_manager = new EntityManager();
             this.scene = new THREE.Scene();
             this.scene.fog = new THREE.Fog(0xffffff, 300, 3000); // TODO: set this based on offset
             this.initRenderer();
             this.keyboard = new KeyBoardWarrior();
             this.init();
             this.player_areas = { "red": [], "blue": [] };
+            this.hemisphere_lights = [];
         }
         
     init = () => 
@@ -55,7 +58,8 @@ export default class StateManager {
             this.renderer.setClearColor(0x000000);
             this.renderer.gammaFactor = 2.2;
             this.renderer.shadowMap.enabled = true;
-            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            this.renderer.shadowMap.type = THREE.VSMShadowMap;
+            //this.renderer.physicallyCorrectLights=true
             this.renderer.setPixelRatio(window.devicePixelRatio);
             this.renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -76,8 +80,15 @@ export default class StateManager {
         this.updateUI(this.state); 
     }
     
+    addModel = (entity) => { 
+        this.entity_manager.add(entity); 
+        this.scene.add(entity);
+    }
+
+    getEntity = (name) => { return this.entity_manager.get(name); }
+
     get key_pressed() { return this.keyboard.key_pressed; }
-    
+
     get game_mode() { return this.state["game_mode"]; }
     get game_type() { return this.state["game_type"]; }
     get match_size() { return this.state["game_size"]; }

@@ -7,11 +7,8 @@ const state = StateManager.instance;
 
 const map_center = state.map_center;
 const grid_size = state.grid_size;
-const half_grid = state.half_grid;
 const spawn_buffer = config.spawn_buffer;
 const square_size = config.square_size;
-const spawn_area = (spawn_buffer * 2)  * square_size - square_size;
-const path_buffer = config.path_buffer;
 const square_inset = square_size - config.frame_size;
 let x_rotation_matrix = new THREE.Matrix4().makeRotationX(-Math.PI / 2);
 
@@ -66,6 +63,19 @@ export default class Map {
         this.constructSpawnAreas();
         this.constructPathways();
     } 
+
+    updateLighting = () => 
+        {
+            let day_cycle = state.normalized_day_cycle;
+            for (const lights of state.hemisphere_lights)
+                {
+                    // TODO: Move these to a local static function
+                    lights.color.copy(config.lerpTopColor(day_cycle));
+                    lights.groundColor.copy(config.lerpBottomColor(day_cycle));
+                }
+        }
+
+
 
     // a square object should have a 'name', 'id' and 'location'
     // name: spawn, info{ team, id }, location: { x, y }
@@ -235,7 +245,22 @@ export default class Map {
             // const normal_map = textureLoader('assets/textures/map/normal.jpg', texture_scale);
             // const bump_map = textureLoader('assets/textures/map/bump.jpg', texture_scale);
 
-            const geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
+            const underpinning_geometry = new THREE.PlaneGeometry(state.field_size_x * 2, state.field_size_y * 2);
+            const underpinning_material = new THREE.MeshStandardMaterial({
+                color: 0x000000,
+                side: THREE.DoubleSide,
+            });
+
+            // Used to block light from orbiting sun/moon
+            const underpinning = new THREE.Mesh(underpinning_geometry, underpinning_material);
+            underpinning.rotation.x = -Math.PI / 2;
+            underpinning.position.set(0, -2, 0);
+            underpinning.name = "terrain";
+            underpinning.receiveShadow = true;
+            underpinning.castShadow = true;
+            state.scene.add(underpinning);
+            
+            const terrain_geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
             const field_material = new THREE.MeshLambertMaterial( {
                 // map: diffuse,
                 // normalMap: normal_map,
@@ -244,10 +269,13 @@ export default class Map {
                 color: 0xbc7e49,
                 flatShading: true,
                 //wireframe: true
+                shadowSide: THREE.FrontSide,
+                side: THREE.DoubleSide
             } )
-            const terrain = new THREE.Mesh(geometry, field_material);
+
+            const terrain = new THREE.Mesh(terrain_geometry, field_material);
             terrain.rotation.x = -Math.PI / 2;
-            terrain.position.set(0, -1, 0);
+            terrain.position.set(0, -0.5, 0);
             terrain.name = "terrain";
             terrain.receiveShadow = true;
             terrain.castShadow = true;
@@ -264,12 +292,28 @@ export default class Map {
 
             let half_set = false;
 
-            for (let i = 0; i < geometry.attributes.position.count; i++)
+            for (let i = 0; i < terrain_geometry.attributes.position.count; i++)
                 {
                     // We have to add 1 for the x and y
                     // to account for the extra vertices
                     let x = i % (grid_size.x + 1);
                     let y = Math.floor(i / (grid_size.x + 1));
+
+                    if (x < 2 || x >= grid_size.x - 3)
+                        { 
+                            if (x === 0 || x === grid_size.x + 1)
+                                {
+                                    vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
+                                    terrain_geometry.attributes.position.setXYZ(i, 0, vertex.y, -10);
+                                }
+                            else
+                                {
+                                    vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
+                                    terrain_geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, -10);
+                                }
+                            
+                            
+                            continue; }
 
                     let current_square = findSquare(y, x);
 
@@ -298,15 +342,15 @@ export default class Map {
                         {   continue; }
 
 
-                    vertex.fromBufferAttribute(geometry.attributes.position, i);
+                    vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
 
                     // if we are adjacent to a square, we want to raise the vertex partially
                     if (look_ahead || (look_above && !look_ahead) || (look_down && !look_behind) || half_set || look_up_two)
-                        { vertex.z =  5 + Math.random() * 12 - 3; half_set = false; }
+                        { vertex.z =  8 + Math.random() * 15 - 3; half_set = false; }
                     else // Otherwise we want to raise the vertex to top level
-                        { vertex.z = Math.random() * 5 + 15; }
+                        { vertex.z = Math.random() * 7 + 17; }
                     
-                    geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
+                    terrain_geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
                 }
 
 
@@ -320,20 +364,19 @@ export default class Map {
     // Create Player Areas //
     /////////////////////////
 
-    // TODO: Swap this for instanced mesh
+    // TODO: Move to Entity Manager
     addHemisphereLight = (position) =>
         {
             let light_x = position.x * square_size + config.square_offset - map_center.x;
             let light_y = position.y * square_size + config.square_offset - map_center.y;
 
             // TODO: Add Interpolation for day and night cycle
-            let player_lighting = new THREE.HemisphereLight(0x996611, 0x00cc99, 0.03); // This is the perfect night color
+            let player_lighting = new THREE.HemisphereLight(config.night_top_color, config.night_bottom_color, 0.03); // This is the perfect night color
             player_lighting.name = "light";
-            player_lighting.position.set(light_x, 4, light_y);
-            player_lighting.color.setHSL(1, 1, 1); // This is the perfect Day Color 
             player_lighting.groundColor.setHSL(0.25, .5, .7);
             state.scene.add(player_lighting);
-    
+            state.hemisphere_lights.push(player_lighting);
+
             // Hemisphere Helper
             // const hemisphere_helper = new THREE.HemisphereLightHelper(player_lighting, 5);
             // state.scene.add(hemisphere_helper);

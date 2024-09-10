@@ -20,16 +20,9 @@ export default class Camera extends CameraController {
     _current_position = new THREE.Vector3();
     _current_lookat = new THREE.Vector3();
  
-    constructor(_renderer) 
+    constructor() 
         {
             super();
-            this._renderer = _renderer; // TODO: Move this to State and Make State into Singleton Engine
-            this.init();
-        }
-
-
-    init = () => 
-        {
             this.instance = new THREE.PerspectiveCamera(config.fov, window.innerWidth / window.innerHeight, config.near, config.far);
             this.instance.position.set(0, config.default_zoom_height, 0);
         }
