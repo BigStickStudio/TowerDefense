@@ -140,15 +140,40 @@ export default class Sky {
         sun.shadow.bias = -0.0001;
         sun.shadow.radius = 3;
         sun.shadow.sampleSize = 9;
+        sun.castShadow = true;
+        sun.shadow.camera.near = 1500;
+        sun.shadow.camera.far = 4000;
+        sun.shadow.camera.left = -1000;
+        sun.shadow.camera.right = 1000;
+        sun.shadow.camera.top = 1000;
+        sun.shadow.camera.bottom = -1000;
+        sun.shadow.mapSize.width = 1024;
+        sun.shadow.mapSize.height = 1024;
+        sun.shadow.bias = -0.0001;
+        sun.shadow.radius = 3;
+        sun.shadow.sampleSize = 9;
         sun.add(
             new THREE.Mesh(new THREE.SphereGeometry(150, 15, 15), 
             new THREE.MeshBasicMaterial({ color: 0xFFF4C0 }))
         );
 
 
+
         let moon = new THREE.DirectionalLight(0x92ADAE, 0.2);
         moon.name = "moon";
         moon.position.set(-700, 2000, 0);
+        moon.castShadow = true;
+        moon.shadow.camera.near = 1500;
+        moon.shadow.camera.far = 4000;
+        moon.shadow.camera.left = -1000;
+        moon.shadow.camera.right = 1000;
+        moon.shadow.camera.top = 1000;
+        moon.shadow.camera.bottom = -1000;
+        moon.shadow.bias = -0.0001;
+        moon.shadow.mapSize.width = 2048;
+        moon.shadow.mapSize.height = 2048;
+        moon.shadow.radius = 8;
+        moon.shadow.sampleSize = 12;
         moon.castShadow = true;
         moon.shadow.camera.near = 1500;
         moon.shadow.camera.far = 4000;
