@@ -228,22 +228,22 @@ export default class Map {
         
     constructMap = () =>
         {
-            // This texture mapping doesn't work
-            // let map_size = state.field_size;
+            //This texture mapping doesn't work
+            let map_size = state.field_size;
 
-            // const textureLoader = (path, scale) => {
-            //     const texture = new THREE.TextureLoader().load(path);
-            //     //texture.wrapS = THREE.MirroredRepeatWrapping;
-            //     //texture.wrapT = THREE.MirroredRepeatWrapping;
-            //     texture.repeat.set((map_size.x / scale), (map_size.y / scale));
-            //     return texture;
-            // } 
+            const textureLoader = (path, scale) => {
+                const texture = new THREE.TextureLoader().load(path);
+                texture.wrapS = THREE.MirroredRepeatWrapping;
+                texture.wrapT = THREE.MirroredRepeatWrapping;
+                texture.repeat.set((map_size.x / scale), (map_size.y / scale));
+                return texture;
+            } 
 
-            // let texture_scale = 1000;
+            let texture_scale = 75;
 
-            // const diffuse = textureLoader('assets/textures/map/diffuse.jpg', texture_scale);
-            // const normal_map = textureLoader('assets/textures/map/normal.jpg', texture_scale);
-            // const bump_map = textureLoader('assets/textures/map/bump.jpg', texture_scale);
+            const diffuse = textureLoader('assets/textures/map/diffuse.jpg', texture_scale);
+            const normal_map = textureLoader('assets/textures/map/normal.jpg', texture_scale);
+            const bump_map = textureLoader('assets/textures/map/bump.jpg', texture_scale);
 
             const underpinning_geometry = new THREE.PlaneGeometry(state.field_size_x * 2, state.field_size_y * 2);
             const underpinning_material = new THREE.MeshStandardMaterial({
@@ -262,10 +262,10 @@ export default class Map {
             
             const terrain_geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
             const field_material = new THREE.MeshLambertMaterial( {
-                // map: diffuse,
-                // normalMap: normal_map,
-                // bumpMap: bump_map,
-                // bumpScale: 0.5,
+                map: diffuse,
+                normalMap: normal_map,
+                bumpMap: bump_map,
+                bumpScale: 0.5,
                 color: 0xbc7e49,
                 flatShading: true,
                 //wireframe: true

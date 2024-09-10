@@ -52,7 +52,7 @@ export default class Character extends CharacterController {
                 model.traverse(child => { 
                     if (child.isObject3D && child?.name?.includes("cannon")) 
                         { 
-                            child.scale.set(0.3, 0.3, 0.3);
+                            child.scale.set(0.4, 0.4, 0.4);
                             let object = new THREE.Object3D();
                             object.copy(child.clone());
                             console.log("Adding model to state: ", object);
@@ -60,6 +60,7 @@ export default class Character extends CharacterController {
                         }
                  });
         
+                this.target = model;
                 this._mixer = new THREE.AnimationMixer(model);
 
                 const animations = gltf.animations;
