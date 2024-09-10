@@ -2,9 +2,34 @@
 Our Client uses Python + ThreeJS
 Our Server uses Golang
 
+## Run
+To run the application:
+ - clone the repo
+ - cd into `client`
+ - run the application using `python pyserve.py`
+ - open the browser and navigate to `localhost:9001`
+
+## Controls
+
+|     Button           |    Control                                  |
+|----------------------|---------------------------------------------|
+| Left Click           | Spawns a tower at a player square           |
+| Middle Mouse         | changes the lookat point of the camera      |
+| Shift + Middle Mouse | changes the location of the camera          |
+| Scroll Wheel         | Zooms in and Out                            |
+
+Additional Notes: 
+- To zoom in to `third-person`/`first-person` mode requires having a target selected
+- To select a target requires opening the menu in the top right and switching to `Fixed` camera mode
+- Spawning towers only works when in free mode
+- Moving the Camera while in `top-down` switches to `Free Fly` camera mode
+
+
 ## Known Bugs:
+ - Opening the link from the terminal when running `pyserve` sometimes fails to load threejs
  - Camera Flips Upside Down when switching from Fixed to Free Camera
  - Shadow comes through the back of the map
+
 
 ## Fixed Bugs:
  - Day and Night Cycles just Jump when they hit 0
