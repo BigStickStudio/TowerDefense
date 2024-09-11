@@ -43,6 +43,8 @@ export default class StateManager {
                 "night_cycle": 0.0, // 255 is full night, 0 is full day
                 "day_cycle": 0.0, // 255 is full day, 0 is full night
                 "sun_rotation": 0.0, // % 512 is full rotation
+                "uv_scale": 1.0,
+                "uv_offset": 0.0,
                 "fixed_camera": camera_config.default_camera_position === "third-person", // (Fixed vs Free Fly)
             };
             
@@ -88,6 +90,21 @@ export default class StateManager {
     getEntity = (name) => { return this.entity_manager.get(name); }
 
     get key_pressed() { return this.keyboard.key_pressed; }
+
+    setUVScale = (value) => { 
+        this.state["uv_scale"] = value; 
+        // get terrain texture and set the uniform
+        this.field_material.uniforms.uv_scale.value = new THREE.Vector2(value, value);
+    }
+    set uv_scale(value) { this.state["uv_scale"] = value; this.redrawUI(`UV Scale(${value})`); }
+    get uv_scale() { return this.state["uv_scale"]; }
+
+    setUVOffset = (value) => { 
+        this.state["uv_offset"] = value; 
+        this.field_material.uniforms.uv_offset.value = new THREE.Vector2(value, value);
+    }
+    set uv_offset(value) { this.state["uv_offset"] = value; this.redrawUI(`UV Offset(${value})`); }
+    get uv_offset() { return this.state["uv_offset"]; }
 
     get game_mode() { return this.state["game_mode"]; }
     get game_type() { return this.state["game_type"]; }

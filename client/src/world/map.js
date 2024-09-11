@@ -18,9 +18,12 @@ const vertexShader = `
 `;
 
 const fragmentShader = `
-    uniform sampler2D top_texture;
-    uniform sampler2D top_bump;
-    uniform sampler2D top_normal;
+    uniform sampler2D top1_texture;
+    uniform sampler2D top1_bump;
+    uniform sampler2D top1_normal;
+    uniform sampler2D top2_texture;
+    uniform sampler2D top2_bump;
+    uniform sampler2D top2_normal;
     uniform float top_bounds;
     uniform vec3 top_scale;
 
@@ -41,9 +44,20 @@ const fragmentShader = `
     varying vec3 vWorldNormal;
     varying vec3 vWorldPosition;
 
+    uniform sampler2D top_noise_map1;
+    uniform sampler2D top_noise_map2;
+    uniform sampler2D uv_noise;
+    uniform vec2 uv_offset;
+    uniform vec2 uv_scale;
+
     vec3 applyBumpMap(sampler2D bumpMap, vec3 normal, vec2 uv) {
         vec3 bumpNormal = texture2D(bumpMap, uv).rgb * 2.0 - 1.0; // Convert to [-1, 1]
         return normalize(normal + bumpNormal);
+    }
+
+    vec2 getTileOffset(vec2 tile) {
+        vec3 offset = texture2D(uv_noise, tile).rgb;
+        return vec2(offset.xy) * uv_scale + uv_offset;
     }
 
     vec4 triplanar(vec3 normal, vec3 objectPosition, sampler2D tex, vec3 scale) {
@@ -84,8 +98,36 @@ const fragmentShader = `
     }
 
 void main() {
-    vec3 normal1 = triplanarNormal(vWorldNormal, vWorldPosition, top_normal, top_scale);
-    vec4 color1 = triplanar(vWorldNormal, vWorldPosition, top_texture, top_scale);
+    // blend top textures using noise map
+    vec2 tiledUv = vUv * uv_scale;
+    vec2 tileCoords = fract(tiledUv);
+    vec2 baseTile = tiledUv - floor(tileCoords);
+    vec2 tileOffset1 = getTileOffset(baseTile);
+    vec2 tileOffset2 = getTileOffset(baseTile + vec2(1.0, 0.0));
+    vec2 uv1 = tileCoords + tileOffset1;
+    vec2 uv2 = tileCoords + tileOffset2;
+
+    vec4 top_noise_color1a = texture2D(top_noise_map1, uv1);
+    vec4 top_noise_color1b = texture2D(top_noise_map1, tileCoords);
+    vec4 top_noise_color1 = mix(top_noise_color1a, top_noise_color1b, baseTile.r);
+    float top_noise1 = dot(top_noise_color1.rgb, vec3(0.299, 0.587, 0.114));
+
+    vec4 top_noise_color2a = texture2D(top_noise_map2, uv2);
+    vec4 top_noise_color2b = texture2D(top_noise_map2, tileCoords);
+    vec4 top_noise_color2 = mix(top_noise_color2a, top_noise_color2b, baseTile.r);
+    float top_noise2 = dot(top_noise_color2.rgb, vec3(0.299, 0.587, 0.114));
+
+    vec3 top_normal1 = triplanarNormal(vWorldNormal, vWorldPosition, top1_normal, top_scale);
+    vec4 top_color1 = triplanar(vWorldNormal, vWorldPosition, top1_texture, top_scale);
+
+    vec3 top_normal2 = triplanarNormal(vWorldNormal, vWorldPosition, top2_normal, top_scale);
+    vec4 top_color2 = triplanar(vWorldNormal, vWorldPosition, top2_texture, top_scale);
+
+    vec4 color1 = mix(top_color2, top_color1, top_noise1);
+    vec3 normal1 = mix(top_normal2, top_normal1, top_noise1);
+
+    color1 = mix(color1, top_color1, top_noise2);
+    normal1 = mix(normal1, top_normal1, top_noise2);
 
     vec3 normal2 = triplanarNormal(vWorldNormal, vWorldPosition, middle_normal, middle_scale);
     vec4 color2 = triplanar(vWorldNormal, vWorldPosition, middle_texture, middle_scale);
@@ -231,10 +273,15 @@ export default class Map {
                 let top_scale = 100;
                 let middle_scale = 25;
                 let bottom_scale = 50;
+                let noise_scale = 100;
 
-                const top_diffuse = textureLoader('assets/textures/map/tops/flowers/diffuse.jpg', top_scale);
-                const top_normal_map = textureLoader('assets/textures/map/tops/flowers/normal.jpg', top_scale);
-                const top_bump_map = textureLoader('assets/textures/map/tops/flowers/bump.jpg', top_scale);
+                const top1_diffuse = textureLoader('assets/textures/map/tops/grass/diffuse.jpg', top_scale);
+                const top1_normal_map = textureLoader('assets/textures/map/tops/grass/normal.jpg', top_scale);
+                const top1_bump_map = textureLoader('assets/textures/map/tops/grass/bump.jpg', top_scale);
+
+                const top2_diffuse = textureLoader('assets/textures/map/tops/flowers/diffuse.jpg', top_scale);
+                const top2_normal_map = textureLoader('assets/textures/map/tops/flowers/normal.jpg', top_scale);
+                const top2_bump_map = textureLoader('assets/textures/map/tops/flowers/bump.jpg', top_scale);
 
                 const middle_diffuse = textureLoader('assets/textures/map/walls/stone/diffuse.jpg', middle_scale);
                 const middle_normal_map = textureLoader('assets/textures/map/walls/stone/normal.jpg', middle_scale);
@@ -244,7 +291,10 @@ export default class Map {
                 const bottom_normal_map = textureLoader('assets/textures/map/floors/gravel2/normal.jpg', bottom_scale);
                 const bottom_bump_map = textureLoader('assets/textures/map/floors/gravel2/bump.jpg', bottom_scale);
 
-    
+                const top_noise1 = textureLoader('assets/textures/noise/turbulence/turbulence1.png', noise_scale);
+                const top_noise2 = textureLoader('assets/textures/noise/milky/milky1.png', noise_scale);
+                const uv_noise = textureLoader('assets/textures/noise/grainy/grainy1.png', noise_scale);
+
                 const underpinning_geometry = new THREE.PlaneGeometry(state.field_size_x * 2, state.field_size_y * 2);
                 const underpinning_material = new THREE.MeshStandardMaterial({
                     color: 0x000000,
@@ -259,6 +309,14 @@ export default class Map {
                 underpinning.receiveShadow = true;
                 underpinning.castShadow = true;
                 state.scene.add(underpinning);
+
+                // random number between 0.4 and 0.8
+                let random_scale = Math.random() * 0.5 + 0.3;
+                state.uv_scale = new THREE.Vector2(random_scale, random_scale);
+
+                // random number betwee 0.2 and 0.4
+                let random_offset = Math.random() * 0.2 + 0.2;
+                state.uv_offset = new THREE.Vector2(random_offset, random_offset);
                 
                 const terrain_geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
                 // const field_material = new THREE.MeshLambertMaterial( {
@@ -274,26 +332,35 @@ export default class Map {
                 // } )
                 const field_material = new THREE.ShaderMaterial({
                     uniforms: {
-                        top_texture: { value: top_diffuse },
-                        top_normal: { value: top_normal_map },
-                        top_bump: { value: top_bump_map },
-                        top_bounds: { value: 20 },
+                        top1_texture: { value: top1_diffuse },
+                        top1_normal: { value: top1_normal_map },
+                        top1_bump: { value: top1_bump_map },
+                        top2_texture: { value: top2_diffuse },
+                        top2_normal: { value: top2_normal_map },
+                        top2_bump: { value: top2_bump_map },
+                        top_bounds: { value: 19 },
                         middle_texture: { value: middle_diffuse },
                         middle_normal: { value: middle_normal_map },
                         middle_bump: { value: middle_bump_map },
-                        middle_bounds: { value: 7 },
+                        middle_bounds: { value: 6 },
                         lower_texture: { value: bottom_diffuse },
                         lower_normal: { value: bottom_normal_map },
                         lower_bump: { value: bottom_bump_map },
                         lower_bounds: { value: -3 },
-                        top_scale: { value: new THREE.Vector3(0.3, 0.3, 0.3) },
+                        // top_scale: { value: new THREE.Vector3(0.001, 0.001, 0.001) },
+                        top_scale: { value: new THREE.Vector3(0.01, 0.01, 0.01) },
                         middle_scale: { value: new THREE.Vector3(0.07, 0.03, 0.07) },
-                        lower_scale: { value: new THREE.Vector3(0.01, 0.01, 0.01) }
+                        lower_scale: { value: new THREE.Vector3(0.01, 0.01, 0.01) },
+                        top_noise_map1: { value: top_noise1 },
+                        top_noise_map2: { value: top_noise2 },
+                        uv_noise: { value: uv_noise },
+                        uv_offset: { value: state.uv_offset }, // 0.6
+                        uv_scale: { value: state.uv_scale } // 0.4
                     },
                     vertexShader: vertexShader,
                     fragmentShader: fragmentShader,
                   });
-
+                state.field_material = field_material;
 
                 const terrain = new THREE.Mesh(terrain_geometry, field_material);
                 terrain.rotation.x = -Math.PI / 2;
@@ -303,7 +370,7 @@ export default class Map {
                 terrain.castShadow = true;
     
                 let vertex = new THREE.Vector3();
-    
+
                 const findSquare = (y, x) =>
                     { 
                         if (y < 0 || y >= grid_size.y || x < 0 || x >= grid_size.x)

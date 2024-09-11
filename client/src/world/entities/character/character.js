@@ -55,7 +55,7 @@ export default class Character extends CharacterController {
                             child.scale.set(0.4, 0.4, 0.4);
                             let object = new THREE.Object3D();
                             object.copy(child.clone());
-                            console.log("Adding model to state: ", object);
+                            //console.log("Adding model to state: ", object);
                             state.addModel(object); 
                         }
                  });

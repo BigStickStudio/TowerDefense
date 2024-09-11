@@ -1,8 +1,12 @@
 import StateManager from "./state_manager.js";
 
 const state = StateManager.instance;
-const blocked_keys = ["night_cycle", "day_cycle", "sun_rotation"];
+// real one
+//const blocked_keys = ["night_cycle", "day_cycle", "sun_rotation"];
+// debug one
+const blocked_keys = ["night_cycle", "day_cycle", "sun_rotation", "camera_target", "camera_position", "cursor_target", "selected_target", "selection_mode", "moving_state"];
 const buttons = ["fixed_camera"];
+const sliders = ["uv_scale", "uv_offset"]
 
 const button_map = {
     "fixed_camera": {
@@ -11,16 +15,26 @@ const button_map = {
     },
 }
 
+const slider_map = {
+    "uv_scale": {
+        fn: state.setUVScale,
+    },
+    "uv_offset": {
+        fn: state.setUVOffset,
+    }
+}
+
 const unwrap = (t) => {
     let v = t?.name;
     return v ? v : t;
 }
 
 export default class UI {
-    ui = document.getElementById("ui")
-    expanded = false;
+    ui = document.getElementById("ui");
+    expanded = true;
     local_state = { "error": "updateUI() failed" };
     button_fns = [];
+    slider_fns = [];
 
     constructor(enableListeners, disableListeners) {
         console.log("UI initialized");
@@ -58,7 +72,28 @@ export default class UI {
 
                     this.button_fns.push(initButton);
                 }
-            else 
+            else if (sliders.includes(key))
+                {
+                    ui_components.push(`
+                        <div class="row my-2 px-4 mr-4">
+                            <label for="${key}" class="col form-label">${key}</label>
+                            <output class="col">1</output>
+                            <input type="range" min="0" max="2" step="0.025" class="form-range" id="${key}">
+                            
+                        </div>
+                        `)
+
+                    function initSlider() {
+                        let slider = document.getElementById(key);
+                        slider.oninput = () => { 
+                            slider.previousElementSibling.innerHTML = slider.value;
+                            slider_map[key].fn(slider.value); 
+                        }
+                    }
+
+                    this.slider_fns.push(initSlider);
+                }
+            else
                 {
                     ui_components.push(`
                         <div class="row my-2 px-4 mr-4">
@@ -115,6 +150,7 @@ export default class UI {
 
         if (this.expanded) {
             this.button_fns.forEach((fn) => { fn(); });
+            this.slider_fns.forEach((fn) => { fn(); });
         }
     }
 
