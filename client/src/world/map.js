@@ -20,19 +20,19 @@ const fragmentShader = `
     uniform sampler2D top_bump;
     uniform sampler2D top_normal;
     uniform float top_bounds;
-    uniform float top_scale;
+    uniform vec3 top_scale;
 
     uniform sampler2D middle_texture;
     uniform sampler2D middle_bump;
     uniform sampler2D middle_normal;
     uniform float middle_bounds;
-    uniform float middle_scale;
+    uniform vec3 middle_scale;
 
     uniform sampler2D lower_texture;
     uniform sampler2D lower_bump;
     uniform sampler2D lower_normal;
     uniform float lower_bounds;
-    uniform float bottom_scale;
+    uniform vec3 lower_scale;
 
     varying vec2 vUv;
     varying vec3 vNormal;
@@ -40,41 +40,45 @@ const fragmentShader = `
 
     vec3 applyBumpMap(sampler2D bumpMap, vec3 normal, vec2 uv) {
         vec3 bumpNormal = texture2D(bumpMap, uv).rgb * 2.0 - 1.0; // Convert to [-1, 1]
-        bumpNormal = normalize(bumpNormal * 2.0 - 1.0); // Adjust intensity if needed
         return normalize(normal + bumpNormal);
     }
 
-vec4 triplanar(vec3 normal, vec3 worldPosition, sampler2D tex, float scale) {
-    vec3 n = normalize(normal);
-    vec3 nabs = abs(n);
+    vec4 triplanar(vec3 normal, vec3 objectPosition, sampler2D tex, vec3 scale) {
+        vec3 n = normalize(normal);
+        vec3 nabs = abs(n);
 
-    vec2 texCoordX = worldPosition.yz * scale;
-    vec2 texCoordY = worldPosition.xz * scale;
-    vec2 texCoordZ = worldPosition.xy * scale;
+        vec2 texCoordX = objectPosition.yz * scale.x;
+        vec2 texCoordY = objectPosition.xz * scale.y;
+        vec2 texCoordZ = objectPosition.xy * scale.z;
 
-    vec2 texCoord = nabs.z > max(nabs.x, nabs.y) ? texCoordX :
-                        nabs.y > nabs.x ? texCoordY :
-                        texCoordZ;
+        vec3 blendWeights = normalize(nabs);
+        blendWeights = blendWeights / (blendWeights.x + blendWeights.y + blendWeights.z);
 
-    return texture2D(tex, texCoord); // Ensure correct filtering is applied
-}
+        vec4 xColor = texture2D(tex, texCoordX);
+        vec4 yColor = texture2D(tex, texCoordY);
+        vec4 zColor = texture2D(tex, texCoordZ);
 
-vec3 triplanarNormal(vec3 normal, vec3 worldPosition, sampler2D normalMap, float scale) {
-    vec3 n = normalize(normal);
-    vec3 nabs = abs(n);
+        return texture2D(tex, texCoordX) * blendWeights.x + texture2D(tex, texCoordY) * blendWeights.y + texture2D(tex, texCoordZ) * blendWeights.z;
+    }
 
-    vec2 texCoordX = worldPosition.yz * scale;
-    vec2 texCoordY = worldPosition.xz * scale;
-    vec2 texCoordZ = worldPosition.xy * scale;
+    vec3 triplanarNormal(vec3 normal, vec3 objectPosition, sampler2D normalMap, vec3 scale) {
+        vec3 n = normalize(normal);
+        vec3 nabs = abs(n);
 
-    vec2 texCoord = nabs.z > max(nabs.x, nabs.y) ? texCoordX :
-                        nabs.y > nabs.x ? texCoordY :
-                        texCoordZ;
+        vec2 texCoordX = objectPosition.yz * scale.x;
+        vec2 texCoordY = objectPosition.xz * scale.y;
+        vec2 texCoordZ = objectPosition.xy * scale.z;
 
-    vec3 bumpNormal = texture2D(normalMap, texCoord).rgb * 2.0 - 1.0; // Convert to [-1, 1]
-    bumpNormal = normalize(bumpNormal); // Adjust intensity if needed
-    return bumpNormal;
-}
+        vec3 blendWeights = normalize(nabs);
+        blendWeights = blendWeights / (blendWeights.x + blendWeights.y + blendWeights.z);
+
+        vec3 xNormal = texture2D(normalMap, texCoordX).rgb * 2.0 - 1.0;
+        vec3 yNormal = texture2D(normalMap, texCoordY).rgb * 2.0 - 1.0;
+        vec3 zNormal = texture2D(normalMap, texCoordZ).rgb * 2.0 - 1.0;
+
+        vec3 bumpNormal = xNormal * blendWeights.x + yNormal * blendWeights.y + zNormal * blendWeights.z;
+        return bumpNormal;
+    }
 
 void main() {
     vec3 normal1 = triplanarNormal(vNormal, vWorldPosition, top_normal, top_scale);
@@ -83,8 +87,8 @@ void main() {
     vec3 normal2 = triplanarNormal(vNormal, vWorldPosition, middle_normal, middle_scale);
     vec4 color2 = triplanar(vNormal, vWorldPosition, middle_texture, middle_scale);
 
-    vec3 normal3 = triplanarNormal(vNormal, vWorldPosition, lower_normal, bottom_scale);
-    vec4 color3 = triplanar(vNormal, vWorldPosition, lower_texture, bottom_scale);
+    vec3 normal3 = triplanarNormal(vNormal, vWorldPosition, lower_normal, lower_scale);
+    vec4 color3 = triplanar(vNormal, vWorldPosition, lower_texture, lower_scale);
 
     vec4 finalColor;
     vec3 finalNormal;
@@ -112,6 +116,8 @@ void main() {
     gl_FragColor = finalColor;
 }
 `;
+
+
 
 
 const state = StateManager.instance;
@@ -218,10 +224,11 @@ export default class Map {
                 // Top Texture Scales:
                     // Granite Scale 75
                     // Stone 
-                let top_scale = 0.04;
-                let middle_scale = 0.03;
-                let bottom_scale = 0.020;
     
+                let top_scale = 100;
+                let middle_scale = 25;
+                let bottom_scale = 50;
+
                 const top_diffuse = textureLoader('assets/textures/map/tops/flowers/diffuse.jpg', top_scale);
                 const top_normal_map = textureLoader('assets/textures/map/tops/flowers/normal.jpg', top_scale);
                 const top_bump_map = textureLoader('assets/textures/map/tops/flowers/bump.jpg', top_scale);
@@ -276,9 +283,9 @@ export default class Map {
                         lower_normal: { value: bottom_normal_map },
                         lower_bump: { value: bottom_bump_map },
                         lower_bounds: { value: -1 },
-                        top_scale: { value: top_scale },
-                        middle_scale: { value: middle_scale },
-                        bottom_scale: { value: bottom_scale}
+                        top_scale: { value: new THREE.Vector3(0.03, 0.03, 0.03) },
+                        middle_scale: { value: new THREE.Vector3(0.05, 0.06, 0.04) },
+                        lower_scale: { value: new THREE.Vector3(0.001, 0.01, 0.003) }
                     },
                     vertexShader: vertexShader,
                     fragmentShader: fragmentShader,
@@ -505,9 +512,9 @@ export default class Map {
         }
 
 
-    /////////////////////////
-    // Create Player Areas //
-    /////////////////////////
+/////////////////////////
+// Create Player Areas //
+/////////////////////////
 
     // TODO: Move to Entity Manager
     addHemisphereLight = (position) =>
@@ -640,9 +647,9 @@ export default class Map {
                         
         }
 
-    /////////////////////
-    // Create Pathways //
-    /////////////////////
+/////////////////////
+// Create Pathways //
+/////////////////////
 
     definePathways = () => 
         {
