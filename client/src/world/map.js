@@ -52,9 +52,9 @@ vec4 triplanar(vec3 normal, vec3 worldPosition, sampler2D tex, float scale) {
     vec2 texCoordY = worldPosition.xz * scale;
     vec2 texCoordZ = worldPosition.xy * scale;
 
-    vec2 texCoord = nabs.z > max(nabs.x, nabs.y) ? texCoordX :
+    vec2 texCoord = nabs.z > max(nabs.x, nabs.y) ? texCoordZ :
                         nabs.y > nabs.x ? texCoordY :
-                        texCoordZ;
+                        texCoordX;
 
     return texture2D(tex, texCoord); // Ensure correct filtering is applied
 }
@@ -67,9 +67,9 @@ vec3 triplanarNormal(vec3 normal, vec3 worldPosition, sampler2D normalMap, float
     vec2 texCoordY = worldPosition.xz * scale;
     vec2 texCoordZ = worldPosition.xy * scale;
 
-    vec2 texCoord = nabs.z > max(nabs.x, nabs.y) ? texCoordX :
+    vec2 texCoord = nabs.z > max(nabs.x, nabs.y) ? texCoordZ :
                         nabs.y > nabs.x ? texCoordY :
-                        texCoordZ;
+                        texCoordX;
 
     vec3 bumpNormal = texture2D(normalMap, texCoord).rgb * 2.0 - 1.0; // Convert to [-1, 1]
     bumpNormal = normalize(bumpNormal); // Adjust intensity if needed
