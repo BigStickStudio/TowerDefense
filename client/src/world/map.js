@@ -6,10 +6,12 @@ const vertexShader = `
     varying vec2 vUv;
     varying vec3 vNormal;
     varying vec3 vWorldPosition;
+    varying vec3 vWorldNormal;
 
     void main() {
         vUv = uv;
         vNormal = normalize(normalMatrix * normal);
+        vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
         vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
@@ -36,6 +38,7 @@ const fragmentShader = `
 
     varying vec2 vUv;
     varying vec3 vNormal;
+    varying vec3 vWorldNormal;
     varying vec3 vWorldPosition;
 
     vec3 applyBumpMap(sampler2D bumpMap, vec3 normal, vec2 uv) {
@@ -81,14 +84,14 @@ const fragmentShader = `
     }
 
 void main() {
-    vec3 normal1 = triplanarNormal(vNormal, vWorldPosition, top_normal, top_scale);
-    vec4 color1 = triplanar(vNormal, vWorldPosition, top_texture, top_scale);
+    vec3 normal1 = triplanarNormal(vWorldNormal, vWorldPosition, top_normal, top_scale);
+    vec4 color1 = triplanar(vWorldNormal, vWorldPosition, top_texture, top_scale);
 
-    vec3 normal2 = triplanarNormal(vNormal, vWorldPosition, middle_normal, middle_scale);
-    vec4 color2 = triplanar(vNormal, vWorldPosition, middle_texture, middle_scale);
+    vec3 normal2 = triplanarNormal(vWorldNormal, vWorldPosition, middle_normal, middle_scale);
+    vec4 color2 = triplanar(vWorldNormal, vWorldPosition, middle_texture, middle_scale);
 
-    vec3 normal3 = triplanarNormal(vNormal, vWorldPosition, lower_normal, lower_scale);
-    vec4 color3 = triplanar(vNormal, vWorldPosition, lower_texture, lower_scale);
+    vec3 normal3 = triplanarNormal(vWorldNormal, vWorldPosition, lower_normal, lower_scale);
+    vec4 color3 = triplanar(vWorldNormal, vWorldPosition, lower_texture, lower_scale);
 
     vec4 finalColor;
     vec3 finalNormal;
@@ -274,18 +277,18 @@ export default class Map {
                         top_texture: { value: top_diffuse },
                         top_normal: { value: top_normal_map },
                         top_bump: { value: top_bump_map },
-                        top_bounds: { value: 19 },
+                        top_bounds: { value: 20 },
                         middle_texture: { value: middle_diffuse },
                         middle_normal: { value: middle_normal_map },
                         middle_bump: { value: middle_bump_map },
-                        middle_bounds: { value: 6 },
+                        middle_bounds: { value: 7 },
                         lower_texture: { value: bottom_diffuse },
                         lower_normal: { value: bottom_normal_map },
                         lower_bump: { value: bottom_bump_map },
-                        lower_bounds: { value: -1 },
-                        top_scale: { value: new THREE.Vector3(0.03, 0.03, 0.03) },
-                        middle_scale: { value: new THREE.Vector3(0.05, 0.06, 0.04) },
-                        lower_scale: { value: new THREE.Vector3(0.001, 0.01, 0.003) }
+                        lower_bounds: { value: -3 },
+                        top_scale: { value: new THREE.Vector3(0.3, 0.3, 0.3) },
+                        middle_scale: { value: new THREE.Vector3(0.07, 0.03, 0.07) },
+                        lower_scale: { value: new THREE.Vector3(0.01, 0.01, 0.01) }
                     },
                     vertexShader: vertexShader,
                     fragmentShader: fragmentShader,
