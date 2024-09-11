@@ -2,6 +2,117 @@ import * as THREE from 'three';
 import config from '/src/configs/map_config.js';
 import StateManager from '/src/engine/state_manager.js';
 
+const vertexShader = `
+    varying vec2 vUv;
+    varying vec3 vNormal;
+    varying vec3 vWorldPosition;
+
+    void main() {
+        vUv = uv;
+        vNormal = normalize(normalMatrix * normal);
+        vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+`;
+
+const fragmentShader = `
+    uniform sampler2D top_texture;
+    uniform sampler2D top_bump;
+    uniform sampler2D top_normal;
+    uniform float top_bounds;
+    uniform float top_scale;
+
+    uniform sampler2D middle_texture;
+    uniform sampler2D middle_bump;
+    uniform sampler2D middle_normal;
+    uniform float middle_bounds;
+    uniform float middle_scale;
+
+    uniform sampler2D lower_texture;
+    uniform sampler2D lower_bump;
+    uniform sampler2D lower_normal;
+    uniform float lower_bounds;
+    uniform float bottom_scale;
+
+    varying vec2 vUv;
+    varying vec3 vNormal;
+    varying vec3 vWorldPosition;
+
+    vec3 applyBumpMap(sampler2D bumpMap, vec3 normal, vec2 uv) {
+        vec3 bumpNormal = texture2D(bumpMap, uv).rgb * 2.0 - 1.0; // Convert to [-1, 1]
+        bumpNormal = normalize(bumpNormal * 2.0 - 1.0); // Adjust intensity if needed
+        return normalize(normal + bumpNormal);
+    }
+
+vec4 triplanar(vec3 normal, vec3 worldPosition, sampler2D tex, float scale) {
+    vec3 n = normalize(normal);
+    vec3 nabs = abs(n);
+
+    vec2 texCoordX = worldPosition.yz * scale;
+    vec2 texCoordY = worldPosition.xz * scale;
+    vec2 texCoordZ = worldPosition.xy * scale;
+
+    vec2 texCoord = nabs.z > max(nabs.x, nabs.y) ? texCoordX :
+                        nabs.y > nabs.x ? texCoordY :
+                        texCoordZ;
+
+    return texture2D(tex, texCoord); // Ensure correct filtering is applied
+}
+
+vec3 triplanarNormal(vec3 normal, vec3 worldPosition, sampler2D normalMap, float scale) {
+    vec3 n = normalize(normal);
+    vec3 nabs = abs(n);
+
+    vec2 texCoordX = worldPosition.yz * scale;
+    vec2 texCoordY = worldPosition.xz * scale;
+    vec2 texCoordZ = worldPosition.xy * scale;
+
+    vec2 texCoord = nabs.z > max(nabs.x, nabs.y) ? texCoordX :
+                        nabs.y > nabs.x ? texCoordY :
+                        texCoordZ;
+
+    vec3 bumpNormal = texture2D(normalMap, texCoord).rgb * 2.0 - 1.0; // Convert to [-1, 1]
+    bumpNormal = normalize(bumpNormal); // Adjust intensity if needed
+    return bumpNormal;
+}
+
+void main() {
+    vec3 normal1 = triplanarNormal(vNormal, vWorldPosition, top_normal, top_scale);
+    vec4 color1 = triplanar(vNormal, vWorldPosition, top_texture, top_scale);
+
+    vec3 normal2 = triplanarNormal(vNormal, vWorldPosition, middle_normal, middle_scale);
+    vec4 color2 = triplanar(vNormal, vWorldPosition, middle_texture, middle_scale);
+
+    vec3 normal3 = triplanarNormal(vNormal, vWorldPosition, lower_normal, bottom_scale);
+    vec4 color3 = triplanar(vNormal, vWorldPosition, lower_texture, bottom_scale);
+
+    vec4 finalColor;
+    vec3 finalNormal;
+
+    float mid_top = top_bounds - middle_bounds;
+    float mid_low = lower_bounds + middle_bounds;
+
+    if (vWorldPosition.y <= lower_bounds) {
+        finalColor = color3;
+        finalNormal = normal3;    
+    } else if (vWorldPosition.y > lower_bounds && vWorldPosition.y <= mid_low) {
+        finalColor = mix(color3, color2, smoothstep(lower_bounds, mid_low, vWorldPosition.y));
+        finalNormal = mix(normal3, normal2, smoothstep(lower_bounds, mid_low, vWorldPosition.y));
+    } else if (vWorldPosition.y > mid_low && vWorldPosition.y <= mid_top) {
+        finalColor = color2;
+        finalNormal = normal2;
+    } else if (vWorldPosition.y > mid_top && vWorldPosition.y <= top_bounds) {
+        finalColor = mix(color2, color1, smoothstep(mid_top, top_bounds, vWorldPosition.y));
+        finalNormal = mix(normal2, normal1, smoothstep(mid_top, top_bounds, vWorldPosition.y));
+    } else {
+        finalColor = color1;
+        finalNormal = normal1;    
+    }
+
+    gl_FragColor = finalColor;
+}
+`;
+
 
 const state = StateManager.instance;
 
@@ -47,12 +158,8 @@ export default class Map {
     // numbered team spawn or a path
     square_table = [[]]; 
     player_positions = { red: [], blue: [] };
-    spawn_areas = {
-        red: [],
-        blue: []
-    }
+    spawn_areas = { red: [], blue: [] }
     path_areas = [];
-
 
     constructor() {
         // This will be brought back into init once old_init is trashed
@@ -75,7 +182,196 @@ export default class Map {
                 }
         }
 
+        /////////////////
+        // Create Map //
+        /////////////////
 
+        initEmptyMap = () =>
+            {
+                // Create Empty Square_Table
+                for (let i = 0; i < grid_size.y; i++)
+                {
+                    this.square_table[i] = [];
+    
+                    for (let j = 0; j < grid_size.x; j++)
+                        { this.square_table[i][j] = false; }
+                }
+            }
+            
+        constructMap = () =>
+            {
+                //This texture mapping doesn't work
+                let map_size = state.field_size;
+    
+                const textureLoader = (path, scale) => {
+                    const texture = new THREE.TextureLoader().load(path);
+                    texture.wrapS = THREE.MirroredRepeatWrapping;
+                    texture.wrapT = THREE.MirroredRepeatWrapping;
+                    texture.repeat.set((map_size.x / scale), (map_size.y / scale));
+                    // rotate the texture by 90 degrees
+                    texture.rotation = Math.PI / 2;
+                    texture.magFilter = THREE.LinearFilter;
+                    texture.minFilter = THREE.LinearMipMapLinearFilter;
+                    return texture;
+                } 
+    
+                // Top Texture Scales:
+                    // Granite Scale 75
+                    // Stone 
+                let top_scale = 0.04;
+                let middle_scale = 0.03;
+                let bottom_scale = 0.020;
+    
+                const top_diffuse = textureLoader('assets/textures/map/tops/flowers/diffuse.jpg', top_scale);
+                const top_normal_map = textureLoader('assets/textures/map/tops/flowers/normal.jpg', top_scale);
+                const top_bump_map = textureLoader('assets/textures/map/tops/flowers/bump.jpg', top_scale);
+
+                const middle_diffuse = textureLoader('assets/textures/map/walls/stone/diffuse.jpg', middle_scale);
+                const middle_normal_map = textureLoader('assets/textures/map/walls/stone/normal.jpg', middle_scale);
+                const middle_bump_map = textureLoader('assets/textures/map/walls/stone/bump.jpg', middle_scale);
+    
+                const bottom_diffuse = textureLoader('assets/textures/map/floors/gravel2/diffuse.jpg', bottom_scale);
+                const bottom_normal_map = textureLoader('assets/textures/map/floors/gravel2/normal.jpg', bottom_scale);
+                const bottom_bump_map = textureLoader('assets/textures/map/floors/gravel2/bump.jpg', bottom_scale);
+
+    
+                const underpinning_geometry = new THREE.PlaneGeometry(state.field_size_x * 2, state.field_size_y * 2);
+                const underpinning_material = new THREE.MeshStandardMaterial({
+                    color: 0x000000,
+                    side: THREE.DoubleSide,
+                });
+    
+                // Used to block light from orbiting sun/moon
+                const underpinning = new THREE.Mesh(underpinning_geometry, underpinning_material);
+                underpinning.rotation.x = -Math.PI / 2;
+                underpinning.position.set(0, -2, 0);
+                underpinning.name = "terrain";
+                underpinning.receiveShadow = true;
+                underpinning.castShadow = true;
+                state.scene.add(underpinning);
+                
+                const terrain_geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
+                // const field_material = new THREE.MeshLambertMaterial( {
+                //     map: diffuse,
+                //     normalMap: normal_map,
+                //     bumpMap: bump_map,
+                //     bumpScale: 0.5,
+                //     color: 0xbc7e49,
+                //     flatShading: true,
+                //     //wireframe: true
+                //     shadowSide: THREE.FrontSide,
+                //     side: THREE.DoubleSide
+                // } )
+                const field_material = new THREE.ShaderMaterial({
+                    uniforms: {
+                        top_texture: { value: top_diffuse },
+                        top_normal: { value: top_normal_map },
+                        top_bump: { value: top_bump_map },
+                        top_bounds: { value: 19 },
+                        middle_texture: { value: middle_diffuse },
+                        middle_normal: { value: middle_normal_map },
+                        middle_bump: { value: middle_bump_map },
+                        middle_bounds: { value: 6 },
+                        lower_texture: { value: bottom_diffuse },
+                        lower_normal: { value: bottom_normal_map },
+                        lower_bump: { value: bottom_bump_map },
+                        lower_bounds: { value: -1 },
+                        top_scale: { value: top_scale },
+                        middle_scale: { value: middle_scale },
+                        bottom_scale: { value: bottom_scale}
+                    },
+                    vertexShader: vertexShader,
+                    fragmentShader: fragmentShader,
+                  });
+
+
+                const terrain = new THREE.Mesh(terrain_geometry, field_material);
+                terrain.rotation.x = -Math.PI / 2;
+                terrain.position.set(0, -0.5, 0);
+                terrain.name = "terrain";
+                terrain.receiveShadow = true;
+                terrain.castShadow = true;
+    
+                let vertex = new THREE.Vector3();
+    
+                const findSquare = (y, x) =>
+                    { 
+                        if (y < 0 || y >= grid_size.y || x < 0 || x >= grid_size.x)
+                            { return false; }
+    
+                        return this.square_table[y][x]; 
+                    }
+    
+                let half_set = false;
+    
+                for (let i = 0; i < terrain_geometry.attributes.position.count; i++)
+                    {
+                        // We have to add 1 for the x and y
+                        // to account for the extra vertices
+                        let x = i % (grid_size.x + 1);
+                        let y = Math.floor(i / (grid_size.x + 1));
+    
+                        if (x < 2 || x >= grid_size.x - 3)
+                            { 
+                                if (x === 0 || x === grid_size.x + 1)
+                                    {
+                                        vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
+                                        terrain_geometry.attributes.position.setXYZ(i, 0, vertex.y, -10);
+                                    }
+                                else
+                                    {
+                                        vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
+                                        terrain_geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, -10);
+                                    }
+                                
+                                
+                                continue; }
+    
+                        let current_square = findSquare(y, x);
+    
+                        // If we are in a square then we want to draw it
+                        if (current_square)
+                            { 
+                                this.createPlayableArea(current_square); 
+                                continue;
+                            }
+    
+                        let look_above = findSquare(y - 1, x);
+                        let look_down = findSquare(y + 1, x);
+                        let look_ahead = findSquare(y, x + 1);
+                        let look_behind = findSquare(y, x - 1);
+                        let look_adjascent = findSquare(y - 1, x - 1)
+                        let look_up_two = findSquare(y - 2, x);
+    
+                        if (look_adjascent)
+                            {
+                                half_set = true;
+                                continue;
+                            }
+    
+                        // If we have squares above or below, we want to skip
+                        if (look_above || look_behind)
+                            {   continue; }
+    
+    
+                        vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
+    
+                        // if we are adjacent to a square, we want to raise the vertex partially
+                        if (look_ahead || (look_above && !look_ahead) || (look_down && !look_behind) || half_set || look_up_two)
+                            { vertex.z =  8 + Math.random() * 15 - 3; half_set = false; }
+                        else // Otherwise we want to raise the vertex to top level
+                            { vertex.z = Math.random() * 7 + 17; }
+                        
+                        terrain_geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
+                    }
+    
+    
+    
+                state.scene.add(terrain);
+    
+            }
+    
+    
 
     // a square object should have a 'name', 'id' and 'location'
     // name: spawn, info{ team, id }, location: { x, y }
@@ -206,157 +502,6 @@ export default class Map {
                 }
 
             state.scene.add(mesh);
-        }
-
-
-
-        /////////////////
-        // Create Map //
-        /////////////////
-
-    initEmptyMap = () =>
-        {
-            // Create Empty Square_Table
-            for (let i = 0; i < grid_size.y; i++)
-            {
-                this.square_table[i] = [];
-
-                for (let j = 0; j < grid_size.x; j++)
-                    { this.square_table[i][j] = false; }
-            }
-        }
-        
-    constructMap = () =>
-        {
-            //This texture mapping doesn't work
-            let map_size = state.field_size;
-
-            const textureLoader = (path, scale) => {
-                const texture = new THREE.TextureLoader().load(path);
-                texture.wrapS = THREE.MirroredRepeatWrapping;
-                texture.wrapT = THREE.MirroredRepeatWrapping;
-                texture.repeat.set((map_size.x / scale), (map_size.y / scale));
-                return texture;
-            } 
-
-            let texture_scale = 75;
-
-            const diffuse = textureLoader('assets/textures/map/diffuse.jpg', texture_scale);
-            const normal_map = textureLoader('assets/textures/map/normal.jpg', texture_scale);
-            const bump_map = textureLoader('assets/textures/map/bump.jpg', texture_scale);
-
-            const underpinning_geometry = new THREE.PlaneGeometry(state.field_size_x * 2, state.field_size_y * 2);
-            const underpinning_material = new THREE.MeshStandardMaterial({
-                color: 0x000000,
-                side: THREE.DoubleSide,
-            });
-
-            // Used to block light from orbiting sun/moon
-            const underpinning = new THREE.Mesh(underpinning_geometry, underpinning_material);
-            underpinning.rotation.x = -Math.PI / 2;
-            underpinning.position.set(0, -2, 0);
-            underpinning.name = "terrain";
-            underpinning.receiveShadow = true;
-            underpinning.castShadow = true;
-            state.scene.add(underpinning);
-            
-            const terrain_geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
-            const field_material = new THREE.MeshLambertMaterial( {
-                map: diffuse,
-                normalMap: normal_map,
-                bumpMap: bump_map,
-                bumpScale: 0.5,
-                color: 0xbc7e49,
-                flatShading: true,
-                //wireframe: true
-                shadowSide: THREE.FrontSide,
-                side: THREE.DoubleSide
-            } )
-
-            const terrain = new THREE.Mesh(terrain_geometry, field_material);
-            terrain.rotation.x = -Math.PI / 2;
-            terrain.position.set(0, -0.5, 0);
-            terrain.name = "terrain";
-            terrain.receiveShadow = true;
-            terrain.castShadow = true;
-
-            let vertex = new THREE.Vector3();
-
-            const findSquare = (y, x) =>
-                { 
-                    if (y < 0 || y >= grid_size.y || x < 0 || x >= grid_size.x)
-                        { return false; }
-
-                    return this.square_table[y][x]; 
-                }
-
-            let half_set = false;
-
-            for (let i = 0; i < terrain_geometry.attributes.position.count; i++)
-                {
-                    // We have to add 1 for the x and y
-                    // to account for the extra vertices
-                    let x = i % (grid_size.x + 1);
-                    let y = Math.floor(i / (grid_size.x + 1));
-
-                    if (x < 2 || x >= grid_size.x - 3)
-                        { 
-                            if (x === 0 || x === grid_size.x + 1)
-                                {
-                                    vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
-                                    terrain_geometry.attributes.position.setXYZ(i, 0, vertex.y, -10);
-                                }
-                            else
-                                {
-                                    vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
-                                    terrain_geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, -10);
-                                }
-                            
-                            
-                            continue; }
-
-                    let current_square = findSquare(y, x);
-
-                    // If we are in a square then we want to draw it
-                    if (current_square)
-                        { 
-                            this.createPlayableArea(current_square); 
-                            continue;
-                        }
-
-                    let look_above = findSquare(y - 1, x);
-                    let look_down = findSquare(y + 1, x);
-                    let look_ahead = findSquare(y, x + 1);
-                    let look_behind = findSquare(y, x - 1);
-                    let look_adjascent = findSquare(y - 1, x - 1)
-                    let look_up_two = findSquare(y - 2, x);
-
-                    if (look_adjascent)
-                        {
-                            half_set = true;
-                            continue;
-                        }
-
-                    // If we have squares above or below, we want to skip
-                    if (look_above || look_behind)
-                        {   continue; }
-
-
-                    vertex.fromBufferAttribute(terrain_geometry.attributes.position, i);
-
-                    // if we are adjacent to a square, we want to raise the vertex partially
-                    if (look_ahead || (look_above && !look_ahead) || (look_down && !look_behind) || half_set || look_up_two)
-                        { vertex.z =  8 + Math.random() * 15 - 3; half_set = false; }
-                    else // Otherwise we want to raise the vertex to top level
-                        { vertex.z = Math.random() * 7 + 17; }
-                    
-                    terrain_geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
-                }
-
-
-
-            state.scene.add(terrain);
-
         }
 
 
