@@ -45,6 +45,7 @@ export default class StateManager {
                 "sun_rotation": 0.0, // % 512 is full rotation
                 "uv_scale": 1.0,
                 "uv_offset": 0.0,
+                "ui_expanded": false,
                 "fixed_camera": camera_config.default_camera_position === "third-person", // (Fixed vs Free Fly)
             };
             
@@ -64,6 +65,7 @@ export default class StateManager {
             //this.renderer.physicallyCorrectLights=true
             this.renderer.setPixelRatio(window.devicePixelRatio);
             this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.precision = "mediump";
 
             let canvas = document.getElementById('canvas');
             canvas.appendChild(this.renderer.domElement);
@@ -155,8 +157,11 @@ export default class StateManager {
     // Called when we drag the mouse from top-down OR when we double click a character
     // - When Enabled the camera should switch to a target
     // - When Disabled the camera should switch to a free fly
-    toggleCameraMode = () =>
-        { this.fixed_camera = !this.fixed_camera; }
+    toggleCameraMode = () => { this.fixed_camera = !this.fixed_camera; }
+    toggleUI = () => { this.ui_expanded = !this.ui_expanded; }
+
+    set ui_expanded(value) { this.state["ui_expanded"] = value; }
+    get ui_expanded() { return this.state["ui_expanded"]; }
 
     get camera_target() { return this.state["camera_target"]; }
     set camera_target(value) { this.state["camera_target"] = value; this.redrawUI(`Camera Target(${value})`); }

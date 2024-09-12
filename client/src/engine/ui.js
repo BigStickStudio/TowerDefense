@@ -31,7 +31,7 @@ const unwrap = (t) => {
 
 export default class UI {
     ui = document.getElementById("ui");
-    expanded = true;
+    expanded = state.ui_expanded;
     local_state = { "error": "updateUI() failed" };
     button_fns = [];
     slider_fns = [];
@@ -156,7 +156,7 @@ export default class UI {
 
     toggleUI = () => {
         console.log(this.expanded);
-        this.expanded = !this.expanded;
+        state.toggleUI();
         this.updateUI();
     }
 }

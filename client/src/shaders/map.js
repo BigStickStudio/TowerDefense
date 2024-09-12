@@ -66,6 +66,20 @@ const fragmentShader = `
         return normalize(normal + bumpNormal);
     }
 
+    mat2 rotationMatrix(float angle) {
+        float s = sin(angle);
+        float c = cos(angle);
+        return mat2(c, -s, s, c);
+    }
+
+    vec2 applyRandomRotation(vec2 uv, vec2 tile, float scale) {
+        vec3 offset = texture2D(uv_noise, tile).rgb;
+        vec2 angle = vec2(offset.x, offset.y) * 6.28318530718;
+        mat2 rot = rotationMatrix(angle.x);
+        vec2 rotated = rot * uv;
+        return vec2(rotated.x * scale, rotated.y);
+    }
+
     vec2 getTileOffset(vec2 tile) {
         vec3 offset = texture2D(uv_noise, tile).rgb;
         return vec2(offset.xy) * uv_scale + uv_offset;
@@ -184,8 +198,8 @@ const fragmentShader = `
         vec2 baseTile = tiledUv - floor(tileCoords);
         vec2 tileOffset1 = getTileOffset(baseTile);
         vec2 tileOffset2 = getTileOffset(baseTile + vec2(1.0, 0.0));
-        vec2 uv1 = tileCoords + tileOffset1;
-        vec2 uv2 = tileCoords + tileOffset2;
+        vec2 uv1 = applyRandomRotation(tileCoords + tileOffset1, baseTile, 1.0);
+        vec2 uv2 = applyRandomRotation(tileCoords + tileOffset2, baseTile + vec2(1.0, 0.0), 1.2);
 
         float top_noise1 = noiseColor(top_noise_map1, uv1, tileCoords, baseTile);
         float top_noise2 = noiseColor(top_noise_map2, uv2, tileCoords, baseTile);

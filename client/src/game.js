@@ -6,6 +6,9 @@ import World from './world/world.js';
 const state = StateManager.instance;
 let stats = new Stats();
 
+const fps = 1/60;
+let delta = 0;
+
 export default class Game {
     constructor() { 
         this.init(); 
@@ -32,14 +35,17 @@ export default class Game {
             state.renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-    requestFrame = () => { requestAnimationFrame(this.render); }
+    requestFrame = () => 
+        { 
+            requestAnimationFrame(this.render);
+        }
 
     // TODO: This should be moved to the engine and called as a run() with a closure
-    render = (t) => 
+    render = () => 
         {
+            this.world.update();
             stats.update();
             this.requestFrame();
             state.renderer.render(state.scene, this.world.camera.instance);
-            this.world.update();
         }
 }
