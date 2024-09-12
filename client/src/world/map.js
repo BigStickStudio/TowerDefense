@@ -27,15 +27,21 @@ const fragmentShader = `
     uniform float top_bounds;
     uniform vec3 top_scale;
 
-    uniform sampler2D middle_texture;
-    uniform sampler2D middle_bump;
-    uniform sampler2D middle_normal;
+    uniform sampler2D middle1_texture;
+    uniform sampler2D middle1_bump;
+    uniform sampler2D middle1_normal;
+    uniform sampler2D middle2_texture;
+    uniform sampler2D middle2_bump;
+    uniform sampler2D middle2_normal;
     uniform float middle_bounds;
     uniform vec3 middle_scale;
 
-    uniform sampler2D lower_texture;
-    uniform sampler2D lower_bump;
-    uniform sampler2D lower_normal;
+    uniform sampler2D lower1_texture;
+    uniform sampler2D lower1_bump;
+    uniform sampler2D lower1_normal;
+    uniform sampler2D lower2_texture;
+    uniform sampler2D lower2_bump;
+    uniform sampler2D lower2_normal;
     uniform float lower_bounds;
     uniform vec3 lower_scale;
 
@@ -46,6 +52,9 @@ const fragmentShader = `
 
     uniform sampler2D top_noise_map1;
     uniform sampler2D top_noise_map2;
+    uniform sampler2D middle_noise_map1;
+    uniform sampler2D middle_noise_map2;
+    uniform sampler2D bottom_noise_map;
     uniform sampler2D uv_noise;
     uniform vec2 uv_offset;
     uniform vec2 uv_scale;
@@ -60,106 +69,162 @@ const fragmentShader = `
         return vec2(offset.xy) * uv_scale + uv_offset;
     }
 
+    vec4 textureUV(sampler2D tex, vec2 uv) {
+        float k = texture2D(tex, 0.0025 * uv).r;
+        float l = k * 8.0;
+        float f = fract(l);
+
+        float ia = floor(l+0.5); // kudos suslik
+        float ib = floor(l);
+        f = min(f, 1.0 - f) * 2.0;
+
+        vec2 offset_a = sin(vec2(3.0, 7.0) * ia);
+        vec2 offset_b = sin(vec2(3.0, 7.0) * ib);
+
+        vec4 color_a = texture2D(tex, uv.xy + offset_a);
+        vec4 color_b = texture2D(tex, uv.xy + offset_b);
+
+        return mix(color_a, color_b, smoothstep(0.2, 0.8, f - 0.1 * (color_a.x + color_a.y + color_a.z - color_b.x - color_b.y - color_b.z)));
+    }
+
     vec4 triplanar(vec3 normal, vec3 objectPosition, sampler2D tex, vec3 scale) {
         vec3 n = normalize(normal);
         vec3 nabs = abs(n);
 
-        vec2 texCoordX = objectPosition.yz * scale.x;
-        vec2 texCoordY = objectPosition.xz * scale.y;
-        vec2 texCoordZ = objectPosition.xy * scale.z;
+        vec2 texCoordX = objectPosition.yz;
+        vec2 texCoordY = objectPosition.xz;
+        vec2 texCoordZ = objectPosition.xy;
 
         vec3 blendWeights = normalize(nabs);
         blendWeights = blendWeights / (blendWeights.x + blendWeights.y + blendWeights.z);
 
-        vec4 xColor = texture2D(tex, texCoordX);
-        vec4 yColor = texture2D(tex, texCoordY);
-        vec4 zColor = texture2D(tex, texCoordZ);
+        vec4 texX = textureUV(tex, texCoordX * scale.xy);
+        vec4 texY = textureUV(tex, texCoordY * scale.yz);
+        vec4 texZ = textureUV(tex, texCoordZ * scale.xz);
 
-        return texture2D(tex, texCoordX) * blendWeights.x + texture2D(tex, texCoordY) * blendWeights.y + texture2D(tex, texCoordZ) * blendWeights.z;
+        return texX * blendWeights.x + texY * blendWeights.y + texZ * blendWeights.z;
+    }
+
+    vec3 textureUVNormal(sampler2D tex, vec2 uv) {
+        float k = texture2D(tex, 0.0025 * uv).r;
+        float l = k * 8.0;
+        float f = fract(l);
+
+        float ia = floor(l+0.5); // kudos suslik
+        float ib = floor(l);
+        f = min(f, 1.0 - f) * 2.0;
+
+        vec2 offset_a = sin(vec2(5.0, 9.0) * ia);
+        vec2 offset_b = sin(vec2(3.0, 7.0) * ib);
+
+        vec3 color_a = texture2D(tex, uv.xy + offset_a).rgb;
+        vec3 color_b = texture2D(tex, uv.xy + offset_b).rgb;
+
+        return mix(color_a, color_b, smoothstep(0.2, 0.8, f - 0.1 * (color_a.x + color_a.y + color_a.z - color_b.x - color_b.y - color_b.z)));
     }
 
     vec3 triplanarNormal(vec3 normal, vec3 objectPosition, sampler2D normalMap, vec3 scale) {
         vec3 n = normalize(normal);
         vec3 nabs = abs(n);
 
-        vec2 texCoordX = objectPosition.yz * scale.x;
-        vec2 texCoordY = objectPosition.xz * scale.y;
-        vec2 texCoordZ = objectPosition.xy * scale.z;
+        vec2 texCoordX = objectPosition.yz;
+        vec2 texCoordY = objectPosition.xz;
+        vec2 texCoordZ = objectPosition.xy;
 
         vec3 blendWeights = normalize(nabs);
         blendWeights = blendWeights / (blendWeights.x + blendWeights.y + blendWeights.z);
 
-        vec3 xNormal = texture2D(normalMap, texCoordX).rgb * 2.0 - 1.0;
-        vec3 yNormal = texture2D(normalMap, texCoordY).rgb * 2.0 - 1.0;
-        vec3 zNormal = texture2D(normalMap, texCoordZ).rgb * 2.0 - 1.0;
+        vec3 xNormal = textureUVNormal(normalMap, texCoordX * scale.xy);
+        vec3 yNormal = textureUVNormal(normalMap, texCoordY * scale.yz);
+        vec3 zNormal = textureUVNormal(normalMap, texCoordZ * scale.xz);
 
         vec3 bumpNormal = xNormal * blendWeights.x + yNormal * blendWeights.y + zNormal * blendWeights.z;
         return bumpNormal;
     }
 
-void main() {
-    // blend top textures using noise map
-    vec2 tiledUv = vUv * uv_scale;
-    vec2 tileCoords = fract(tiledUv);
-    vec2 baseTile = tiledUv - floor(tileCoords);
-    vec2 tileOffset1 = getTileOffset(baseTile);
-    vec2 tileOffset2 = getTileOffset(baseTile + vec2(1.0, 0.0));
-    vec2 uv1 = tileCoords + tileOffset1;
-    vec2 uv2 = tileCoords + tileOffset2;
-
-    vec4 top_noise_color1a = texture2D(top_noise_map1, uv1);
-    vec4 top_noise_color1b = texture2D(top_noise_map1, tileCoords);
-    vec4 top_noise_color1 = mix(top_noise_color1a, top_noise_color1b, baseTile.r);
-    float top_noise1 = dot(top_noise_color1.rgb, vec3(0.299, 0.587, 0.114));
-
-    vec4 top_noise_color2a = texture2D(top_noise_map2, uv2);
-    vec4 top_noise_color2b = texture2D(top_noise_map2, tileCoords);
-    vec4 top_noise_color2 = mix(top_noise_color2a, top_noise_color2b, baseTile.r);
-    float top_noise2 = dot(top_noise_color2.rgb, vec3(0.299, 0.587, 0.114));
-
-    vec3 top_normal1 = triplanarNormal(vWorldNormal, vWorldPosition, top1_normal, top_scale);
-    vec4 top_color1 = triplanar(vWorldNormal, vWorldPosition, top1_texture, top_scale);
-
-    vec3 top_normal2 = triplanarNormal(vWorldNormal, vWorldPosition, top2_normal, top_scale);
-    vec4 top_color2 = triplanar(vWorldNormal, vWorldPosition, top2_texture, top_scale);
-
-    vec4 color1 = mix(top_color2, top_color1, top_noise1);
-    vec3 normal1 = mix(top_normal2, top_normal1, top_noise1);
-
-    color1 = mix(color1, top_color1, top_noise2);
-    normal1 = mix(normal1, top_normal1, top_noise2);
-
-    vec3 normal2 = triplanarNormal(vWorldNormal, vWorldPosition, middle_normal, middle_scale);
-    vec4 color2 = triplanar(vWorldNormal, vWorldPosition, middle_texture, middle_scale);
-
-    vec3 normal3 = triplanarNormal(vWorldNormal, vWorldPosition, lower_normal, lower_scale);
-    vec4 color3 = triplanar(vWorldNormal, vWorldPosition, lower_texture, lower_scale);
-
-    vec4 finalColor;
-    vec3 finalNormal;
-
-    float mid_top = top_bounds - middle_bounds;
-    float mid_low = lower_bounds + middle_bounds;
-
-    if (vWorldPosition.y <= lower_bounds) {
-        finalColor = color3;
-        finalNormal = normal3;    
-    } else if (vWorldPosition.y > lower_bounds && vWorldPosition.y <= mid_low) {
-        finalColor = mix(color3, color2, smoothstep(lower_bounds, mid_low, vWorldPosition.y));
-        finalNormal = mix(normal3, normal2, smoothstep(lower_bounds, mid_low, vWorldPosition.y));
-    } else if (vWorldPosition.y > mid_low && vWorldPosition.y <= mid_top) {
-        finalColor = color2;
-        finalNormal = normal2;
-    } else if (vWorldPosition.y > mid_top && vWorldPosition.y <= top_bounds) {
-        finalColor = mix(color2, color1, smoothstep(mid_top, top_bounds, vWorldPosition.y));
-        finalNormal = mix(normal2, normal1, smoothstep(mid_top, top_bounds, vWorldPosition.y));
-    } else {
-        finalColor = color1;
-        finalNormal = normal1;    
+    float noiseColor(sampler2D noiseMap, vec2 uv, vec2 coords, vec2 base) {
+        vec4 colorA = texture2D(noiseMap, uv);
+        vec4 colorB = texture2D(noiseMap, coords);
+        vec4 noiseColor = mix(colorA, colorB, base.r);
+        return dot(noiseColor.rgb, vec3(0.299, 0.587, 0.114));
     }
 
-    gl_FragColor = finalColor;
-}
+    vec4 colorMixer(sampler2D tex1, sampler2D tex2, float noise1, vec3 scale) {
+        vec4 color1 = triplanar(vWorldNormal, vWorldPosition, tex1, scale);
+        vec4 color2 = triplanar(vWorldNormal, vWorldPosition, tex2, scale);
+        return mix(color1, color2, noise1);
+    }
+
+    vec4 colorDoubleMixer(sampler2D tex1, sampler2D tex2, float noise1, float noise2, vec3 scale) {
+        vec4 color1 = triplanar(vWorldNormal, vWorldPosition, tex1, scale);
+        vec4 color2 = triplanar(vWorldNormal, vWorldPosition, tex2, scale);
+        return mix(mix(color1, color2, noise1), color1, noise2);
+    }
+
+    vec3 normalMixer(sampler2D normal1, sampler2D normal2, float noise1, vec3 scale) {
+        vec3 norm1 = triplanarNormal(vWorldNormal, vWorldPosition, normal1, scale);
+        vec3 norm2 = triplanarNormal(vWorldNormal, vWorldPosition, normal2, scale);
+        return mix(norm1, norm2, noise1);
+    }
+
+    vec3 normalDoubleMixer(sampler2D normal1, sampler2D normal2, float noise1, float noise2, vec3 scale) {
+        vec3 norm1 = triplanarNormal(vWorldNormal, vWorldPosition, normal1, scale);
+        vec3 norm2 = triplanarNormal(vWorldNormal, vWorldPosition, normal2, scale);
+        return mix(mix(norm1, norm2, noise1), norm1, noise2);
+    }
+
+    void main() {
+        // blend top textures using noise map
+        vec2 tiledUv = vUv * uv_scale;
+        vec2 tileCoords = fract(tiledUv);
+        vec2 baseTile = tiledUv - floor(tileCoords);
+        vec2 tileOffset1 = getTileOffset(baseTile);
+        vec2 tileOffset2 = getTileOffset(baseTile + vec2(1.0, 0.0));
+        vec2 uv1 = tileCoords + tileOffset1;
+        vec2 uv2 = tileCoords + tileOffset2;
+
+        float top_noise1 = noiseColor(top_noise_map1, uv1, tileCoords, baseTile);
+        float top_noise2 = noiseColor(top_noise_map2, uv2, tileCoords, baseTile);
+
+        vec4 color1 = colorDoubleMixer(top1_texture, top2_texture, top_noise2, top_noise1, top_scale);
+        vec3 normal1 = normalDoubleMixer(top1_normal, top2_normal, top_noise2, top_noise1, top_scale);
+
+        float middle_noise1 = noiseColor(middle_noise_map1, uv1, tileCoords, baseTile);
+        float middle_noise2 = noiseColor(middle_noise_map2, uv2, tileCoords, baseTile);
+
+        vec4 color2 = colorDoubleMixer(middle1_texture, middle2_texture, middle_noise1, middle_noise2, middle_scale);
+        vec3 normal2 = normalDoubleMixer(middle1_normal, middle2_normal, middle_noise1, middle_noise2, middle_scale);
+
+        float lower_noise = noiseColor(bottom_noise_map, uv1, tileCoords, baseTile);
+
+        vec3 normal3 = normalMixer(lower1_normal, lower2_normal, lower_noise, lower_scale);
+        vec4 color3 = colorMixer(lower1_texture, lower2_texture, lower_noise, lower_scale);
+
+        vec4 finalColor;
+        vec3 finalNormal;
+
+        float mid_top = top_bounds - middle_bounds;
+        float mid_low = lower_bounds + middle_bounds;
+
+        if (vWorldPosition.y <= lower_bounds) {
+            finalColor = color3;
+            finalNormal = normal3;    
+        } else if (vWorldPosition.y > lower_bounds && vWorldPosition.y <= mid_low) {
+            finalColor = mix(color3, color2, smoothstep(lower_bounds, mid_low, vWorldPosition.y));
+            finalNormal = mix(normal3, normal2, smoothstep(lower_bounds, mid_low, vWorldPosition.y));
+        } else if (vWorldPosition.y > mid_low && vWorldPosition.y <= mid_top) {
+            finalColor = color2;
+            finalNormal = normal2;
+        } else if (vWorldPosition.y > mid_top && vWorldPosition.y <= top_bounds) {
+            finalColor = mix(color2, color1, smoothstep(mid_top, top_bounds, vWorldPosition.y));
+            finalNormal = mix(normal2, normal1, smoothstep(mid_top, top_bounds, vWorldPosition.y));
+        } else {
+            finalColor = color1;
+            finalNormal = normal1;    
+        }
+
+        gl_FragColor = finalColor;
+    }
 `;
 
 
@@ -270,29 +335,74 @@ export default class Map {
                     // Granite Scale 75
                     // Stone 
     
-                let top_scale = 100;
-                let middle_scale = 25;
-                let bottom_scale = 50;
+                let top_scale = 1;
+                let middle_scale = 1;
+                let bottom_scale = 1;
                 let noise_scale = 100;
 
-                const top1_diffuse = textureLoader('assets/textures/map/tops/grass/diffuse.jpg', top_scale);
-                const top1_normal_map = textureLoader('assets/textures/map/tops/grass/normal.jpg', top_scale);
-                const top1_bump_map = textureLoader('assets/textures/map/tops/grass/bump.jpg', top_scale);
+                // TODO: Major Refactor Here
+                const top_a_diffuse = textureLoader('assets/textures/map/tops/grass/diffuse.jpg', top_scale);
+                const top_a_normal_map = textureLoader('assets/textures/map/tops/grass/normal.jpg', top_scale);
+                const top_a_bump_map = textureLoader('assets/textures/map/tops/grass/bump.jpg', top_scale);
 
-                const top2_diffuse = textureLoader('assets/textures/map/tops/flowers/diffuse.jpg', top_scale);
-                const top2_normal_map = textureLoader('assets/textures/map/tops/flowers/normal.jpg', top_scale);
-                const top2_bump_map = textureLoader('assets/textures/map/tops/flowers/bump.jpg', top_scale);
+                const top_b_diffuse = textureLoader('assets/textures/map/tops/flowers/diffuse.jpg', top_scale);
+                const top_b_normal_map = textureLoader('assets/textures/map/tops/flowers/normal.jpg', top_scale);
+                const top_b_bump_map = textureLoader('assets/textures/map/tops/flowers/bump.jpg', top_scale);
 
-                const middle_diffuse = textureLoader('assets/textures/map/walls/stone/diffuse.jpg', middle_scale);
-                const middle_normal_map = textureLoader('assets/textures/map/walls/stone/normal.jpg', middle_scale);
-                const middle_bump_map = textureLoader('assets/textures/map/walls/stone/bump.jpg', middle_scale);
+                const top_c_diffuse = textureLoader('assets/textures/map/tops/barren/diffuse.jpg', top_scale);
+                const top_c_normal_map = textureLoader('assets/textures/map/tops/barren/normal.jpg', top_scale);
+                const top_c_bump_map = textureLoader('assets/textures/map/tops/barren/bump.jpg', top_scale);
+
+                let top_choices = [
+                    { diffuse: top_a_diffuse, normal: top_a_normal_map, bump: top_a_bump_map },
+                    { diffuse: top_b_diffuse, normal: top_b_normal_map, bump: top_b_bump_map },
+                    { diffuse: top_c_diffuse, normal: top_c_normal_map, bump: top_c_bump_map }
+                ]
+
+                let top1 = top_choices[Math.floor(Math.random() * top_choices.length)];
+                top_choices = top_choices.filter((choice) => choice !== top1);
+                let top2 = top_choices[Math.floor(Math.random() * top_choices.length)];
+            
+                const middle_a_diffuse = textureLoader('assets/textures/map/walls/stone/diffuse.jpg', middle_scale);
+                const middle_a_normal_map = textureLoader('assets/textures/map/walls/stone/normal.jpg', middle_scale);
+                const middle_a_bump_map = textureLoader('assets/textures/map/walls/stone/bump.jpg', middle_scale);
     
-                const bottom_diffuse = textureLoader('assets/textures/map/floors/gravel2/diffuse.jpg', bottom_scale);
-                const bottom_normal_map = textureLoader('assets/textures/map/floors/gravel2/normal.jpg', bottom_scale);
-                const bottom_bump_map = textureLoader('assets/textures/map/floors/gravel2/bump.jpg', bottom_scale);
+                const middle_b_diffuse = textureLoader('assets/textures/map/walls/lavarock/diffuse.jpg', middle_scale);
+                const middle_b_normal_map = textureLoader('assets/textures/map/walls/lavarock/normal.jpg', middle_scale);
+                const middle_b_bump_map = textureLoader('assets/textures/map/walls/lavarock/bump.jpg', middle_scale);
+
+                const middle_c_diffuse = textureLoader('assets/textures/map/walls/granite/diffuse.jpg', middle_scale);
+                const middle_c_normal_map = textureLoader('assets/textures/map/walls/granite/normal.jpg', middle_scale);
+                const middle_c_bump_map = textureLoader('assets/textures/map/walls/granite/bump.jpg', middle_scale);
+
+                const middle_d_diffuse = textureLoader('assets/textures/map/walls/rocks/diffuse.jpg', middle_scale);
+                const middle_d_normal_map = textureLoader('assets/textures/map/walls/rocks/normal.jpg', middle_scale);
+                const middle_d_bump_map = textureLoader('assets/textures/map/walls/rocks/bump.jpg', middle_scale);
+
+                let middle_choices = [
+                    { diffuse: middle_a_diffuse, normal: middle_a_normal_map, bump: middle_a_bump_map },
+                    { diffuse: middle_b_diffuse, normal: middle_b_normal_map, bump: middle_b_bump_map },
+                    { diffuse: middle_c_diffuse, normal: middle_c_normal_map, bump: middle_c_bump_map },
+                    { diffuse: middle_d_diffuse, normal: middle_d_normal_map, bump: middle_d_bump_map }
+                ]
+
+                let middle1 = middle_choices[Math.floor(Math.random() * middle_choices.length)];
+                middle_choices = middle_choices.filter((choice) => choice !== middle1);
+                let middle2 = middle_choices[Math.floor(Math.random() * middle_choices.length)];
+
+                const bottom1_diffuse = textureLoader('assets/textures/map/floors/gravel2/diffuse.jpg', bottom_scale);
+                const bottom1_normal_map = textureLoader('assets/textures/map/floors/gravel2/normal.jpg', bottom_scale);
+                const bottom1_bump_map = textureLoader('assets/textures/map/floors/gravel2/bump.jpg', bottom_scale);
+    
+                const bottom2_diffuse = textureLoader('assets/textures/map/floors/gravel2/diffuse.jpg', bottom_scale);
+                const bottom2_normal_map = textureLoader('assets/textures/map/floors/gravel2/normal.jpg', bottom_scale);
+                const bottom2_bump_map = textureLoader('assets/textures/map/floors/gravel2/bump.jpg', bottom_scale);
 
                 const top_noise1 = textureLoader('assets/textures/noise/turbulence/turbulence1.png', noise_scale);
                 const top_noise2 = textureLoader('assets/textures/noise/milky/milky1.png', noise_scale);
+                const middle_noise1 = textureLoader('assets/textures/noise/marble/marble1.png', noise_scale);
+                const middle_noise2 = textureLoader('assets/textures/noise/melt/melt1.png', noise_scale);
+                const bottom_noise = textureLoader('assets/textures/noise/manifold/manifold1.png', noise_scale);
                 const uv_noise = textureLoader('assets/textures/noise/grainy/grainy1.png', noise_scale);
 
                 const underpinning_geometry = new THREE.PlaneGeometry(state.field_size_x * 2, state.field_size_y * 2);
@@ -311,11 +421,11 @@ export default class Map {
                 state.scene.add(underpinning);
 
                 // random number between 0.4 and 0.8
-                let random_scale = Math.random() * 0.5 + 0.3;
+                let random_scale = Math.random() * 0.2 + 0.2;
                 state.uv_scale = new THREE.Vector2(random_scale, random_scale);
 
                 // random number betwee 0.2 and 0.4
-                let random_offset = Math.random() * 0.2 + 0.2;
+                let random_offset = Math.random() * 0.3 + 0.2;
                 state.uv_offset = new THREE.Vector2(random_offset, random_offset);
                 
                 const terrain_geometry = new THREE.PlaneGeometry(state.field_size_x, state.field_size_y, grid_size.x, grid_size.y);
@@ -332,30 +442,39 @@ export default class Map {
                 // } )
                 const field_material = new THREE.ShaderMaterial({
                     uniforms: {
-                        top1_texture: { value: top1_diffuse },
-                        top1_normal: { value: top1_normal_map },
-                        top1_bump: { value: top1_bump_map },
-                        top2_texture: { value: top2_diffuse },
-                        top2_normal: { value: top2_normal_map },
-                        top2_bump: { value: top2_bump_map },
+                        top1_texture: { value: top1.diffuse },
+                        top1_normal: { value: top1.normal },
+                        top1_bump: { value: top1.bump },
+                        top2_texture: { value: top2.diffuse },
+                        top2_normal: { value: top2.normal },
+                        top2_bump: { value: top2.bump },
                         top_bounds: { value: 19 },
-                        middle_texture: { value: middle_diffuse },
-                        middle_normal: { value: middle_normal_map },
-                        middle_bump: { value: middle_bump_map },
+                        middle1_texture: { value: middle1.diffuse },
+                        middle1_normal: { value: middle1.normal },
+                        middle1_bump: { value: middle1.bump },
+                        middle2_texture: { value: middle2.diffuse },
+                        middle2_normal: { value: middle2.normal },
+                        middle2_bump: { value: middle2.bump },
                         middle_bounds: { value: 6 },
-                        lower_texture: { value: bottom_diffuse },
-                        lower_normal: { value: bottom_normal_map },
-                        lower_bump: { value: bottom_bump_map },
+                        lower1_texture: { value: bottom1_diffuse },
+                        lower1_normal: { value: bottom1_normal_map },
+                        lower1_bump: { value: bottom1_bump_map },
+                        lower2_texture: { value: bottom2_diffuse },
+                        lower2_normal: { value: bottom2_normal_map },
+                        lower2_bump: { value: bottom2_bump_map },
                         lower_bounds: { value: -3 },
-                        // top_scale: { value: new THREE.Vector3(0.001, 0.001, 0.001) },
-                        top_scale: { value: new THREE.Vector3(0.01, 0.01, 0.01) },
-                        middle_scale: { value: new THREE.Vector3(0.07, 0.03, 0.07) },
+                        top_scale: { value: new THREE.Vector3(0.04, 0.04, 0.04) },
+                        // top_scale: { value: new THREE.Vector3(1, 1, 1) },
+                        middle_scale: { value: new THREE.Vector3(0.039, 0.057, 0.041) },
                         lower_scale: { value: new THREE.Vector3(0.01, 0.01, 0.01) },
                         top_noise_map1: { value: top_noise1 },
                         top_noise_map2: { value: top_noise2 },
+                        middle_noise_map1: { value: middle_noise1 },
+                        middle_noise_map2: { value: middle_noise2 },
+                        bottom_noise_map: { value: bottom_noise },
                         uv_noise: { value: uv_noise },
-                        uv_offset: { value: state.uv_offset }, // 0.6
-                        uv_scale: { value: state.uv_scale } // 0.4
+                        uv_offset: { value: state.uv_offset }, // 0.55
+                        uv_scale: { value: state.uv_scale } // 0.575
                     },
                     vertexShader: vertexShader,
                     fragmentShader: fragmentShader,
