@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import StateManager from '/src/engine/state_manager.js';
+import StateManager from '../engine/state_manager.js';
 
 const state = StateManager.instance;
 
@@ -64,30 +64,30 @@ export default class Sky {
         const night_loader = new THREE.CubeTextureLoader();
 
         const sky_texture = sky_loader.load([
-            'assets/textures/sky/SkyRight.png',
-            'assets/textures/sky/SkyLeft.png',
-            'assets/textures/sky/SkyTop.png',
-            'assets/textures/sky/SkyBottom.png',
-            'assets/textures/sky/SkyFront.png',
-            'assets/textures/sky/SkyBack.png',
+            '/assets/textures/sky/SkyRight.png',
+            '/assets/textures/sky/SkyLeft.png',
+            '/assets/textures/sky/SkyTop.png',
+            '/assets/textures/sky/SkyBottom.png',
+            '/assets/textures/sky/SkyFront.png',
+            '/assets/textures/sky/SkyBack.png',
         ]);
 
         const day_texture = day_loader.load([
-            'assets/textures/sky/DayRight.png',
-            'assets/textures/sky/DayLeft.png',
-            'assets/textures/sky/DayTop.png',
-            'assets/textures/sky/DayBottom.png',
-            'assets/textures/sky/DayFront.png',
-            'assets/textures/sky/DayBack.png',
+            '/assets/textures/sky/DayRight.png',
+            '/assets/textures/sky/DayLeft.png',
+            '/assets/textures/sky/DayTop.png',
+            '/assets/textures/sky/DayBottom.png',
+            '/assets/textures/sky/DayFront.png',
+            '/assets/textures/sky/DayBack.png',
         ]);
 
         const night_texture = night_loader.load([
-            'assets/textures/sky/StarRight.png',
-            'assets/textures/sky/StarLeft.png',
-            'assets/textures/sky/StarTop.png',
-            'assets/textures/sky/StarBottom.png',
-            'assets/textures/sky/StarFront.png',
-            'assets/textures/sky/StarBack.png',
+            '/assets/textures/sky/StarRight.png',
+            '/assets/textures/sky/StarLeft.png',
+            '/assets/textures/sky/StarTop.png',
+            '/assets/textures/sky/StarBottom.png',
+            '/assets/textures/sky/StarFront.png',
+            '/assets/textures/sky/StarBack.png',
         ]);
 
         let sky_net = new THREE.BoxGeometry(2000, 2000, 2000, 5, 5 ,5);

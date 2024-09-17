@@ -1,8 +1,8 @@
+import StateManager from '../engine/state_manager.js';
 import Character from './entities/character/character.js';
 import Camera from './entities/player/camera.js';
 import Map from './map.js';
 import Sky from './sky.js';
-import StateManager from '/src/engine/state_manager.js';
 
 const state = StateManager.instance;
 const filtered_items = ["terrain", "cursor", "light", "sky", "camera_target", "pathways"];

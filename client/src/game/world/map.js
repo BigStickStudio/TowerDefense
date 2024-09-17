@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import config from '/src/configs/map_config.js';
-import StateManager from '/src/engine/state_manager.js';
-import { fragmentShader, vertexShader } from '/src/shaders/map.js';
-import { batchTextureLoader, textureLoader } from '/src/world/utils.js';
+import config from '../configs/map_config.js';
+import StateManager from '../engine/state_manager.js';
+import { fragmentShader, vertexShader } from '../shaders/map.js';
+import { batchTextureLoader, textureLoader } from '../world/utils.js';
 
 const state = StateManager.instance;
 
@@ -104,10 +104,10 @@ export default class Map {
                 let noise_scale = 100;
 
                 // TODO: Major Refactor Here
-                const top_a = batchTextureLoader('assets/textures/map/tops/grass/', top_scale, map_size);
-                const top_b = batchTextureLoader('assets/textures/map/tops/flowers/', top_scale, map_size);
-                const top_c = batchTextureLoader('assets/textures/map/tops/barren/', top_scale, map_size);
-                // const top_d = batchTextureLoader('assets/textures/map/tops/snow/', top_scale, map_size);
+                const top_a = batchTextureLoader('/assets/textures/map/tops/grass/', top_scale, map_size);
+                const top_b = batchTextureLoader('/assets/textures/map/tops/flowers/', top_scale, map_size);
+                const top_c = batchTextureLoader('/assets/textures/map/tops/barren/', top_scale, map_size);
+                // const top_d = batchTextureLoader('/assets/textures/map/tops/snow/', top_scale, map_size);
                 // TODO: Look at individual texture scaling and grouped textures e.g. 'snow', 'barren', 'grassy', etc
 
                 let top_choices = [ top_a, top_b, top_c];
@@ -118,12 +118,12 @@ export default class Map {
                 top_choices = top_choices.filter((choice) => choice !== top2);
                 const top3 = top_choices[Math.floor(Math.random() * top_choices.length)];
             
-                const middle_a = batchTextureLoader('assets/textures/map/walls/stone/', middle_scale, map_size);
-                const middle_b = batchTextureLoader('assets/textures/map/walls/lavarock/', middle_scale, map_size);
-                const middle_c = batchTextureLoader('assets/textures/map/walls/granite/', middle_scale, map_size);
-                const middle_d = batchTextureLoader('assets/textures/map/walls/rocks1/', middle_scale, map_size);
-                const middle_e = batchTextureLoader('assets/textures/map/walls/rocks2/', middle_scale, map_size);
-                const middle_f = batchTextureLoader('assets/textures/map/walls/rocks3/', middle_scale, map_size);
+                const middle_a = batchTextureLoader('/assets/textures/map/walls/stone/', middle_scale, map_size);
+                const middle_b = batchTextureLoader('/assets/textures/map/walls/lavarock/', middle_scale, map_size);
+                const middle_c = batchTextureLoader('/assets/textures/map/walls/granite/', middle_scale, map_size);
+                const middle_d = batchTextureLoader('/assets/textures/map/walls/rocks1/', middle_scale, map_size);
+                const middle_e = batchTextureLoader('/assets/textures/map/walls/rocks2/', middle_scale, map_size);
+                const middle_f = batchTextureLoader('/assets/textures/map/walls/rocks3/', middle_scale, map_size);
 
                 let middle_choices = [ middle_a, middle_b, middle_c, middle_d, middle_e, middle_f ];
 
@@ -133,11 +133,11 @@ export default class Map {
                 middle_choices = middle_choices.filter((choice) => choice !== middle2);
                 const middle3 = middle_choices[Math.floor(Math.random() * middle_choices.length)];
 
-                const bottom_a = batchTextureLoader('assets/textures/map/floors/gravel1/', bottom_scale, map_size);
-                const bottom_b = batchTextureLoader('assets/textures/map/floors/gravel2/', bottom_scale, map_size);
-                const bottom_c = batchTextureLoader('assets/textures/map/floors/pavement/', bottom_scale, map_size);
-                const bottom_d = batchTextureLoader('assets/textures/map/floors/sand1/', bottom_scale, map_size);
-                const bottom_e = batchTextureLoader('assets/textures/map/floors/sand2/', bottom_scale, map_size);
+                const bottom_a = batchTextureLoader('/assets/textures/map/floors/gravel1/', bottom_scale, map_size);
+                const bottom_b = batchTextureLoader('/assets/textures/map/floors/gravel2/', bottom_scale, map_size);
+                const bottom_c = batchTextureLoader('/assets/textures/map/floors/pavement/', bottom_scale, map_size);
+                const bottom_d = batchTextureLoader('/assets/textures/map/floors/sand1/', bottom_scale, map_size);
+                const bottom_e = batchTextureLoader('/assets/textures/map/floors/sand2/', bottom_scale, map_size);
 
                 let bottom_choices = [ bottom_a, bottom_b, bottom_c, bottom_d, bottom_e ];
 
@@ -145,12 +145,12 @@ export default class Map {
                 bottom_choices = bottom_choices.filter((choice) => choice !== bottom1);
                 const bottom2 = bottom_choices[Math.floor(Math.random() * bottom_choices.length)];
 
-                const top_noise1 = textureLoader('assets/textures/noise/turbulence/turbulence1.png', noise_scale, map_size);
-                const top_noise2 = textureLoader('assets/textures/noise/milky/milky1.png', noise_scale, map_size);
-                const middle_noise1 = textureLoader('assets/textures/noise/manifold/manifold3.png', noise_scale, map_size);
-                const middle_noise2 = textureLoader('assets/textures/noise/swirl/swirl1.png', noise_scale, map_size);
-                const bottom_noise = textureLoader('assets/textures/noise/manifold/manifold1.png', noise_scale, map_size);
-                const uv_noise = textureLoader('assets/textures/noise/perlin/perlin1.png', noise_scale, map_size);
+                const top_noise1 = textureLoader('/assets/textures/noise/turbulence/turbulence1.png', noise_scale, map_size);
+                const top_noise2 = textureLoader('/assets/textures/noise/milky/milky1.png', noise_scale, map_size);
+                const middle_noise1 = textureLoader('/assets/textures/noise/manifold/manifold3.png', noise_scale, map_size);
+                const middle_noise2 = textureLoader('/assets/textures/noise/swirl/swirl1.png', noise_scale, map_size);
+                const bottom_noise = textureLoader('/assets/textures/noise/manifold/manifold1.png', noise_scale, map_size);
+                const uv_noise = textureLoader('/assets/textures/noise/perlin/perlin1.png', noise_scale, map_size);
 
                 const underpinning_geometry = new THREE.PlaneGeometry(state.field_size_x * 2, state.field_size_y * 2);
                 const underpinning_material = new THREE.MeshStandardMaterial({

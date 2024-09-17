@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import CharacterController from './character_controller.js';
-import StateManager from '/src/engine/state_manager.js';
+import StateManager from '/src/game/engine/state_manager.js';
 
 const state = StateManager.instance;
 
@@ -46,7 +46,7 @@ export default class Character extends CharacterController {
     createModel = () => 
         {
             const loader = new GLTFLoader();
-            loader.load('assets/models/heavy_cannon_tower.glb', (gltf) => {
+            loader.load('/assets/models/towers/heavy_cannon_tower.glb', (gltf) => {
                 let model = gltf.scene;
                 model.position.set(0, 1, 0); // TODO: Blender: Move model back 3
                 model.traverse(child => { 

@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import config from '/src/configs/camera_config.js';
-import map_config from '/src/configs/map_config.js';
-import StateManager from "/src/engine/state_manager.js";
+import config from '/src/game/configs/camera_config.js';
+import map_config from '/src/game/configs/map_config.js';
+import StateManager from "/src/game/engine/state_manager.js";
 
 const state = StateManager.instance;
 
