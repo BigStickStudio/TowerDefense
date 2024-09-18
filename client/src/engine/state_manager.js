@@ -37,7 +37,7 @@ export default class StateManager {
             this.state = {
                 "game_mode": 'pvp',
                 "game_type": 'battle',
-                "game_size": '5v5',
+                "game_size": '1v1',
                 "camera_target": new THREE.Object3D(),
                 "camera_position": camera_config.default_camera_position, // first-person, third-person, top-down
                 "cursor_target": 'none',
@@ -54,7 +54,7 @@ export default class StateManager {
             };
             
             this.configuration_count = game_config_map[this.game_mode][this.game_type][this.match_size].config_count;
-            this.configuration = Math.floor(Math.random() * this.configuration_count);
+            this.configuration = 0;//Math.floor(Math.random() * this.configuration_count);
             console.log("[StateManager]::configuration:", this.configuration);
 
             this.runLoop = () => { console.error("[StateManager]::error : Run Loop not defined."); }
@@ -140,6 +140,15 @@ export default class StateManager {
     get field_size_x() { return this.grid_size.x * map_config.square_size; }
     get field_size_y() { return this.grid_size.y * map_config.square_size; }
     
+    get bases() {
+        let game_config = this.game_config;
+
+        return {
+            'red_base': game_config["red_base"],
+            'blue_base': game_config["blue_base"],
+        }
+    }
+
     get teams() { 
         let game_config = this.game_config;
 

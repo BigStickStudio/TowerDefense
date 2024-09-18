@@ -6,29 +6,51 @@ const game_modes = {
                 "configuration": [
                         {
                             "grid_size": {
-                                "x": 40,
-                                "y": 50
+                                "x": 450,
+                                "y": 600
                             },
+                            "red_base": 
+                                {
+                                    "min_x": 0.45,
+                                    "max_x": 0.55,
+                                    "min_y": 0.3,
+                                    "max_y": 0.35
+                                },
                             "red": [
                                     {
-                                        "min_x": 0.3,
-                                        "max_x": 0.7,
-                                        "min_y": 0,
-                                        "max_y": 0
+                                        "min_x": 0.45,
+                                        "max_x": 0.55,
+                                        "min_y": 0.4,
+                                        "max_y": 0.47
                                     }
                                 ],
                             "blue": [
                                 {
-                                    "min_x": 0.3,
-                                    "max_x": 0.7,
-                                    "min_y": 1,
-                                    "max_y": 1
+                                    "min_x": 0.45,
+                                    "max_x": 0.55,
+                                    "min_y": 0.53,
+                                    "max_y": 0.6
                                 }
                             ],
+                            "blue_base":
+                                {
+                                    "min_x": 0.45,
+                                    "max_x": 0.55,
+                                    "min_y": 0.65,
+                                    "max_y": 0.7
+                                },
                             "paths": [
-                                [ 
+                                [
+                                    { "red_base": -1 },
+                                    { "red": 0 }
+                                ],
+                                [
                                     { "red": 0 },
                                     { "blue": 0 }
+                                ],
+                                [
+                                    { "blue": 0 },
+                                    { "blue_base": -1 }
                                 ]
                             ]
                         }

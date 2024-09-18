@@ -48,12 +48,14 @@ export default class Map {
     // numbered team spawn or a path
     square_table = [[]]; 
     player_positions = { red: [], blue: [] };
+    base_positions = { red_base: [], blue_base: [] };
     spawn_areas = { red: [], blue: [] }
     path_areas = [];
 
     constructor() {
         // This will be brought back into init once old_init is trashed
         this.initEmptyMap();
+        this.defineBasePositions();
         this.defineSpawnAreas();
         this.definePathways();
         this.constructMap();
@@ -231,6 +233,7 @@ export default class Map {
                     },
                     vertexShader: vertexShader,
                     fragmentShader: fragmentShader,
+                    wireframe: true,
                   });
                 state.field_material = field_material;
 
@@ -314,19 +317,17 @@ export default class Map {
                         terrain_geometry.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z);
                     }
     
-    
-    
                 state.scene.add(terrain);
-    
             }
     
-    
-
     // a square object should have a 'name', 'id' and 'location'
     // name: spawn, info{ team, id }, location: { x, y }
-    addSquare = (id_y, id_x, sq_obj) =>
+    addSquare = (sq_obj) =>
         {
-            const hazardSquare = (id_y, id_x) =>
+            const id_y = sq_obj.location.y;
+            const id_x = sq_obj.location.x;
+
+            const hazardSquare = () =>
                 {
                     let square = this.square_table[id_y][id_x];
                     let safety = (id_y > 0) ? this.square_table[id_y - 1][id_x] : false;
@@ -344,7 +345,7 @@ export default class Map {
                 // NOTE: This is HIGHLY Inefficient and NEEDS Refactor
             // If we have a path conflicting paths, we want to remove the square
             // But we have to allow for complimentary paths
-            if (hazardSquare(id_y, id_x))
+            if (hazardSquare())
                 {
                     this.square_table[id_y][id_x] = false;
                     return;
@@ -478,6 +479,18 @@ export default class Map {
             // state.scene.add(hemisphere_helper);
         }
 
+    defineBasePositions = () => 
+        {
+            Object.entries(state.bases).forEach(([team, position]) =>
+                {
+                    let location = this.pickRandomXY(position);
+                    this.addHemisphereLight(location);
+                    this.defineBaseBounds(location, team);
+                });
+
+            this.addBaseArea();
+        }
+
     defineSpawnAreas = () => 
         {
             // We iterate over the teams and their positions
@@ -497,12 +510,36 @@ export default class Map {
                             // We simply calculate the min and max bounds for the player area
                             // and construct an object of {position, x{min, max}, y{min, max}}
                             // that we then add to this.player_positions
+                            console.log("Defining Player Bounds", position, team);
                             this.definePlayerBounds(position, team);
                         }
                 }
             );
 
             this.addSpawnArea();
+        }
+
+    defineBaseBounds = (position, team) =>
+        {
+            let base_buffer = spawn_buffer * 2;
+            let min_x = position.x - base_buffer;
+            let max_x = position.x + base_buffer;
+            let min_y = position.y - base_buffer;
+            let max_y = position.y + base_buffer;
+
+            this.base_positions[team] = {
+                position: position,
+                bounds: {
+                    x: {
+                        min: min_x,
+                        max: max_x
+                    },
+                    y: {
+                        min: min_y,
+                        max: max_y
+                    }
+                }
+            }
         }
 
     definePlayerBounds = (position, team) =>
@@ -546,6 +583,29 @@ export default class Map {
             }
         }
 
+    addBaseArea = () => 
+        {
+            // We iterate over all of the base positions
+            Object.entries(this.base_positions).forEach(([team, position]) =>
+                {
+                    let bounds = position.bounds;
+                    for (let i = bounds.y.min; i <= bounds.y.max; i++)
+                        {
+                            for (let j = bounds.x.min; j <= bounds.x.max; j++)
+                                { 
+                                    this.addSquare( 
+                                        {  
+                                            name: "base", 
+                                            info: { team: team, id: -1 },
+                                            location: { x: j, y: i }
+                                        } 
+                                    ); 
+                                }
+                        }
+                });
+        }
+    
+
     addSpawnArea = () => 
         {
             const dropCorners = (i, j, bounds) => 
@@ -571,16 +631,12 @@ export default class Map {
                                                 { continue; }
 
                                             // This adds the square to our square_table
-                                            this.addSquare(
-                                                i, j, // This is redundant
-                                                { 
-                                                    name: "player",
-                                                    info: { team: team, id: player },
-                                                    location: { 
-                                                        x: j, 
-                                                        y: i 
-                                                    }
-                                                }
+                                            this.addSquare( 
+                                                {  
+                                                    name: "player", 
+                                                    info: { team: team, id: player }, 
+                                                    location: { x: j, y: i }
+                                                } 
                                             );
                                         }
                                 }
@@ -604,8 +660,9 @@ export default class Map {
                         let [start_team, start_index] = Object.entries(path[0])[0];
                         let [end_team, end_index] = Object.entries(path[1])[0];
 
-                        const start_area = this.player_positions[start_team][start_index];
-                        const end_area = this.player_positions[end_team][end_index];
+                        console.log(start_team, start_index, end_team, end_index);
+                        const start_area = start_index >= 0 ? this.player_positions[start_team][start_index] : this.base_positions[start_team];
+                        const end_area = end_index >= 0 ? this.player_positions[end_team][end_index] : this.base_positions[end_team];
 
                         this.definePathArea(start_index, start_area, end_index, end_area);
                     }
@@ -681,8 +738,6 @@ export default class Map {
                                 { continue; }
                                 
                             this.addSquare(
-                                    _y, 
-                                    _x, 
                                     { 
                                         name: "path", 
                                         start_id: start_id, 

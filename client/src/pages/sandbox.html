@@ -32,4 +32,14 @@
     </a>
     <div id="ui" style="position: absolute; z-index: 100;"></div>
     <div id="canvas" style="position: absolute; z-index: -1000;"></div>
+
+    <script>
+        const page = document.getElementById('page');
+
+        const wsPort = 9002;
+        const ws = new WebSocket(`ws://localhost:${wsPort}`);
+
+        ws.onmessage = (msg) => 
+            { if (msg.data === 'reload') { location.reload(); } };
+    </script>
 </body>

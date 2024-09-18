@@ -13,7 +13,7 @@ export default class World extends Map {
         { 
             super(); 
             this.sky = new Sky();
-            this.character = new Character("/assets/models/troops/military/super_soldier.glb", new THREE.Vector3(0, 0, 0)); // Create as Entity - TODO: Add 'Worker'
+            this.character = new Character("/assets/models/troops/warriors/chunky_knight.glb", new THREE.Vector3(0, 0, 0)); // Create as Entity - TODO: Add 'Worker'
             this.objects = state.scene.children.filter((child) => !filtered_items.includes(child.name));
         }
 

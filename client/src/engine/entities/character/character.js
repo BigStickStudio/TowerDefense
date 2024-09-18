@@ -53,11 +53,12 @@ export default class Character extends CharacterController {
                 let model = gltf.scene;
                 model.position.set(0, 1, 0); // TODO: Blender: Move model back 3
                 model.traverse(child => { 
-                    if (child.isObject3D) 
+                    if (child.isObject3D && child.name === "BOSS_geo") 
                         { 
                             // child.scale.set(100, 100, 100);
-                            child.scale.set(0.01, 0.01, 0.01);
+                            // child.scale.set(0.01, 0.01, 0.01);
                             let object = new THREE.Object3D();
+                            console.log(object);
                             object.copy(child.clone());
                             object.position.set(position.x, position.y, position.z);
                             //console.log("Adding model to state: ", object);
@@ -66,14 +67,14 @@ export default class Character extends CharacterController {
                  });
         
                 this.target = model;
-                // this._mixer = new THREE.AnimationMixer(model);
+                this._mixer = new THREE.AnimationMixer(model);
 
-                // const animations = gltf.animations;
-                // animations.forEach((animation) => {
-                //     this.loadAnimation(animation.name, animation);
-                // });
+                const animations = gltf.animations;
+                animations.forEach((animation) => {
+                    this.loadAnimation(animation.name, animation);
+                });
 
-                // this._manager = new THREE.LoadingManager();
+                this._manager = new THREE.LoadingManager();
             });
         }
 
