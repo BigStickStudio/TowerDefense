@@ -1,11 +1,10 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import CharacterController from './character_controller.js';
 import StateManager from '/src/engine/state_manager.js';
 
 const state = StateManager.instance;
 
-export default class Character extends CharacterController {
+export default class Entity {
     _animations = {};
     _mixer = null;
     _manager = null;
@@ -13,10 +12,9 @@ export default class Character extends CharacterController {
     state = "Resting";
 
 
-    constructor(path, position) 
+    constructor(name, path, position) 
         {
-            super(self);
-            this.createModel(path, position);
+            this.createModel(name, path, position);
         }
 
     set setState(moving_state) 
@@ -45,7 +43,7 @@ export default class Character extends CharacterController {
         }
 
     // '/assets/models/towers/heavy_cannon_tower.glb'
-    createModel = (path, position) => 
+    createModel = (name, path, position) => 
         {
             console.log("Creating model: ", path);
             const loader = new GLTFLoader();
@@ -53,14 +51,15 @@ export default class Character extends CharacterController {
                 let model = gltf.scene;
                 model.position.set(0, 1, 0); // TODO: Blender: Move model back 3
                 model.traverse(child => { 
-                    if (child.isObject3D && child.name === "BOSS_geo") 
+                    if (child.isObject3D && child.name === "wall004") 
                         { 
                             // child.scale.set(100, 100, 100);
-                            // child.scale.set(0.01, 0.01, 0.01);
+                            child.scale.set(0.1, 0.1, 0.1);
                             let object = new THREE.Object3D();
-                            // console.log(object);
+                            console.log(position);
                             object.copy(child.clone());
                             object.position.set(position.x, position.y, position.z);
+                            object.rotation.y = Math.PI / 2;
                             //console.log("Adding model to state: ", object);
                             state.addModel(object); 
                         }
@@ -76,12 +75,5 @@ export default class Character extends CharacterController {
 
                 this._manager = new THREE.LoadingManager();
             });
-        }
-
-    update = (delta) => 
-        {
-            if (!this.target) { return; }
-
-            super.update(delta);
         }
 }

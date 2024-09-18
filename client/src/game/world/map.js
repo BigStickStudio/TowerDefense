@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import Entity from '../../engine/entities/entity.js';
 import { fragmentShader, vertexShader } from '../shaders/map.js';
 import { batchTextureLoader, textureLoader } from '../world/utils.js';
 import config from '/src/engine/configs/map_config.js';
@@ -59,6 +60,7 @@ export default class Map {
         this.defineSpawnAreas();
         this.definePathways();
         this.constructMap();
+        this.constructBases();
         this.constructSpawnAreas();
         this.constructPathways();
     } 
@@ -233,7 +235,7 @@ export default class Map {
                     },
                     vertexShader: vertexShader,
                     fragmentShader: fragmentShader,
-                    wireframe: true,
+                    // wireframe: true,
                   });
                 state.field_material = field_material;
 
@@ -362,46 +364,65 @@ export default class Map {
             if (square === undefined)
                 { return; }
             
-            //console.log(square)
-
             if (square.name === "player") 
                 {
-                    //console.log("Creating Spawn Area");
                     if (!this.spawn_areas[square.info.team][square.info.id])
-                        {
-                            this.spawn_areas[square.info.team][square.info.id] = [];
-                            // console.log(`Creating Playable Area for ${square.info.team} ${square.info.id}`);
-                            // console.log(this.spawn_areas[square.info.team][square.info.id]);
-                        }
+                        { this.spawn_areas[square.info.team][square.info.id] = []; }
                     
                     this.spawn_areas[square.info.team][square.info.id].push(square.location);
                 }
 
             if (square.name === "path")
+                { this.path_areas.push(square.location); }
+        }
+
+    constructBases = () => 
+        {
+            // We iterate over the teams and their positions
+            Object.entries(this.base_positions).forEach(([team, position]) =>
                 {
-                    //console.log("Creating Path Area");
-                    this.path_areas.push(square.location);
-                }
+                    let width = position.bounds.x.max - position.bounds.x.min;
+                    let height = position.bounds.y.max - position.bounds.y.min;
+                    let material = team === "red_base" ? red_square_material : blue_square_material;
+                    let map_center = state.map_center;
+
+                    let x = position.position.x * square_size + config.square_offset - map_center.x;
+                    let y = position.position.y * square_size + config.square_offset - map_center.y;
+
+                    let geometry = new THREE.PlaneGeometry(width * square_size + square_size, height * square_size + square_size);
+                    let mesh = new THREE.Mesh(geometry, material);
+                    mesh.name = team;
+                    mesh.info = { team: team, id: -1 };
+                    mesh.position.set(x, 0, y);
+                    mesh.rotation.x = -Math.PI / 2;
+                    state.scene.add(mesh);
+                    
+                    let base_x = x + (width * square_size / 3.2);
+                    let base_y = y + (height * square_size / 6);
+                    new Entity(team, "/assets/models/bases/temp_fortress.glb", new THREE.Vector3(base_x, 0, base_y));
+
+                    if (team === "blue_base")
+                        {
+                            let entity = state.getEntity("blue_base");
+                            console.log("Entity:", entity);
+                            //entity.target.rotation.y = Math.PI;
+                        }
+                });
+
+            // Load Base Mesh
         }
 
     constructSpawnAreas = () =>
         {
-            // console.log("Constructing Spawn Areas");
-            // console.log(this.spawn_areas);
-
             // We iterate over the teams
             Object.entries(this.spawn_areas).forEach(([team, players]) => 
                 {
                     let material = team === "red" ? red_square_material : blue_square_material;
                     let map_center = state.map_center;
 
-                    // console.log("Creating Team", team);
-                    // console.log(players);
-
                     // We iterate over the players array
                     for (let player in players) 
                         {
-                            //console.log("Creating Player", team, player);
                             let square_count = players[player].length;
                             let mesh = new THREE.InstancedMesh(plane_geometry, material, square_count);
                             mesh.name = `${team}_${player}`;
@@ -421,7 +442,6 @@ export default class Map {
                                     mesh.setMatrixAt(i, matrix);
                                 }
 
-                            console.log(mesh);
                             state.scene.add(mesh);
                             state.player_areas[team].push(mesh);
                         }
@@ -432,8 +452,6 @@ export default class Map {
     constructPathways = () =>
         {
             let path_count = this.path_areas.length;
-            // console.log("Creating Pathways", path_count);
-            // console.log(this.path_areas);
             let material = path_square_material;
             let map_center = state.map_center;
             let mesh = new THREE.InstancedMesh(plane_geometry, material, path_count);
@@ -510,7 +528,6 @@ export default class Map {
                             // We simply calculate the min and max bounds for the player area
                             // and construct an object of {position, x{min, max}, y{min, max}}
                             // that we then add to this.player_positions
-                            console.log("Defining Player Bounds", position, team);
                             this.definePlayerBounds(position, team);
                         }
                 }
@@ -660,7 +677,6 @@ export default class Map {
                         let [start_team, start_index] = Object.entries(path[0])[0];
                         let [end_team, end_index] = Object.entries(path[1])[0];
 
-                        console.log(start_team, start_index, end_team, end_index);
                         const start_area = start_index >= 0 ? this.player_positions[start_team][start_index] : this.base_positions[start_team];
                         const end_area = end_index >= 0 ? this.player_positions[end_team][end_index] : this.base_positions[end_team];
 

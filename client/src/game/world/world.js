@@ -5,7 +5,7 @@ import Character from '/src/engine/entities/character/character.js';
 import StateManager from '/src/engine/state_manager.js';
 
 const state = StateManager.instance;
-const filtered_items = ["terrain", "cursor", "light", "sky", "camera_target", "pathways"];
+const filtered_items = ["terrain", "cursor", "light", "sky", "camera_target", "pathways", "red_base", "blue_base"];
 
 // Cleanest Utility Class in the Game - Do not make a mess here please
 export default class World extends Map {
