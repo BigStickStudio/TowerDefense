@@ -49,10 +49,10 @@ const loadModels = async () =>
         for (let model of models) 
             { 
                 new Character(model, new THREE.Vector3(x, 0, z)); 
-                x += 6;
+                x += 12;
 
-                if (x > 64) 
-                    { x = -64; z += 6; }
+                if (x > 128) 
+                    { x = -64; z += 12; }
             }
     }
 

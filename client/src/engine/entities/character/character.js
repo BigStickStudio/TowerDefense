@@ -55,7 +55,8 @@ export default class Character extends CharacterController {
                 model.traverse(child => { 
                     if (child.isObject3D) 
                         { 
-                            child.scale.set(100, 100, 100);
+                            // child.scale.set(100, 100, 100);
+                            child.scale.set(0.01, 0.01, 0.01);
                             let object = new THREE.Object3D();
                             object.copy(child.clone());
                             object.position.set(position.x, position.y, position.z);
