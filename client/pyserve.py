@@ -6,6 +6,8 @@ import time
 import threading
 import asyncio
 import websockets
+import urllib.parse
+import json
 
 PORT = 9001
 WS_PORT = 9002
@@ -21,17 +23,67 @@ class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         '.svg':	'image/svg+xml',
         '.css':	'text/css',
         '.js':'application/x-javascript',
+        '.cjs':'application/javascript',
         '.wasm': 'application/wasm',
         '.json': 'application/json',
         '.xml': 'application/xml',
     }
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
 
     def end_headers(self):
         self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.send_header('Pragma', 'no-cache')
         self.send_header('Expires', '0')
         super().end_headers()
+    
+    def do_GET(self):
+        url = self.path
+        
+        if url == '/':
+            # Serve index.html from the current directory
+            self.path = '/index.html'
+        elif url.endswith('.html'):
+            # Serve other HTML files from src/pages/
+            self.path = '/src/pages' + url
 
+        return http.server.SimpleHTTPRequestHandler.do_GET(self)
+    
+    def do_POST(self):
+        if self.path == '/models':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+            self.end_headers()
+
+            content_size = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_size)
+            post = urllib.parse.parse_qs(post_data.decode('utf-8'))
+
+            path = post.get('path', [None])[0]
+
+            base_dir = os.getcwd()
+            full_path = base_dir + path
+            if path and os.path.isdir(full_path):
+                files = [os.path.join(path, f) for f in os.listdir(full_path) if f.endswith('.glb')]
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'files': files}).encode('utf-8'))
+            else:
+                self.send_response(400)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(bytes(json.dumps({'error': 'Invalid path'}), 'utf-8'))
+		
 
 class MyTCPServer(socketserver.TCPServer):
     allow_reuse_address = True

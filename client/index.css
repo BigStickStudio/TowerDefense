@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+
+body {
+    background-image: url("/assets/images/title.png");
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    height: 100vh;
+    width: 100vw;
+}
+
+strong#title {
+    font-family: 'Anton', sans-serif;
+    font-size: 10.75vw;
+    text-align: center;
+    color: #a77e41;
+    text-shadow: 1px 4px 6px rgb(57, 37, 37), 4px 4px 6px rgb(0, 0, 0), -1px -1px 1px #ffffff;
+    padding: 0 0 1rem;
+    -webkit-user-select: none;        
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    margin-bottom: -25px;
+    margin-left: 1rem;
+}
+
+span { 
+    font-size: 1.5vw; 
+    color: #b8b8b8;
+    text-shadow: 1px 1px 1px #290909d0;
+}
+
+a#button {
+    color: white;
+    font-weight: 600;
+    box-shadow: 2px 2px 5px #000000cc,
+                inset 2px 2px 5px #ffffff55;
+    background: linear-gradient(145deg, #065668 0%, #02257c 20%, #02257c 80%, #065668 100%);
+}
+
+a#button:hover {
+    color: white;
+    box-shadow: 1px 1px 3px #000000cc,
+                inset 1px 1px 3px #ffffff55;
+    background: linear-gradient(145deg, #0134b4, #19758a);
+}
+
+i {
+    color: rgba(255, 255, 255, 0.67);
+    text-shadow: 1px 1px 3px #000000;
+}

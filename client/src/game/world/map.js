@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import config from '../configs/map_config.js';
-import StateManager from '../engine/state_manager.js';
 import { fragmentShader, vertexShader } from '../shaders/map.js';
 import { batchTextureLoader, textureLoader } from '../world/utils.js';
+import config from '/src/engine/configs/map_config.js';
+import StateManager from '/src/engine/state_manager.js';
 
 const state = StateManager.instance;
 
@@ -420,6 +420,7 @@ export default class Map {
                                     mesh.setMatrixAt(i, matrix);
                                 }
 
+                            console.log(mesh);
                             state.scene.add(mesh);
                             state.player_areas[team].push(mesh);
                         }
@@ -467,7 +468,8 @@ export default class Map {
             // TODO: Add Interpolation for day and night cycle
             let player_lighting = new THREE.HemisphereLight(config.night_top_color, config.night_bottom_color, 0.03); // This is the perfect night color
             player_lighting.name = "light";
-            player_lighting.groundColor.setHSL(0.25, .5, .7);
+            player_lighting.groundColor.setHSL(0.25, .5, .3);
+            player_lighting.position.set(light_x, 10, light_y);
             state.scene.add(player_lighting);
             state.hemisphere_lights.push(player_lighting);
 

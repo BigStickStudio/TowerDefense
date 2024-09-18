@@ -1,7 +1,8 @@
 import Stats from 'three/addons/libs/stats.module.js';
-import StateManager from './engine/state_manager.js';
-import UI from './engine/ui.js';
 import World from './world/world.js';
+import Camera from '/src/engine/entities/player/camera.js';
+import StateManager from '/src/engine/state_manager.js';
+import UI from '/src/engine/ui.js';
 
 const state = StateManager.instance;
 let stats = new Stats();
@@ -12,40 +13,33 @@ let delta = 0;
 export default class Game {
     constructor() { 
         this.init(); 
-        this.requestFrame();
+        state.run_loop = this.render;
+        state.run();
     }
 
     init = () => 
         {
-            this.ui = new UI(this.enableListeners, this.disableListeners);
-            window.addEventListener('resize', this.onWindowResize, false);
             this.world = new World();
-            this.enableCamera = this.world.camera.enable;
-            this.disableCamera = this.world.camera.disable;
+            state.camera = new Camera();
+            state.ui = new UI(state.enableListeners, state.disableListeners); 
+            stats.dom.style.top = "";
+            stats.dom.style.left = "";
+            stats.dom.style.bottom = "0px";
+            stats.dom.style.right = "0px";
             document.body.appendChild(stats.dom);
-        }
 
-    // These have to exist in order to be passed to the UI before the World exists
-    enableListeners = () => { this.enableCamera(); }
-    disableListeners = () => { this.disableCamera(); }
+            window.addEventListener('resize', this.onWindowResize, false);
+        }
 
     onWindowResize = () => 
         {
-            this.world.camera.refresh();
+            state.camera.refresh();
             state.renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-    requestFrame = () => 
-        { 
-            requestAnimationFrame(this.render);
-        }
-
-    // TODO: This should be moved to the engine and called as a run() with a closure
     render = () => 
         {
             this.world.update();
             stats.update();
-            this.requestFrame();
-            state.renderer.render(state.scene, this.world.camera.instance);
         }
 }

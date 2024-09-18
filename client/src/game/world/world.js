@@ -1,8 +1,8 @@
-import StateManager from '../engine/state_manager.js';
-import Character from './entities/character/character.js';
-import Camera from './entities/player/camera.js';
+import * as THREE from 'three';
 import Map from './map.js';
 import Sky from './sky.js';
+import Character from '/src/engine/entities/character/character.js';
+import StateManager from '/src/engine/state_manager.js';
 
 const state = StateManager.instance;
 const filtered_items = ["terrain", "cursor", "light", "sky", "camera_target", "pathways"];
@@ -13,8 +13,7 @@ export default class World extends Map {
         { 
             super(); 
             this.sky = new Sky();
-            this.character = new Character(); // Create as Entity
-            this.camera = new Camera();
+            this.character = new Character("/assets/models/troops/military/super_soldier.glb", new THREE.Vector3(0, 0, 0)); // Create as Entity - TODO: Add 'Worker'
             this.objects = state.scene.children.filter((child) => !filtered_items.includes(child.name));
         }
 
@@ -28,15 +27,15 @@ export default class World extends Map {
                 {
                     //console.log(this.character.target);
                     this.character?.update(elapsed);
-                    this.camera.updateFreeCamera(this.character.target);
-                    this.camera.update(this.character.target, elapsed);
+                    state.camera.updateFreeCamera(this.character.target);
+                    state.camera.update(this.character.target, elapsed);
                 }
             else 
-                { this.camera.update(this.camera.free_target, elapsed); }
+                { state.camera.update(state.camera.free_target, elapsed); }
             
             // This doesn't work as expected
             if (this.t_wait(1000))
-                { this.camera.getIntersection(this.objects); }
+                { state.camera.getIntersection(this.objects); }
             
             this.sky.update(elapsed);
         }
@@ -45,7 +44,7 @@ export default class World extends Map {
         {
             this.step();
             this.sky.rotate();
-            this.sky.fade(state.night_cycle, state.day_cycle);
+            this.sky.fade(state.night_cycle, state.day_cycle); // TODO: Can we move these to the sky
             this.updateLighting();
         }
 }

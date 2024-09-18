@@ -1,4 +1,17 @@
 <header>
+    <script type="importmap">
+        {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
+        }
+        }
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="/src/pages/game.js" type="module"></script>
+
     <style>
         body {
             width: 100vw;
@@ -9,23 +22,15 @@
             z-index: -100;
         }
     </style>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </header>
 <body>
-    <script type="importmap">
-        {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
-        }
-        }
-    </script>
-
-    <script src="./app.js" type="module"></script>
-
-    <!-- TODO: Add Game Menu Settings Here - and then Lobby -->
-    <div id="ui" style="position: absolute; z-index: 100"></div>
+    <!-- TODO: Add Game Menu Settings Here - and then Lobby - and then loading screen -->
+    <a type="button" 
+         class="btn btn-outline-primary mx-5 px-4 my-3" 
+         style="position: absolute; z-index: 100;"
+         href="/">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <div id="ui" style="position: absolute; z-index: 100;"></div>
     <div id="canvas" style="position: absolute; z-index: -1000;"></div>
 </body>
