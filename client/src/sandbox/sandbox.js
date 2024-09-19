@@ -1,5 +1,4 @@
 import Stats from 'three/addons/libs/stats.module.js';
-import loadModels from './loader/object_loader.js';
 import Camera from '/src/engine/entities/player/camera.js';
 import StateManager from '/src/engine/state_manager.js';
 import World from '/src/sandbox/world/world.js';
@@ -15,22 +14,29 @@ export default class SandBox {
         { 
             this.init(); 
             state.run_loop = this.update;
-            state.camera = new Camera();
             state.run();
-            loadModels();
+            // loadModels();
         }
     
     init = () => 
         {
+            this.initStats();
+            state.camera = new Camera();
             this.world = new World();
 
+            this.world.cameraTracker(state.camera.instance.position);
+            
+            
+            window.addEventListener('resize', this.onWindowResize, false);
+        }
+
+    initStats = () =>
+        {
             stats.dom.style.top = "";
             stats.dom.style.left = "";
             stats.dom.style.bottom = "0px";
             stats.dom.style.right = "0px";
             document.body.appendChild(stats.dom);
-            
-            window.addEventListener('resize', this.onWindowResize, false);
         }
 
     onWindowResize = () => 
@@ -43,5 +49,6 @@ export default class SandBox {
         {
             this.world.update();
             stats.update();
+            this.world.cameraTracker(state.camera.instance.position);
         }
 }

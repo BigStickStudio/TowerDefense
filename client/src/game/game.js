@@ -5,7 +5,6 @@ import StateManager from '/src/engine/state_manager.js';
 import UI from '/src/engine/ui.js';
 
 const state = StateManager.instance;
-let stats = new Stats();
 
 const fps = 1/60;
 let delta = 0;
@@ -22,13 +21,18 @@ export default class Game {
             this.world = new World();
             state.camera = new Camera();
             state.ui = new UI(state.enableListeners, state.disableListeners); 
+            this.initStats();
+            window.addEventListener('resize', this.onWindowResize, false);
+        }
+
+    initStats = () =>
+        { 
+            let stats = new Stats();
             stats.dom.style.top = "";
             stats.dom.style.left = "";
             stats.dom.style.bottom = "0px";
             stats.dom.style.right = "0px";
             document.body.appendChild(stats.dom);
-
-            window.addEventListener('resize', this.onWindowResize, false);
         }
 
     onWindowResize = () => 
