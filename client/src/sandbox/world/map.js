@@ -34,8 +34,6 @@ export default class Map extends Chunker {
         let green_mesh = new THREE.InstancedMesh(plane_geometry, green_material, tile_count / 2);
         let blue_mesh = new THREE.InstancedMesh(plane_geometry, blue_material, tile_count / 2);
 
-        console.log(green_mesh.count);
-
         for (let i = 0; i < this.square_count; i++) {
             for (let j = 0; j < this.square_count; j++) {
                 let x = j * this.square_size - this.map_center.x + this.square_size / 2;

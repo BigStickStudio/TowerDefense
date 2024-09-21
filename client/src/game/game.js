@@ -5,6 +5,7 @@ import StateManager from '/src/engine/state_manager.js';
 import UI from '/src/engine/ui.js';
 
 const state = StateManager.instance;
+let stats = new Stats();
 
 const fps = 1/60;
 let delta = 0;
@@ -27,7 +28,6 @@ export default class Game {
 
     initStats = () =>
         { 
-            let stats = new Stats();
             stats.dom.style.top = "";
             stats.dom.style.left = "";
             stats.dom.style.bottom = "0px";
