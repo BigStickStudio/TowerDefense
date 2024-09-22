@@ -52,29 +52,51 @@ export default class Chunker {
                                 {
                                     let tile = chunk.hexes[tile_key];
 
-                                    for (let cell of tile.cells)
-                                        {
-                                            let position = cell;
-                                            let size = { w: this.square_size, h: this.square_size };
+                                    // for (let hex in tile.hexes)
+                                    //     {
+                                    //         let cell = tile.hexes[hex];
+                                    //         let position = cell.position;
+                                    //         let size = cell.size;
 
-                                            let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
-                                            let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
-                                            let mesh = new THREE.Mesh(geometry, material);
-                                            mesh.position.set(position.x, 0, position.z);
-                                            mesh.rotation.x = -Math.PI / 2;
-                                            state.scene.add(mesh);
-                                        }
-                                    // let position = tile.position;
-                                    // let size = tile.size;
+                                    //         let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
+                                    //         let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
+                                    //         let mesh = new THREE.Mesh(geometry, material);
+                                    //         mesh.position.set(position.x, 0, position.z);
+                                    //         mesh.rotation.x = -Math.PI / 2;
+                                    //         state.scene.add(mesh);
+                                    //     }
+
+                                    let position = tile.position;
+                                    let size = tile.size;
                                 
-                                    // let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
-                                    // let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
-                                    // let mesh = new THREE.Mesh(geometry, material);
-                                    // mesh.position.set(position.x, 0, position.z);
-                                    // mesh.rotation.x = -Math.PI / 2;
-                                    // state.scene.add(mesh);
+                                    let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
+                                    let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
+                                    let mesh = new THREE.Mesh(geometry, material);
+                                    mesh.position.set(position.x, 0, position.z);
+                                    mesh.rotation.x = -Math.PI / 2;
+                                    state.scene.add(mesh);
                                 }
+
+                            // let position = chunk.position;
+                            // let size = chunk.size;
+
+                            // let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
+                            // let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
+                            // let mesh = new THREE.Mesh(geometry, material);
+                            // mesh.position.set(position.x, 0, position.z);
+                            // mesh.rotation.x = -Math.PI / 2;
+                            // state.scene.add(mesh);
                         }
+                    
+                    // let position = region.position;
+                    // let size = region.size;
+
+                    // let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
+                    // let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
+                    // let mesh = new THREE.Mesh(geometry, material);
+                    // mesh.position.set(position.x, 0, position.z);
+                    // mesh.rotation.x = -Math.PI / 2;
+                    // state.scene.add(mesh);
                 }
         }
     initWorldGridSystem = () => 
@@ -158,6 +180,7 @@ export default class Chunker {
                             const hex = { region: `${max_i}_${max_j}`, 
                                           chunk: `${mid_i}_${mid_j}`, 
                                           tile: `${min_i}_${min_j}`,
+                                          hex: `${i}_${j}`,
                                           x: i, z: j };
                             this.hex_tree.addHex(hex);
                         }
