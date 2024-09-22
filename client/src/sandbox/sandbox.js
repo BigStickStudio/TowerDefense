@@ -4,9 +4,9 @@ import StateManager from '/src/engine/state_manager.js';
 import World from '/src/sandbox/world/world.js';
 
 const state = StateManager.instance;
-let stats = new Stats();
+let fps = new Stats();
+let cpu = new Stats();
 
-const fps = 1/60;
 let delta = 0;
 
 export default class SandBox {
@@ -32,11 +32,18 @@ export default class SandBox {
 
     initStats = () =>
         {
-            stats.dom.style.top = "";
-            stats.dom.style.left = "";
-            stats.dom.style.bottom = "0px";
-            stats.dom.style.right = "0px";
-            document.body.appendChild(stats.dom);
+            fps.dom.style.top = "";
+            fps.dom.style.left = "";
+            fps.dom.style.bottom = "0px";
+            fps.dom.style.right = "0px";
+            document.body.appendChild(fps.dom);
+
+            cpu.showPanel(1);
+            cpu.dom.style.top = "";
+            cpu.dom.style.left = "";
+            cpu.dom.style.bottom = "50px";
+            cpu.dom.style.right = "0px";
+            document.body.appendChild(cpu.dom);
         }
 
     onWindowResize = () => 
@@ -48,7 +55,8 @@ export default class SandBox {
     update = () => 
         {
             this.world.update();
-            stats.update();
+            fps.update();
+            cpu.update();
             this.world.cameraTracker(state.camera.instance.position);
         }
 }

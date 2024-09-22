@@ -7,6 +7,7 @@ const HALF_MAP = MAP_SIZE / 2;
 export default class HexNode {
     constructor(level) {
         this.hexes = {};
+        this.index = { z: 0, x: 0 }; // Index of the region
         this.position = { x: 0, z: 0 }; // Center of the region
         this.size = { h: 0, w: 0 }; // Height and Width of the region
         this.level = level;
@@ -16,17 +17,24 @@ export default class HexNode {
     }
 }
 
+HexNode.prototype.distanceTo = function(position)
+    {
+        let dx = Math.abs(this.position.x - position.x);
+        let dz = Math.abs(this.position.z - position.z);
+        return Math.sqrt(dx * dx + dz * dz);
+    }
+
 HexNode.prototype.getPosition = function(n)  
     { return (n * CHUNK_SIZE) - HALF_MAP + HALF_CHUNK; }
 
 HexNode.prototype.setMinMax = function(x, z)
     {
-        console.log("Setting minmax at @", this.level, ": ", x, z);
+        x = this.getPosition(x);
+        z = this.getPosition(z);
         if (x < this.min.x) { this.min.x = x - HALF_CHUNK; }
         if (z < this.min.z) { this.min.z = z - HALF_CHUNK; }
         if (x > this.max.x) { this.max.x = x + HALF_CHUNK; }
         if (z > this.max.z) { this.max.z = z + HALF_CHUNK; }
-        console.log("Min", this.min, "Max", this.max);
     }
 
 HexNode.prototype.calculatePosition = function()
@@ -38,14 +46,15 @@ HexNode.prototype.calculatePosition = function()
 
 HexNode.prototype.calculateSize = function()
     {
-        let h = this.count * CHUNK_SIZE;
-        let w = this.count * CHUNK_SIZE;
+        let h = this.max.z - this.min.z;
+        let w = this.max.x - this.min.x;
         this.size = { h: h, w: w };
     }
 
 HexNode.prototype.update = function(x, z)
     {
         this.count += 1;
+        this.index = { x: x, z: z };
         this.setMinMax(x, z);
         this.calculatePosition();
         this.calculateSize();
@@ -56,22 +65,24 @@ HexNode.prototype.addHex = function(hex)
         if (this.hexes[hex.region] === undefined)
             { this.hexes[hex.region] = new HexNode('region'); }
         
-        if (this.hexes[hex.region].hexes[hex.chunk] === undefined)
-            { this.hexes[hex.region].hexes[hex.chunk] = new HexNode('chunk'); }
+        let region = this.hexes[hex.region];
+
+        if (region.hexes[hex.chunk] === undefined)
+            { region.hexes[hex.chunk] = new HexNode('chunk'); }
         
-        if (this.hexes[hex.region].hexes[hex.chunk].hexes[hex.tile] === undefined)
-            { this.hexes[hex.region].hexes[hex.chunk].hexes[hex.tile] = new HexNode('tile'); }
+        let chunk = region.hexes[hex.chunk];
+
+        if (chunk.hexes[hex.tile] === undefined)
+            { chunk.hexes[hex.tile] = new HexNode('tile'); }
         
-        if (this.hexes[hex.region].hexes[hex.chunk].hexes[hex.tile].hexes[hex.hex] === undefined)
-            { this.hexes[hex.region].hexes[hex.chunk].hexes[hex.tile].hexes[hex.hex] = new HexNode('hex'); }
+        let tile = chunk.hexes[hex.tile];
 
+        if (tile.hexes[hex.hex] === undefined)
+            { tile.hexes[hex.hex] = new HexNode('hex'); }
 
-        const x_position = this.getPosition(hex.x);
-        const z_position = this.getPosition(hex.z);
-
-        this.hexes[hex.region].hexes[hex.chunk].hexes[hex.tile].hexes[hex.hex].update(x_position, z_position);
-        this.hexes[hex.region].hexes[hex.chunk].hexes[hex.tile].update(x_position, z_position); // We can move this outside of the loop to optimize
-        this.hexes[hex.region].hexes[hex.chunk].update(x_position, z_position);
-        this.hexes[hex.region].update(x_position, z_position);
-        this.update(x_position, z_position);
+        tile.hexes[hex.hex].update(hex.x, hex.z);
+        tile.update(hex.x, hex.z); // We can move this outside of the loop to optimize
+        chunk.update(hex.x, hex.z);
+        region.update(hex.x, hex.z);
+        this.update(hex.x, hex.z);
     }

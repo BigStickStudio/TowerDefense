@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CHUNK_SIZE, MAP_SIZE, MAX_ID_TABLE, MID_ID_TABLE, SQUARE_SIZE, TILE_COUNT } from './chunk_config.js';
+import { CHUNK_SIZE, MAP_SIZE, MAX_ID_TABLE, MID_CHUNK_SIZE, MID_ID_TABLE, MIN_CHUNK_SIZE, SQUARE_SIZE, TILE_COUNT } from './chunk_config.js';
 import HexNode from './hextree.js';
 import StateManager from '/src/engine/state_manager.js';
 
@@ -38,67 +38,68 @@ export default class Chunker {
 
     drawHexGrid = () =>
         {
+            const drawMesh = (position, size) =>
+                {
+                    let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
+                    let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
+                    let mesh = new THREE.Mesh(geometry, material);
+                    mesh.position.set(position.x, 0.5, position.z);
+                    mesh.rotation.x = -Math.PI / 2;
+                    mesh.name = "hex";
+                    state.scene.add(mesh);
+                }
+
             let hexes = this.hex_tree.hexes;
             
+            const MAX_CHUNK_OFFSET = MID_CHUNK_SIZE + MIN_CHUNK_SIZE / 2;
+
             for (let region_key in hexes)
                 {
                     let region = hexes[region_key]; 
+                    let region_distance = region.distanceTo(this.camera_mesh.position);
+
+                    if (MAX_CHUNK_OFFSET < region_distance)
+                        { 
+                            drawMesh(region.position, region.size); 
+                            continue;
+                        }
 
                     for (let chunk_key in region.hexes)
                         {
                             let chunk = region.hexes[chunk_key];
-                            
+                            let chunk_distance = chunk.distanceTo(this.camera_mesh.position);
+
+                            if (MIN_CHUNK_SIZE + CHUNK_SIZE * 3.5 < chunk_distance)
+                                { 
+                                    drawMesh(chunk.position, chunk.size); 
+                                    continue;
+                                }
+
                             for (let tile_key in chunk.hexes)
                                 {
                                     let tile = chunk.hexes[tile_key];
+                                    let tile_distance = tile.distanceTo(this.camera_mesh.position)
+                                    
+                                    if (CHUNK_SIZE * 2 < tile_distance && tile_distance < CHUNK_SIZE * 5)
+                                        { 
+                                            drawMesh(tile.position, tile.size); 
+                                            continue;
+                                        }
+                                        
+                                    for (let hex in tile.hexes)
+                                        {
+                                            let cell = tile.hexes[hex];
+                                            console.log(cell.distanceTo(this.camera_position.x, this.camera_position.z));
 
-                                    // for (let hex in tile.hexes)
-                                    //     {
-                                    //         let cell = tile.hexes[hex];
-                                    //         let position = cell.position;
-                                    //         let size = cell.size;
+                                            if (cell.distanceTo(this.camera_mesh.position) < CHUNK_SIZE * 2)
+                                                { drawMesh(cell.position, cell.size); }
 
-                                    //         let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
-                                    //         let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
-                                    //         let mesh = new THREE.Mesh(geometry, material);
-                                    //         mesh.position.set(position.x, 0, position.z);
-                                    //         mesh.rotation.x = -Math.PI / 2;
-                                    //         state.scene.add(mesh);
-                                    //     }
-
-                                    let position = tile.position;
-                                    let size = tile.size;
-                                
-                                    let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
-                                    let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
-                                    let mesh = new THREE.Mesh(geometry, material);
-                                    mesh.position.set(position.x, 0, position.z);
-                                    mesh.rotation.x = -Math.PI / 2;
-                                    state.scene.add(mesh);
+                                        }
                                 }
-
-                            // let position = chunk.position;
-                            // let size = chunk.size;
-
-                            // let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
-                            // let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
-                            // let mesh = new THREE.Mesh(geometry, material);
-                            // mesh.position.set(position.x, 0, position.z);
-                            // mesh.rotation.x = -Math.PI / 2;
-                            // state.scene.add(mesh);
                         }
-                    
-                    // let position = region.position;
-                    // let size = region.size;
-
-                    // let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
-                    // let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
-                    // let mesh = new THREE.Mesh(geometry, material);
-                    // mesh.position.set(position.x, 0, position.z);
-                    // mesh.rotation.x = -Math.PI / 2;
-                    // state.scene.add(mesh);
-                }
+                }   
         }
+
     initWorldGridSystem = () => 
         {
             // console.log("Chunker: Initializing World Grid System");
@@ -210,19 +211,11 @@ export default class Chunker {
     // at this point the previous chunks, and current chunks are not the same
     updateChunks = () =>
         {
-            let x = this.camera_position.x;
-            let z = this.camera_position.z;
-            // let min_x = this.prev_camera_position.x - 1;
-            // let max_x = this.prev_camera_position.x + 1;
-            // let min_z = this.prev_camera_position.z;
-            // let max_z = this.prev_camera_position.z;
-
-            let key = { x: x, z: z };                            
-            // let chunk = this.chunks.find(key);
-            // let mesh = chunk.mesh();
-            // this.activateChunk(mesh);
-            // console.log(mesh);
-            // state.scene.add(mesh);
+            // Remove all chunks from the scene with the name "hex
+            let hexes = state.scene.children.filter(child => child.name === "hex");
+            hexes.forEach(hex => state.scene.remove(hex));
+            this.drawHexGrid();
+            console.log("Updating Chunks");
         }
 
     cameraTracker = (position) => 
@@ -232,22 +225,13 @@ export default class Chunker {
 
             this.camera_mesh.position.set(position.x, 1, position.z);
 
-            // NOTE: TODO: Fix this Bug because it works with numbers like 210, 230, 250, but is off by half a chunk size
-            //       when we use numbers like 200, 220, 240, 260, etc.
-            // We have to talk half the maps chunk_count, and offset the x/y by half the chunk size to account for center,
-            // and then divide by the size of the chunk to get the whole number of what chunk the camera is in
-            let x = Math.floor(this.chunk_count / 2) + Math.floor((position.x + (this.chunk_size / 2)) / this.chunk_size);
-            let z = Math.floor(this.chunk_count / 2) + Math.floor((position.z + (this.chunk_size / 2)) / this.chunk_size);
-            this.camera_position = { x: x, z: z };
-
-            if (this.camera_position.x === this.prev_camera_position.x && this.camera_position.z === this.prev_camera_position.z)
+            let camera_position = this.camera_mesh.position.clone();
+            if (camera_position.x === this.prev_camera_position.x && camera_position.z === this.prev_camera_position.z)
                 { return; }
+            console.log("Camera Position", camera_position);
 
-            // We can update the chunks before we remove the previous
             this.updateChunks();
-
-            this.prev_camera_position = this.camera_position;
-            // console.log(this.camera_position);
+            this.prev_camera_position = camera_position;
         }
 }
 
