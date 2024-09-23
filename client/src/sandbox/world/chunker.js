@@ -152,7 +152,7 @@ export default class Chunker {
                     wireframe: true
                 })
             );
-            // state.scene.add(this.camera_mesh);
+            state.scene.add(this.camera_mesh);
             this.cameraTracker(this.camera_position);
         }
 
