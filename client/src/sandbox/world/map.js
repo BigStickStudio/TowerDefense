@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import * as config from './chunk_config.js';
 import Chunker from './chunker.js';
 import StateManager from '/src/engine/state_manager.js';
 
@@ -21,7 +22,9 @@ const green_material = createSquareMaterial(green);
 const blue_material = createSquareMaterial(blue);
 
 export default class Map extends Chunker {
-   
+    square_size = config.SQUARE_SIZE;
+    square_count = config.TILE_COUNT;
+    map_center = { x: config.MAP_CENTER, y: 0, z: config.MAP_CENTER };
     constructor() {
         super();
         this.createSquares();

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CHUNK_SIZE, MAP_SIZE, MAX_ID_TABLE, MID_CHUNK_SIZE, MID_ID_TABLE, MIN_CHUNK_SIZE, SQUARE_SIZE, TILE_COUNT } from './chunk_config.js';
+import * as config from './chunk_config.js';
 import HexNode from './hextree.js';
 import StateManager from '/src/engine/state_manager.js';
 
@@ -13,12 +13,6 @@ const state = StateManager.instance;
 
 
 export default class Chunker {
-    square_count = TILE_COUNT;
-    square_size = SQUARE_SIZE;
-    chunk_size = CHUNK_SIZE;
-    map_size = MAP_SIZE;
-    map_center = new THREE.Vector3(this.map_size / 2, 0, this.map_size / 2);
-    chunk_count = this.map_size / this.chunk_size;
     prev_camera_position = { x: 0, y: 0 };
     camera_position = { x: 0, y: 0 };
     camera_mesh;
@@ -31,9 +25,7 @@ export default class Chunker {
 
     init = () => 
         {
-            this.initWorldGridSystem();
             this.initCameraTracker();
-            this.drawHexGrid();
         }
 
     drawHexGrid = () =>
@@ -43,147 +35,109 @@ export default class Chunker {
                     let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
                     let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
                     let mesh = new THREE.Mesh(geometry, material);
-                    mesh.position.set(position.x, 0.5, position.z);
+                    mesh.position.set(position.x, 1, position.z);
                     mesh.rotation.x = -Math.PI / 2;
                     mesh.name = "hex";
                     state.scene.add(mesh);
                 }
 
-            let hexes = this.hex_tree.hexes;
+            let x = 0;
+            let z = 0;
+            let chunk_position = { x: 0, z: 0 };
+            let chunk_size = { h: 0, w: 0 };
+
+            console.log("Chunk Count", config.CHUNK_COUNT);
+            console.log("Chunk Size", config.CHUNK_SIZE);
+            console.log("Max Chunk Offset", config.MAX_CHUNK_OFFSET);
+            console.log("Max Offset Size", config.MAX_OFFSET_SIZE);
+            console.log("Mid Chunk Offset", config.MID_CHUNK_OFFSET);
+            console.log("Mid Offset Size", config.MID_OFFSET_SIZE);
+            console.log("Min Chunk Offset", config.MIN_CHUNK_OFFSET);
+            console.log("Min Offset Size", config.MIN_OFFSET_SIZE);
+            console.log("Max Chunk Count", config.MAX_CHUNK_COUNT);
+            console.log("Max Chunk Size", config.MAX_CHUNK_SIZE);
+            console.log("Mid Chunk Count", config.MID_CHUNK_COUNT);
+            console.log("Mid Chunk Size", config.MID_CHUNK_SIZE);
+            console.log("Min Chunk Count", config.MIN_CHUNK_COUNT);
+            console.log("Min Chunk Size", config.MIN_CHUNK_SIZE);
             
-            const MAX_CHUNK_OFFSET = MID_CHUNK_SIZE + MIN_CHUNK_SIZE / 2;
-
-            for (let region_key in hexes)
+            while (z < config.CHUNK_COUNT)
                 {
-                    let region = hexes[region_key]; 
-                    let region_distance = region.distanceTo(this.camera_mesh.position);
+                    console.log("Z", z);
+                    x = 0;
 
-                    if (MAX_CHUNK_OFFSET < region_distance)
-                        { 
-                            drawMesh(region.position, region.size); 
-                            continue;
+                    // Calculate the Z position and size of the chunk 
+                    if (z < config.MAX_CHUNK_OFFSET )
+                        {
+                            let z_pos = ((z + config.MAX_CHUNK_OFFSET) / 2) * config.CHUNK_SIZE;
+                            chunk_position.z = -config.MAP_CENTER + z_pos;
+                            chunk_size.h = config.MAX_OFFSET_SIZE;
+                            z += config.MAX_CHUNK_OFFSET;
+                            console.log(" if z < MAX_CHUNK_OFFSET");
+                            console.log("Chunk Position", chunk_position);
+                            console.log("Chunk Size", chunk_size);
+                            console.log("Z", z);
+                        }
+                    else if (z >= (config.CHUNK_COUNT - config.MAX_CHUNK_OFFSET))
+                        {
+                            chunk_position.z = z * config.CHUNK_SIZE / 2;
+                            chunk_size.h = config.MAX_OFFSET_SIZE;
+                            z += config.MAX_CHUNK_OFFSET;
+                            console.log(" else if z >= CHUNK_COUNT - MAX_CHUNK_OFFSET");
+                            console.log("Chunk Position", chunk_position);
+                            console.log("Chunk Size", chunk_size);
+                            console.log("Z", z);
+                        }
+                    else
+                        {
+                            let z_pos = (z + config.MAX_CHUNK_SIZE) / 2;
+                            chunk_position.z = z_pos - config.MAP_CENTER + config.MAX_CHUNK_OFFSET  * config.CHUNK_SIZE;
+                            chunk_size.h = config.MAX_CHUNK_SIZE;
+                            z += config.MAX_CHUNK_COUNT;
+                            console.log(" else");
+                            console.log("Chunk Position", chunk_position);
+                            console.log("Chunk Size", chunk_size);
+                            console.log("Z", z);
                         }
 
-                    for (let chunk_key in region.hexes)
+                    // Calculate the X position and size of the chunk
+                    while (x < config.CHUNK_COUNT)
                         {
-                            let chunk = region.hexes[chunk_key];
-                            let chunk_distance = chunk.distanceTo(this.camera_mesh.position);
-
-                            if (MIN_CHUNK_SIZE + CHUNK_SIZE * 3.5 < chunk_distance)
-                                { 
-                                    drawMesh(chunk.position, chunk.size); 
-                                    continue;
-                                }
-
-                            for (let tile_key in chunk.hexes)
+                            if (x < config.MAX_CHUNK_OFFSET)
                                 {
-                                    let tile = chunk.hexes[tile_key];
-                                    let tile_distance = tile.distanceTo(this.camera_mesh.position)
-                                    
-                                    if (CHUNK_SIZE * 2 < tile_distance && tile_distance < CHUNK_SIZE * 5)
-                                        { 
-                                            drawMesh(tile.position, tile.size); 
-                                            continue;
-                                        }
-                                        
-                                    for (let hex in tile.hexes)
-                                        {
-                                            let cell = tile.hexes[hex];
-                                            console.log(cell.distanceTo(this.camera_position.x, this.camera_position.z));
-
-                                            if (cell.distanceTo(this.camera_mesh.position) < CHUNK_SIZE * 2)
-                                                { drawMesh(cell.position, cell.size); }
-
-                                        }
+                                    let x_pos = ((x + config.MAX_CHUNK_OFFSET) / 2) * config.CHUNK_SIZE;
+                                    chunk_position.x = -config.MAP_CENTER + x_pos;
+                                    chunk_size.w = config.MAX_OFFSET_SIZE;
+                                    x += config.MAX_CHUNK_OFFSET;
+                                    console.log(" if x < MAX_CHUNK_OFFSET");
+                                    console.log("Chunk Position", chunk_position);
+                                    console.log("Chunk Size", chunk_size);
+                                    console.log("X", x);
                                 }
-                        }
-                }   
-        }
-
-    initWorldGridSystem = () => 
-        {
-            // console.log("Chunker: Initializing World Grid System");
-            let max_chunk_size = 27;
-            let mid_chunk_size = 9;
-            let min_chunk_size = 3;
-            let max_partial_chunk_size = (this.chunk_count % max_chunk_size) / 2;
-            let mid_partial_chunk_size = (max_partial_chunk_size % mid_chunk_size);
-            let min_partial_chunk_size = (mid_partial_chunk_size % min_chunk_size);
-
-            console.log("Chunker: Chunk Size", this.chunk_size);
-            console.log("Chunker: Map Size", this.map_size);
-            console.log("Chunker: Chunk Count", this.chunk_count);
-            console.log("Chunker: Max Chunk Size", max_chunk_size);
-            console.log("Chunker: Mid Chunk Size", mid_chunk_size);
-            console.log("Chunker: Min Chunk Size", min_chunk_size);
-            console.log("Chunker: Max Partial Chunk Size", max_partial_chunk_size);
-            console.log("Chunker: Mid Partial Chunk Size", mid_partial_chunk_size);
-            console.log("Chunker: Min Partial Chunk Size", min_partial_chunk_size);
-            console.log("~".repeat(50));
-
-            const calculateID = (n, partial, max) => 
-                { return n < partial ? 0 : Math.floor((n - partial) / max) + 1; }
-
-
-            let MapCoordinate = "";
-            let RegionCoordinate = "";
-            let ChunkCoordinate = "";
-
-            for (let i = 0; i < this.chunk_count; i++) 
-                {
-                    for (let j = 0; j < this.chunk_count; j++) 
-                        {
-                            let max_i_id = calculateID(i, max_partial_chunk_size, max_chunk_size);
-                            let max_j_id = calculateID(j, max_partial_chunk_size, max_chunk_size);
-                            
-                            let mid_i_id = max_i_id === 0 
-                                ? calculateID(i, mid_partial_chunk_size, mid_chunk_size) 
-                                : Math.floor((i - mid_partial_chunk_size) / mid_chunk_size) + 1;
-                            
-                            let mid_j_id = max_j_id === 0 
-                                ? calculateID(j, mid_partial_chunk_size, mid_chunk_size) 
-                                : Math.floor((j - mid_partial_chunk_size) / mid_chunk_size) + 1;
-                            
-                            let min_i_id = max_i_id === 0
-                                ? calculateID(i, min_partial_chunk_size, min_chunk_size)
-                                : Math.floor((i - min_partial_chunk_size) / min_chunk_size) + 1;
-                    
-                            let min_j_id = max_j_id === 0
-                                ? calculateID(j, min_partial_chunk_size, min_chunk_size)
-                                : Math.floor((j - min_partial_chunk_size) / min_chunk_size) + 1;
-
-
-                            let max_i = MAX_ID_TABLE[max_i_id];
-                            let max_j = MAX_ID_TABLE[max_j_id];
-                            let mid_i = MID_ID_TABLE[mid_i_id];
-                            let mid_j = MID_ID_TABLE[mid_j_id];
-                            let min_i = min_i_id;
-                            let min_j = min_j_id;
-
-                            if (MapCoordinate !== `${max_i}_${max_j}`)
-                                { 
-                                    MapCoordinate = `${max_i}_${max_j}`; 
-                                    // console.warn("Moving into", `${max_i}_${max_j}`);
-                                }
-
-                            if (RegionCoordinate !== `${mid_i}_${mid_j}`)
+                            else if (x >= config.CHUNK_COUNT - config.MAX_CHUNK_OFFSET)
                                 {
-                                    RegionCoordinate = `${mid_i}_${mid_j}`;
-                                    // console.warn(" - Region", `${mid_i}_${mid_j}`);
+                                    chunk_position.x = x * config.CHUNK_SIZE / 2;
+                                    chunk_size.w = config.MAX_OFFSET_SIZE;
+                                    x += config.MAX_CHUNK_OFFSET;
+                                    console.log(" else if x >= CHUNK_COUNT - MAX_CHUNK_OFFSET");
+                                    console.log("Chunk Position", chunk_position);
+                                    console.log("Chunk Size", chunk_size);
+                                    console.log("X", x);
                                 }
-
-                            if (ChunkCoordinate !== `${min_i}_${min_j}`)
+                            else
                                 {
-                                    ChunkCoordinate = `${min_i}_${min_j}`;
-                                    // console.warn(" -- Chunk", `${min_i}_${min_j}`);
+                                    let x_pos = (x + config.MAX_CHUNK_SIZE) / 2;
+                                    chunk_position.x = x_pos - config.MAP_CENTER + config.MAX_CHUNK_OFFSET * config.CHUNK_SIZE;
+                                    chunk_size.w = config.MAX_CHUNK_SIZE;
+                                    x += config.MAX_CHUNK_COUNT;
+                                    console.log(" else");
+                                    console.log("Chunk Position", chunk_position);
+                                    console.log("Chunk Size", chunk_size);
+                                    console.log("X", x);
                                 }
 
-                            const hex = { region: `${max_i}_${max_j}`, 
-                                          chunk: `${mid_i}_${mid_j}`, 
-                                          tile: `${min_i}_${min_j}`,
-                                          hex: `${i}_${j}`,
-                                          x: i, z: j };
-                            this.hex_tree.addHex(hex);
+
+                            drawMesh(chunk_position, chunk_size);
                         }
                 }
         }
@@ -192,13 +146,13 @@ export default class Chunker {
         {
             this.camera_position = { x: 0, z: 0 };
             this.camera_mesh = new THREE.Mesh(
-                new THREE.SphereGeometry(this.square_size * this.square_size + this.square_size, 8, 9),
+                new THREE.SphereGeometry(config.SQUARE_SIZE ** 2.425, 8, 9),
                 new THREE.MeshBasicMaterial({ 
                     color: 0xeeff00, 
                     wireframe: true
                 })
             );
-            state.scene.add(this.camera_mesh);
+            // state.scene.add(this.camera_mesh);
             this.cameraTracker(this.camera_position);
         }
 
@@ -213,9 +167,21 @@ export default class Chunker {
         {
             // Remove all chunks from the scene with the name "hex
             let hexes = state.scene.children.filter(child => child.name === "hex");
-            hexes.forEach(hex => state.scene.remove(hex));
+            hexes.forEach(hex => 
+                {
+                    console.log("Removing Hex", hex);
+                    state.scene.remove(hex)
+                }
+            );
             this.drawHexGrid();
             console.log("Updating Chunks");
+        }
+
+    getCameraPosition = (x, z) => 
+        {
+            let x_id = Math.floor(x / config.CHUNK_SIZE);
+            let z_id = Math.floor(z / config.CHUNK_SIZE);
+            this.camera_position = { x: x_id, z: z_id };
         }
 
     cameraTracker = (position) => 
@@ -225,13 +191,14 @@ export default class Chunker {
 
             this.camera_mesh.position.set(position.x, 1, position.z);
 
-            let camera_position = this.camera_mesh.position.clone();
-            if (camera_position.x === this.prev_camera_position.x && camera_position.z === this.prev_camera_position.z)
+            this.getCameraPosition(position.x, position.z);
+            if (this.camera_position.x === this.prev_camera_position.x && 
+                this.camera_position.z === this.prev_camera_position.z)
                 { return; }
-            console.log("Camera Position", camera_position);
+            console.log("Camera Position:", this.camera_position);
 
             this.updateChunks();
-            this.prev_camera_position = camera_position;
+            this.prev_camera_position = this.camera_position;
         }
 }
 
