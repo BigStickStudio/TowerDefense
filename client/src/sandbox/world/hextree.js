@@ -44,7 +44,7 @@ export default class HexNode {
                 let z_position = calculatePosition(z, z_chunk_size);
                 let height = z_chunk_size;
                 let x = start_x;
-                let z_offset_scalar = z_count / 4;
+                let z_offset_scalar = z_count;
 
                 // Calculate the X position and size of the chunk
                 while (x < end_x)
@@ -54,7 +54,7 @@ export default class HexNode {
 
                         let x_position = calculatePosition(x, x_chunk_size);
                         let width = x_chunk_size;
-                        let x_offset_scalar = x_count / 4;
+                        let x_offset_scalar = x_count;
 
                         let chunk = new Chunk(layer, 
                             {x: x_position, z: z_position}, 
