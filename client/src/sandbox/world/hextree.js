@@ -23,82 +23,53 @@ export default class HexNode {
     }
 
     initGrid = () => {
-        const offset = OFFSETS[this.layer];
-        const offset_size = OFFSET_SIZES[this.layer];
-        const chunk_size = SIZES[this.layer];
-        const count = COUNTS[this.layer];
+        const { layer, start, end, chunks } = this;
+        const offset = OFFSETS[layer];
+        const offset_size = OFFSET_SIZES[layer];
+        const chunk_size = SIZES[layer];
+        const count = COUNTS[layer];
 
-        console.log("Creating Hex Grid", this.layer);
-        console.log("Layer", this.layer);
-        console.log("Offset", offset);
-        console.log("Offset Size", offset_size);
-        console.log("Size", chunk_size);
-        console.log("Count", count);
-        console.log("Start", this.start);
-        console.log("End", this.end);
-        
         const calculatePosition = (index, size) => 
             { return (index * config.CHUNK_SIZE) + (size / 2) - config.MAP_CENTER; }
 
-        let z = this.start?.z ? this.start.z : this.start;
-        let end_z = this.end?.z ? this.end.z : this.end;
-        let end_x = this.end?.x ? this.end.x : this.end;
+        let [z, end_z] = [start?.z ?? start, end?.z ?? end];
+        let [start_x, end_x] = [start?.x ?? start, end?.x ?? end];
 
+        // Calculate the Z position and size of the chunk
         while (z < end_z)
             {
-                let x_position = 0;
-                let z_position = 0;
-                let width = 0;
-                let height = 0;
-                let x = this.start?.x ? this.start.x : this.start;
-                console.warn("Z", z);
-                let start_z = z;
+                let [z_chunk_size, z_count] = (z < offset || z >= config.CHUNK_COUNT - offset) ? 
+                            [offset_size, offset] : [chunk_size, count];
 
-                // Calculate the Z position and size of the chunk for the max chunk size
-                if (z < offset || z >= (config.CHUNK_COUNT - offset))
-                    {
-                        z_position = calculatePosition(z, offset_size);
-                        height = offset_size;
-                        z += offset;
-                    }
-                else
-                    {
-                        z_position = calculatePosition(z, chunk_size);
-                        height = chunk_size;
-                        z += count;
-                    }
+                let z_position = calculatePosition(z, z_chunk_size);
+                let height = z_chunk_size;
+                let x = start_x;
+                let z_offset_scalar = z_count / 4;
 
                 // Calculate the X position and size of the chunk
                 while (x < end_x)
                     {
-                        let start_x = x;
+                        let [x_chunk_size, x_count] = (x < offset || x >= config.CHUNK_COUNT - offset) ?
+                                [offset_size, offset] : [chunk_size, count];
 
-                        if (x < offset || x >= config.CHUNK_COUNT - offset)
-                            {
-                                x_position = calculatePosition(x, offset_size);
-                                width = offset_size;
-                                x += offset;
-                            }
-                        else
-                            {
-                                x_position = calculatePosition(x, chunk_size);
-                                width = chunk_size;
-                                x += count;
-                            }
+                        let x_position = calculatePosition(x, x_chunk_size);
+                        let width = x_chunk_size;
+                        let x_offset_scalar = x_count / 4;
 
-                        let chunk = new Chunk(this.layer, 
+                        let chunk = new Chunk(layer, 
                             {x: x_position, z: z_position}, 
                             {w: width, h: height},
-                            {x: start_x, z: start_z},   // Start Position
-                            {x: x, z: z},                // End Position
-                            (COUNTS[this.layer + 1])            // Offset
+                            {x: x, z: z},                         // Start Position
+                            {x: x + x_count, z: z + z_count},     // End Position
+                            {x: x_offset_scalar, z: z_offset_scalar}    // Offset
                         );
-                        console.warn("New Chunk", chunk);
-                        this.chunks.push(chunk);
-                    }
-            }
 
-            console.log("Chunks", this.chunks);
+                        chunks.push(chunk);
+                        x += x_count;
+                    }
+
+                z += z_count;
+            }
     }
 
     calculateSubdivisions = (position) => {
@@ -108,15 +79,15 @@ export default class HexNode {
         let new_chunks = [];
 
         const filter = (chunk) => { 
-            if (chunk.contains(position)) {
-                console.log("Chunk", chunk, "contains Position", position);
-                    {
-                        let new_nodes = new HexNode(chunk.layer + 1, chunk.start, chunk.end);
-                        new_nodes.calculateSubdivisions(position);
-                        new_chunks.push(...new_nodes.chunks);
-                    }
-                return false;
-            }
+            if (chunk.contains(position)) 
+                {
+                    let new_nodes = new HexNode(chunk.layer + 1, chunk.start, chunk.end);
+                    new_nodes.calculateSubdivisions(position);
+                    new_chunks.push(...new_nodes.chunks);
+
+                    return false;
+                }
+
             return true;
         }
 

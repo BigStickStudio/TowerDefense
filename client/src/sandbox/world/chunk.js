@@ -1,7 +1,6 @@
 
 export default class Chunk {
     constructor(layer, position, size, start, end, offset) {
-        console.log("Creating Chunk", layer, position, size)
         this.layer = layer;
         this.position = position;
         this.size = size;
@@ -13,8 +12,8 @@ export default class Chunk {
 
 Chunk.prototype.contains = function(position)
     {
-        return this.start.x < position.x + this.offset && 
-               position.x - this.offset < this.end.x && 
-               this.start.z < position.z + this.offset  && 
-               position.z - this.offset < this.end.z;
+        return this.start.x - this.offset.x * 6 < position.x &&
+                position.x < this.end.x + this.offset.x * 4 && 
+                this.start.z - this.offset.z * 6 < position.z &&
+                position.z < this.end.z + this.offset.z * 4 ;
     }

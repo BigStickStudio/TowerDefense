@@ -80,12 +80,12 @@ export default class Chunker {
             let hexes = state.scene.children.filter(child => child.name === "hex");
             hexes.forEach(hex => 
                 {
-                    console.log("Removing Hex", hex);
+                    // console.log("Removing Hex", hex);
                     state.scene.remove(hex)
                 }
             );
             this.drawHexGrid();
-            console.log("Updating Chunks");
+            // console.log("Updating Chunks");
         }
 
     getCameraPosition = (x, z) => 
