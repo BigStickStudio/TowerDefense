@@ -76,7 +76,8 @@ export default class Chunker {
     // at this point the previous chunks, and current chunks are not the same
     updateChunks = () =>
         {
-            // Remove all chunks from the scene with the name "hex
+            // TODO: Only Remove and Remake chunks that are different from before
+            // Remove all chunks from the scene with the name "hex" <- This is a hack
             let hexes = state.scene.children.filter(child => child.name === "hex");
             hexes.forEach(hex => 
                 {

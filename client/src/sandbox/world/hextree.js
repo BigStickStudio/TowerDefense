@@ -35,7 +35,7 @@ export default class HexNode {
         let [z, end_z] = [start?.z ?? start, end?.z ?? end];
         let [start_x, end_x] = [start?.x ?? start, end?.x ?? end];
 
-        // Calculate the Z position and size of the chunk
+        // Calculate the Z position and height of the chunk
         while (z < end_z)
             {
                 let [z_chunk_size, z_count] = (z < offset || z >= config.CHUNK_COUNT - offset) ? 
@@ -44,9 +44,8 @@ export default class HexNode {
                 let z_position = calculatePosition(z, z_chunk_size);
                 let height = z_chunk_size;
                 let x = start_x;
-                let z_offset_scalar = z_count;
 
-                // Calculate the X position and size of the chunk
+                // Calculate the X position and width of the chunk
                 while (x < end_x)
                     {
                         let [x_chunk_size, x_count] = (x < offset || x >= config.CHUNK_COUNT - offset) ?
@@ -54,14 +53,13 @@ export default class HexNode {
 
                         let x_position = calculatePosition(x, x_chunk_size);
                         let width = x_chunk_size;
-                        let x_offset_scalar = x_count;
 
                         let chunk = new Chunk(layer, 
                             {x: x_position, z: z_position}, 
                             {w: width, h: height},
                             {x: x, z: z},                         // Start Position
                             {x: x + x_count, z: z + z_count},     // End Position
-                            {x: x_offset_scalar, z: z_offset_scalar}    // Offset
+                            {x: x_count, z: z_count}              // Offset
                         );
 
                         chunks.push(chunk);
@@ -84,7 +82,7 @@ export default class HexNode {
                     let new_nodes = new HexNode(chunk.layer + 1, chunk.start, chunk.end);
                     new_nodes.calculateSubdivisions(position);
                     new_chunks.push(...new_nodes.chunks);
-
+                    // TODO: Flag chunk in scene to be removed
                     return false;
                 }
 
