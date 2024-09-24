@@ -16,7 +16,7 @@ export default class Chunker {
     prev_camera_position = { x: 0, y: 0 };
     camera_position = { x: 0, y: 0 };
     camera_mesh;
-    hex_tree = new HexNode('root');
+    hex_tree = new HexNode(0, 0, config.CHUNK_COUNT);
 
     constructor() {
         this.init();
@@ -30,6 +30,7 @@ export default class Chunker {
 
     drawHexGrid = () =>
         {
+            this.hex_tree = new HexNode(0, 0, config.CHUNK_COUNT);
             const drawMesh = (position, size) =>
                 {
                     let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
@@ -41,120 +42,15 @@ export default class Chunker {
                     state.scene.add(mesh);
                 }
 
-            let x = 0;
-            let z = 0;
-            let chunk_position = { x: 0, z: 0 };
-            let chunk_size = { h: 0, w: 0 };
-            let cPos_z = this.camera_position.z;
-            let cPos_x = this.camera_position.x;
+            this.hex_tree.calculateSubdivisions(this.camera_position);
 
-
-            // console.log("Chunk Count", config.CHUNK_COUNT);
-            // console.log("Chunk Size", config.CHUNK_SIZE);
-            // console.log("Max Chunk Offset", config.MAX_CHUNK_OFFSET);
-            // console.log("Max Offset Size", config.MAX_OFFSET_SIZE);
-            // console.log("Mid Chunk Offset", config.MID_CHUNK_OFFSET);
-            // console.log("Mid Offset Size", config.MID_OFFSET_SIZE);
-            // console.log("Min Chunk Offset", config.MIN_CHUNK_OFFSET);
-            // console.log("Min Offset Size", config.MIN_OFFSET_SIZE);
-            // console.log("Max Chunk Count", config.MAX_CHUNK_COUNT);
-            // console.log("Max Chunk Size", config.MAX_CHUNK_SIZE);
-            // console.log("Mid Chunk Count", config.MID_CHUNK_COUNT);
-            // console.log("Mid Chunk Size", config.MID_CHUNK_SIZE);
-            // console.log("Min Chunk Count", config.MIN_CHUNK_COUNT);
-            // console.log("Min Chunk Size", config.MIN_CHUNK_SIZE);
-            // console.log("Camera Position", cPos_z, cPos_x);
-
-            const distanceTo = (p1, p2) => 
-                { return Math.abs(p1 - p2); }
-
-            while (z < config.CHUNK_COUNT)
+            this.hex_tree.chunks.forEach(chunk =>
                 {
-                    // console.log("Z", z);
-                    x = 0;
-                    console.log("Z", z);
-                    let dx_z = distanceTo(z, cPos_z);
-                    console.log("Distance to Z", dx_z);
-                    
-                    // Calculate the Z position and size of the chunk for the max chunk size
-                    if (z < config.MAX_CHUNK_OFFSET )
-                        {
-                            let z_pos = ((z + config.MAX_CHUNK_OFFSET) / 2) * config.CHUNK_SIZE;
-                            chunk_position.z = -config.MAP_CENTER + z_pos;
-                            chunk_size.h = config.MAX_OFFSET_SIZE;
-                            z += config.MAX_CHUNK_OFFSET;
-                        }
-                    else if (z >= (config.CHUNK_COUNT - config.MAX_CHUNK_OFFSET))
-                        {
-                            chunk_position.z = z * config.CHUNK_SIZE / 2;
-                            chunk_size.h = config.MAX_OFFSET_SIZE;
-                            z += config.MAX_CHUNK_OFFSET;
-                        }
-                    else
-                        {
-                            let z_pos = (z + config.MAX_CHUNK_SIZE) / 2;
-                            chunk_position.z = z_pos - config.MAP_CENTER + config.MAX_CHUNK_OFFSET  * config.CHUNK_SIZE;
-                            chunk_size.h = config.MAX_CHUNK_SIZE;
-                            z += config.MAX_CHUNK_COUNT;
-                        }
-
-                    // Calculate the X position and size of the chunk
-                    while (x < config.CHUNK_COUNT)
-                        {
-                            console.log("X", x);
-                            let dx_x = distanceTo(x, cPos_x);
-                            console.log("Distance to X", dx_x);
-
-                            if (dx_z < (config.MID_CHUNK_COUNT / 2) && dx_x < (config.MID_CHUNK_COUNT / 2))
-                                {
-                                    console.log("Mid Chunk Size");
-                                    let z_pos = (z * config.CHUNK_SIZE) + config.MIN_CHUNK_SIZE / 2;
-                                    let x_pos = (x * config.CHUNK_SIZE) + config.MIN_CHUNK_SIZE / 2;
-                                    chunk_position = { x: x_pos - config.MAP_CENTER, z: z_pos - config.MAP_CENTER }
-                                    chunk_size = { w: config.MIN_CHUNK_SIZE, h: config.MIN_CHUNK_SIZE };
-                                    x += config.MIN_CHUNK_COUNT;
-                                }
-                            else if (dx_z < (config.MAX_CHUNK_COUNT / 2) && dx_x < (config.MAX_CHUNK_COUNT / 2)) 
-                                {
-                                    console.log("Max Chunk Size");
-                                    let z_pos = (z * config.CHUNK_SIZE) + config.MID_CHUNK_SIZE / 2;
-                                    let x_pos = (x * config.CHUNK_SIZE) + config.MID_CHUNK_SIZE / 2;
-                                    chunk_position = { x: x_pos - config.MAP_CENTER, z: z_pos - config.MAP_CENTER };
-                                    chunk_size = { h: config.MID_CHUNK_SIZE, w: config.MID_CHUNK_SIZE };
-                                    x += config.MID_CHUNK_COUNT;
-                                    console.log("Chunk Position", chunk_position);
-                                    console.log("Chunk Size", chunk_size);
-                                }
-                            else if (x < config.MAX_CHUNK_OFFSET)
-                                {
-                                    let x_pos = ((x + config.MAX_CHUNK_OFFSET) / 2) * config.CHUNK_SIZE;
-                                    chunk_position.x = -config.MAP_CENTER + x_pos;
-                                    chunk_size.w = config.MAX_OFFSET_SIZE;
-                                    x += config.MAX_CHUNK_OFFSET;
-                                }
-                            else if (x >= config.CHUNK_COUNT - config.MAX_CHUNK_OFFSET)
-                                {
-                                    chunk_position.x = x * config.CHUNK_SIZE / 2;
-                                    chunk_size.w = config.MAX_OFFSET_SIZE;
-                                    x += config.MAX_CHUNK_OFFSET;
-                                }
-                            else
-                                {
-                                    let x_pos = (x + config.MAX_CHUNK_SIZE) / 2;
-                                    chunk_position.x = x_pos - config.MAP_CENTER + config.MAX_CHUNK_OFFSET * config.CHUNK_SIZE;
-                                    chunk_size.w = config.MAX_CHUNK_SIZE;
-                                    x += config.MAX_CHUNK_COUNT;
-                                }
-
-
-                            drawMesh(chunk_position, chunk_size);
-                        }
-
-                    if (dx_z < (config.MID_CHUNK_COUNT / 2))
-                        { z += config.MIN_CHUNK_COUNT; }
-                    if (dx_z < (config.MAX_CHUNK_COUNT / 2))
-                        { z += config.MID_CHUNK_COUNT; }
+                    let position = chunk.position;
+                    let size = chunk.size;
+                    drawMesh(position, size);
                 }
+            );
         }
 
     initCameraTracker = () => 

@@ -1,41 +1,134 @@
-import { CHUNK_SIZE, MAP_SIZE, SQUARE_SIZE } from './chunk_config.js';
+import Chunk from './chunk.js';
+import * as config from './chunk_config.js';
 
-const HALF_CHUNK = CHUNK_SIZE / 2;
-const HALF_SQUARE = SQUARE_SIZE / 2;
-const HALF_MAP = MAP_SIZE / 2;  
+const HALF_CHUNK = config.CHUNK_SIZE / 2;
+const HALF_SQUARE = config.SQUARE_SIZE / 2;
+const HALF_MAP = config.MAP_SIZE / 2;  
+
+const OFFSETS = [config.MAX_CHUNK_OFFSET, config.MID_CHUNK_OFFSET, config.MIN_CHUNK_OFFSET, 0];
+const OFFSET_SIZES = [config.MAX_OFFSET_SIZE, config.MID_OFFSET_SIZE, config.MIN_OFFSET_SIZE, 0];
+const SIZES = [config.MAX_CHUNK_SIZE, config.MID_CHUNK_SIZE, config.MIN_CHUNK_SIZE, config.CHUNK_SIZE];
+const COUNTS = [config.MAX_CHUNK_COUNT, config.MID_CHUNK_COUNT, config.MIN_CHUNK_COUNT, 1];
+
+
 
 export default class HexNode {
-    constructor(level) {
-        this.hexes = {};
-        this.index = { z: 0, x: 0 }; // Index of the region
-        this.position = { x: 0, z: 0 }; // Center of the region
-        this.size = { h: 0, w: 0 }; // Height and Width of the region
-        this.level = level;
-        this.min = { x: 10000, z: 10000 }; // Top Left
-        this.max = { x: -10000, z: -10000 }; // Bottom Right
-        this.count = 0;
+    chunks = [];               // Array of chunks in the region
+
+    constructor(subdivision, start, end) {
+        this.layer = subdivision;
+        this.start = start;
+        this.end = end;
+        this.initGrid();
+    }
+
+    initGrid = () => {
+        const offset = OFFSETS[this.layer];
+        const offset_size = OFFSET_SIZES[this.layer];
+        const chunk_size = SIZES[this.layer];
+        const count = COUNTS[this.layer];
+
+        console.log("Creating Hex Grid", this.layer);
+        console.log("Layer", this.layer);
+        console.log("Offset", offset);
+        console.log("Offset Size", offset_size);
+        console.log("Size", chunk_size);
+        console.log("Count", count);
+        console.log("Start", this.start);
+        console.log("End", this.end);
+        
+        const calculatePosition = (index, size) => 
+            { return (index * config.CHUNK_SIZE) + (size / 2) - config.MAP_CENTER; }
+
+        let z = this.start?.z ? this.start.z : this.start;
+        let end_z = this.end?.z ? this.end.z : this.end;
+        let end_x = this.end?.x ? this.end.x : this.end;
+
+        while (z < end_z)
+            {
+                let x_position = 0;
+                let z_position = 0;
+                let width = 0;
+                let height = 0;
+                let x = this.start?.x ? this.start.x : this.start;
+                console.warn("Z", z);
+                let start_z = z;
+
+                // Calculate the Z position and size of the chunk for the max chunk size
+                if (z < offset || z >= (config.CHUNK_COUNT - offset))
+                    {
+                        z_position = calculatePosition(z, offset_size);
+                        height = offset_size;
+                        z += offset;
+                    }
+                else
+                    {
+                        z_position = calculatePosition(z, chunk_size);
+                        height = chunk_size;
+                        z += count;
+                    }
+
+                // Calculate the X position and size of the chunk
+                while (x < end_x)
+                    {
+                        let start_x = x;
+
+                        if (x < offset || x >= config.CHUNK_COUNT - offset)
+                            {
+                                x_position = calculatePosition(x, offset_size);
+                                width = offset_size;
+                                x += offset;
+                            }
+                        else
+                            {
+                                x_position = calculatePosition(x, chunk_size);
+                                width = chunk_size;
+                                x += count;
+                            }
+
+                        let chunk = new Chunk(this.layer, 
+                            {x: x_position, z: z_position}, 
+                            {w: width, h: height},
+                            {x: start_x, z: start_z},   // Start Position
+                            {x: x, z: z},                // End Position
+                            (COUNTS[this.layer + 1])            // Offset
+                        );
+                        console.warn("New Chunk", chunk);
+                        this.chunks.push(chunk);
+                    }
+            }
+
+            console.log("Chunks", this.chunks);
+    }
+
+    calculateSubdivisions = (position) => {
+        if (this.layer >= 3)
+            { return; }
+
+        let new_chunks = [];
+
+        const filter = (chunk) => { 
+            if (chunk.contains(position)) {
+                console.log("Chunk", chunk, "contains Position", position);
+                    {
+                        let new_nodes = new HexNode(chunk.layer + 1, chunk.start, chunk.end);
+                        new_nodes.calculateSubdivisions(position);
+                        new_chunks.push(...new_nodes.chunks);
+                    }
+                return false;
+            }
+            return true;
+        }
+
+        this.chunks = this.chunks.filter(filter);
+        this.chunks.push(...new_chunks);
     }
 }
 
-HexNode.prototype.distanceTo = function(position)
-    {
-        let dx = Math.abs(this.position.x - position.x);
-        let dz = Math.abs(this.position.z - position.z);
-        return Math.sqrt(dx * dx + dz * dz);
-    }
 
 HexNode.prototype.getPosition = function(n)  
     { return (n * CHUNK_SIZE) - HALF_MAP + HALF_CHUNK; }
 
-HexNode.prototype.setMinMax = function(x, z)
-    {
-        x = this.getPosition(x);
-        z = this.getPosition(z);
-        if (x < this.min.x) { this.min.x = x - HALF_CHUNK; }
-        if (z < this.min.z) { this.min.z = z - HALF_CHUNK; }
-        if (x > this.max.x) { this.max.x = x + HALF_CHUNK; }
-        if (z > this.max.z) { this.max.z = z + HALF_CHUNK; }
-    }
 
 HexNode.prototype.calculatePosition = function()
     {
@@ -46,43 +139,7 @@ HexNode.prototype.calculatePosition = function()
 
 HexNode.prototype.calculateSize = function()
     {
-        let h = this.max.z - this.min.z;
-        let w = this.max.x - this.min.x;
         this.size = { h: h, w: w };
     }
 
-HexNode.prototype.update = function(x, z)
-    {
-        this.count += 1;
-        this.index = { x: x, z: z };
-        this.setMinMax(x, z);
-        this.calculatePosition();
-        this.calculateSize();
-    }
 
-HexNode.prototype.addHex = function(hex)
-    {
-        if (this.hexes[hex.region] === undefined)
-            { this.hexes[hex.region] = new HexNode('region'); }
-        
-        let region = this.hexes[hex.region];
-
-        if (region.hexes[hex.chunk] === undefined)
-            { region.hexes[hex.chunk] = new HexNode('chunk'); }
-        
-        let chunk = region.hexes[hex.chunk];
-
-        if (chunk.hexes[hex.tile] === undefined)
-            { chunk.hexes[hex.tile] = new HexNode('tile'); }
-        
-        let tile = chunk.hexes[hex.tile];
-
-        if (tile.hexes[hex.hex] === undefined)
-            { tile.hexes[hex.hex] = new HexNode('hex'); }
-
-        tile.hexes[hex.hex].update(hex.x, hex.z);
-        tile.update(hex.x, hex.z); // We can move this outside of the loop to optimize
-        chunk.update(hex.x, hex.z);
-        region.update(hex.x, hex.z);
-        this.update(hex.x, hex.z);
-    }
