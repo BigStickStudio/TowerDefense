@@ -13,8 +13,8 @@ export default class Chunk {
 
 Chunk.prototype.contains = function(position)
     {
-        return this.start.x - this.offset < position.x && 
-               position.x < this.end.x + this.offset && 
-               this.start.z - this.offset < position.z && 
-               position.z < this.end.z + this.offset;
+        return this.start.x < position.x + this.offset && 
+               position.x - this.offset < this.end.x && 
+               this.start.z < position.z + this.offset  && 
+               position.z - this.offset < this.end.z;
     }
