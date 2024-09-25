@@ -24,8 +24,8 @@ Chunk.prototype.zDistance = function(position)
 
 Chunk.prototype.contains = function(position)
     {
-        return this.start.x - this.offset.x * 1.25 < position.x &&
-                position.x < this.end.x + this.offset.x * .5&& 
-                this.start.z - this.offset.z * 1.25 < position.z &&
-                position.z < this.end.z + this.offset.z * .5 ;
+        return this.start.x - this.offset.x * 2 < position.x &&
+                position.x < this.end.x + this.offset.x * 1.5 && 
+                this.start.z - this.offset.z * 2 < position.z &&
+                position.z < this.end.z + this.offset.z * 1.5 ;
     }

@@ -57,7 +57,7 @@ export default class Chunker {
         {
             this.camera_position = { x: 0, z: 0 };
             this.camera_mesh = new THREE.Mesh(
-                new THREE.SphereGeometry(config.SQUARE_SIZE ** 2.425, 8, 9),
+                new THREE.SphereGeometry(config.SQUARE_SIZE ** 3.5, 8, 9),
                 new THREE.MeshBasicMaterial({ 
                     color: 0xeeff00, 
                     wireframe: true
