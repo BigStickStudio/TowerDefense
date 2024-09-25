@@ -79,9 +79,71 @@ export default class HexNode {
         const filter = (chunk) => { 
             if (chunk.contains(position)) 
                 {
-                    let new_nodes = new HexNode(chunk.layer + 1, chunk.start, chunk.end);
-                    new_nodes.calculateSubdivisions(position);
-                    new_chunks.push(...new_nodes.chunks);
+                    let chunks = [];
+
+                    const {x: start_x, z: start_z} = chunk.start; 
+                    const {x: end_x, z: end_z} = chunk.end;
+                    const {x: x_step, z: z_step} = chunk.offset;
+                    let x_distance = chunk.xDistance(position);
+                    let z_distance = chunk.zDistance(position);
+
+                    let z = start_z;
+                    let x = start_x;
+
+                    if (z < z_distance)
+                        {
+                            while (z + z_step < position.z && z < end_z)
+                                { z += z_step; }
+
+                            const partial_z_nodes = new HexNode(chunk.layer + 1, {x: start_x, z: start_z}, {x: end_x, z: z});
+                            console.log("Partial Z < z_distance: ", partial_z_nodes);
+                            chunks = [...partial_z_nodes.chunks];
+                        }
+                    else 
+                        {
+                            while (z - z_step > position.z && z > start_z)
+                                { z -= z_step; }
+
+                            const partial_z_nodes = new HexNode(chunk.layer + 1, {x: start_x, z: z}, {x: end_x, z: end_z});
+                            console.log("Partial Z > z_distance: ", partial_z_nodes);
+                            chunks = [...partial_z_nodes.chunks];
+                        }
+
+
+                    if (z < end_z) 
+                        {
+                            if (x < x_distance) 
+                                {
+                                    while (x + x_step < position.x && x < end_x)
+                                        { x += x_step; }
+
+                                    const partial_x_nodes = new HexNode(chunk.layer + 1, {x: start_x, z: z}, {x: x, z: end_z});
+                                    console.log("Partial X < x_distance", partial_x_nodes);
+                                    chunks = [...chunks, ...partial_x_nodes.chunks];
+                                }
+                            else 
+                                {
+                                    while (x - x_step > position.x && x > start_x)
+                                        { x -= x_step; }
+
+                                    const partial_x_nodes = new HexNode(chunk.layer + 1, {x: x, z: z}, {x: end_x, z: end_z});
+                                    console.log("Partial X > x_distance", partial_x_nodes);
+                                    chunks = [...chunks, ...partial_x_nodes.chunks];
+                                }
+                        }
+
+                    const [rem_x_start, rem_x_end] = (x < end_x) ? [x, end_x] : [start_x, x];
+                    const [rem_z_start, rem_z_end] = (z < end_z) ? [z, end_z] : [start_z, z];
+
+                    if (x != start_x && x != end_x)
+                        {
+                            const remaining_nodes = new HexNode(chunk.layer + 1, {x: rem_x_start, z: rem_z_start}, {x: rem_x_end, z: rem_z_end});
+                            console.log("Partial XZ", remaining_nodes);
+                            chunks = [...chunks, ...remaining_nodes.chunks];
+                        }
+
+                    // new_nodes.calculateSubdivisions(position);
+                    new_chunks.push(...chunks);
                     // TODO: Flag chunk in scene to be removed
                     return false;
                 }
