@@ -16,80 +16,110 @@ const calculatePosition = (index, size) =>
 export default class HexNode {
     chunks = [];               // Array of chunks in the region
 
-    constructor(subdivision, start, end) {
+    constructor(subdivision, start, end, init) {
         this.layer = subdivision;
         this.start = start;
         this.end = end;
-        this.initGrid();
+
+        if (init) 
+            { this.initGrid(); }
     }
 }
 
 
 HexNode.prototype.initGrid = function()
     {
-        const { layer, start, end, chunks } = this;
+        const { layer, start, end } = this;
         let offset_count = OFFSETS[layer];
         let offset_size = OFFSET_SIZES[layer];
         let chunk_size = SIZES[layer];
         let chunk_count = COUNTS[layer];
 
         this.subdivideGrid(start, end, offset_count, offset_size, chunk_size, chunk_count, layer);
-
-        let chunk = this.chunks[0];
-        let new_chunk_layer = chunk.layer + 1;
-        chunk_count = COUNTS[new_chunk_layer];
-        chunk_size = SIZES[new_chunk_layer];
-        offset_size = chunk_size / 3;
-        offset_count = chunk_count / 3;
-        this.subdivideGrid(chunk.start, chunk.end, offset_count, offset_size, chunk.size, chunk_count, new_chunk_layer);
     }
 
-
+// This handles a single layer of the grids subdivision
 HexNode.prototype.subdivideGrid = function(start, end, offset_count, offset_size, chunk_size, chunk_count, layer) 
 {
         let [start_x, start_z] = start.x ? [start.x, start.z] : [start, start];
-        let [end_x, end_z] = end.x ? [end.x, end.z] : [end - offset_count, end - offset_count];
+        let [end_x, end_z] = end.x ? [end.x, end.z] : [end, end];
 
-        console.log("Start", start_x, start_z);
-        console.log("End", end_x, end_z);
-        console.log("Offset", offset_count, offset_size);
-        console.log("Chunk", chunk_count, chunk_size);
+        // console.log("Start", start_x, start_z);
+        // console.log("End", end_x, end_z);
+        // console.log("Offset", offset_count, offset_size);
+        // console.log("Chunk", chunk_count, chunk_size);
 
+        while (start_z < end_z)
+            {
+                let [z_chunk_size, z_count] = (start_z < offset_count || start_z >= config.CHUNK_COUNT - offset_count) ? 
+                            [offset_size, offset_count] : [chunk_size, chunk_count];
 
-        while (start_x < end_x) {
-            let x = calculatePosition(start_x + offset_count, chunk_size);
-            let z = calculatePosition(start_z + offset_count, chunk_size);
-            let position = { x: x, z: z };
-            let size = { h: chunk_size - offset_size, w: chunk_size - offset_size };
-            let chunk = new Chunk(layer, position, size, { x: start_x, z: start_z}, { x: end_x, end_z}, offset_count);
-            console.log("Chunk", chunk);
-            this.chunks.push(chunk);
-            start_x += chunk_count;
-        }
+                let z_position = calculatePosition(start_z, z_chunk_size);
+                let height = z_chunk_size;
+                let x = start_x;
+
+                // Calculate the X position and width of the chunk
+                while (x < end_x)
+                    {
+                        let [x_chunk_size, x_count] = (x < offset_count || x >= config.CHUNK_COUNT - offset_count) ?
+                                [offset_size, offset_count] : [chunk_size, chunk_count];
+
+                        let x_position = calculatePosition(x, x_chunk_size);
+                        let width = x_chunk_size;
+
+                        let chunk = new Chunk(layer, 
+                            {x: x_position, z: z_position}, 
+                            {w: width, h: height},
+                            {x: x, z: start_z},                         // Start Position
+                            {x: x + x_count, z: start_z + z_count},     // End Position
+                            {x: x_count, z: z_count}                    // Offset
+                        );
+
+                        this.chunks.push(chunk);
+                        x += x_count;
+                    }
+
+                start_z += z_count;
+            }
     }
 
 HexNode.prototype.calculateSubdivisions = function(position) 
     {
-        if (this.layer >= 4)
+        if (this.layer >= 3)
             { return; }
 
-        // let new_chunks = [];
+        let new_chunks = [];
 
-        // // const filter = (chunk) => { 
-        // //     if (chunk.contains(position)) 
-        // //         {
-        // //             let new_nodes = new HexNode(this.layer + 1, chunk.start, chunk.end);
-        // //             new_nodes.calculateSubdivisions(position);
-        // //             new_chunks.push(...new_nodes.chunks);
-        // //             // TODO: Flag chunk in scene to be removed
-        // //             return false;
-        // //         }
+        const filter = (chunk) => { 
+            if (chunk.contains(position)) 
+                {
+                    // console.log("Chunk Contains", chunk);
+                    // console.log("Position", position);
 
-        // //     return true;
-        // // }
+                    let start = chunk.start;
+                    let end = chunk.end;
+                    let offset = chunk.offset;
+                    
+                    let offset_count = OFFSETS[this.layer + 1];
+                    let offset_size = OFFSET_SIZES[this.layer + 1];
+                    let chunk_size = SIZES[this.layer + 1];
+                    let chunk_count = COUNTS[this.layer + 1];
 
-        // this.chunks = this.chunks.filter(filter);
-        // this.chunks.push(...new_chunks);
+                    let new_chunk = new HexNode(this.layer + 1, start, end, false);
+                    new_chunk.subdivideGrid(start, end, offset_count, offset_size, chunk_size, chunk_count, this.layer + 1);
+                    new_chunk.calculateSubdivisions(position);
+                    new_chunks.push(...new_chunk.chunks);
+
+                    chunk.delete();
+                    
+                    return false;
+                }
+
+            return true;
+        }
+
+        this.chunks = this.chunks.filter(filter);
+        this.chunks.push(...new_chunks);
         return;
     }
 

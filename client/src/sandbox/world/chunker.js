@@ -16,7 +16,7 @@ export default class Chunker {
     prev_camera_position = { x: 0, y: 0 };
     camera_position = { x: 0, y: 0 };
     camera_mesh;
-    hex_tree = new HexNode(0, 0, config.CHUNK_COUNT);
+    hex_tree = new HexNode(0, 0, config.CHUNK_COUNT, true);
 
     constructor() {
         this.init();
@@ -24,37 +24,6 @@ export default class Chunker {
     }
 
     init = () => 
-        {
-            this.initCameraTracker();
-        }
-
-    drawHexGrid = () =>
-        {
-            // TODO: Remove this and replace with caching
-            this.hex_tree = new HexNode(0, 0, config.CHUNK_COUNT);
-            const drawMesh = (position, size) =>
-                {
-                    let geometry = new THREE.PlaneGeometry(size.w, size.h, 1, 1);
-                    let material = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
-                    let mesh = new THREE.Mesh(geometry, material);
-                    mesh.position.set(position.x, 1, position.z);
-                    mesh.rotation.x = -Math.PI / 2;
-                    mesh.name = "hex";
-                    state.scene.add(mesh);
-                }
-
-            // this.hex_tree.calculateSubdivisions(this.camera_position);
-
-            this.hex_tree.chunks.forEach(chunk =>
-                {
-                    let position = chunk.position;
-                    let size = chunk.size;
-                    drawMesh(position, size);
-                }
-            );
-        }
-
-    initCameraTracker = () => 
         {
             this.camera_position = { x: 0, z: 0 };
             this.camera_mesh = new THREE.Mesh(
@@ -68,32 +37,10 @@ export default class Chunker {
             this.cameraTracker(this.camera_position);
         }
 
-    activateChunk = (chunk) => 
-        { chunk.material.color.setHex(0xff00ff); }
-
-    deactiveChunk = (chunk) => 
-        { chunk.material.color.setHex(0xcccccc); }
-
-    // at this point the previous chunks, and current chunks are not the same
-    updateChunks = () =>
-        {
-            // TODO: Only Remove and Remake chunks that are different from before
-            // Remove all chunks from the scene with the name "hex" <- This is a hack
-            let hexes = state.scene.children.filter(child => child.name === "hex");
-            hexes.forEach(hex => 
-                {
-                    // console.log("Removing Hex", hex);
-                    state.scene.remove(hex)
-                }
-            );
-            this.drawHexGrid();
-            // console.log("Updating Chunks");
-        }
-
     getCameraPosition = (x, z) => 
         {
-            let x_id = Math.floor(x / config.CHUNK_SIZE) + Math.floor(config.CHUNK_COUNT / 2);
-            let z_id = Math.floor(z / config.CHUNK_SIZE) + Math.floor(config.CHUNK_COUNT / 2);
+            let x_id = (x / config.CHUNK_SIZE) + (config.CHUNK_COUNT / 2);
+            let z_id = (z / config.CHUNK_SIZE) + (config.CHUNK_COUNT / 2);
             this.camera_position = { x: x_id, z: z_id };
         }
 
@@ -108,9 +55,9 @@ export default class Chunker {
             if (this.camera_position.x === this.prev_camera_position.x && 
                 this.camera_position.z === this.prev_camera_position.z)
                 { return; }
-            console.log("Camera Position:", this.camera_position);
+            // console.log("Camera Position:", this.camera_position);
 
-            this.updateChunks();
+            this.hex_tree.calculateSubdivisions(this.camera_position);
             this.prev_camera_position = this.camera_position;
         }
 }
