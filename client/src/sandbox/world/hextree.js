@@ -98,12 +98,11 @@ HexNode.prototype.calculateSubdivisions = function(position)
 
                     let start = chunk.start;
                     let end = chunk.end;
-                    let offset = chunk.offset;
                     
-                    let offset_count = OFFSETS[this.layer + 1];
-                    let offset_size = OFFSET_SIZES[this.layer + 1];
                     let chunk_size = SIZES[this.layer + 1];
                     let chunk_count = COUNTS[this.layer + 1];
+                    let offset_count = chunk_count / 3;
+                    let offset_size = chunk_size / 3;
 
                     let new_chunk = new HexNode(this.layer + 1, start, end, false);
                     new_chunk.subdivideGrid(start, end, offset_count, offset_size, chunk_size, chunk_count, this.layer + 1);
