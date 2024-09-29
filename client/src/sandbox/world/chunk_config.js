@@ -1,9 +1,9 @@
 import { Color } from 'three';
 
 export const MAX_CHUNK_COUNT = 54;
-export const MEGA_CHUNK_COUNT = 27;
-export const MID_CHUNK_COUNT = 9;
-export const MIN_CHUNK_COUNT = 3;
+export const MEGA_CHUNK_COUNT = 18;
+export const MID_CHUNK_COUNT = 6;
+export const MIN_CHUNK_COUNT = 2;
 export const SQUARE_SIZE = 6;
 export const TILE_COUNT = 310;
 export const CHUNK_SIZE = SQUARE_SIZE * 5;
@@ -14,7 +14,7 @@ export const MIN_CHUNK_SIZE = CHUNK_SIZE * MIN_CHUNK_COUNT;
 export const MAP_SIZE = SQUARE_SIZE * TILE_COUNT;
 export const MAP_CENTER = MAP_SIZE / 2;
 export const CHUNK_COUNT = MAP_SIZE / CHUNK_SIZE;
-export const MAX_CHUNK_OFFSET = Math.ceil((CHUNK_COUNT % MAX_CHUNK_COUNT) / 2);
+export const MAX_CHUNK_OFFSET = (CHUNK_COUNT % MAX_CHUNK_COUNT) / 2;
 export const MAX_OFFSET_SIZE = MAX_CHUNK_OFFSET * CHUNK_SIZE;
 export const MEGA_CHUNK_OFFSET = (MAX_CHUNK_OFFSET % MEGA_CHUNK_COUNT);
 export const MEGA_OFFSET_SIZE = MEGA_CHUNK_OFFSET * CHUNK_SIZE;

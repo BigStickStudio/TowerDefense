@@ -30,6 +30,7 @@ export default class Chunker {
 
     drawHexGrid = () =>
         {
+            // TODO: Remove this and replace with caching
             this.hex_tree = new HexNode(0, 0, config.CHUNK_COUNT);
             const drawMesh = (position, size) =>
                 {
@@ -42,7 +43,7 @@ export default class Chunker {
                     state.scene.add(mesh);
                 }
 
-            this.hex_tree.calculateSubdivisions(this.camera_position);
+            // this.hex_tree.calculateSubdivisions(this.camera_position);
 
             this.hex_tree.chunks.forEach(chunk =>
                 {
@@ -57,7 +58,7 @@ export default class Chunker {
         {
             this.camera_position = { x: 0, z: 0 };
             this.camera_mesh = new THREE.Mesh(
-                new THREE.SphereGeometry(config.SQUARE_SIZE ** 3.5, 8, 9),
+                new THREE.SphereGeometry(config.SQUARE_SIZE * 3.5, 8, 9),
                 new THREE.MeshBasicMaterial({ 
                     color: 0xeeff00, 
                     wireframe: true
